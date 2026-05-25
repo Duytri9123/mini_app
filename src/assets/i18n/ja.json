@@ -1,0 +1,65 @@
+{
+  "LOGIN": {
+    "EMAIL": "メールまたは電話番号",
+    "PASSWORD": "パスワード",
+    "LOGIN": "ログイン",
+    "OR": "または",
+    "GOOGLE": "Googleでサインアップ",
+    "FACEBOOK": "Facebookでサインアップ",
+    "REMEMBER_ME": "ログイン状態を保持",
+    "FORGOT_PASSWORD": "パスワードを忘れた場合？",
+    "REGISTER": "今すぐ登録",
+    "NO_ACCOUNT": "アカウントをお持ちでないですか？"
+  },
+  "FORGOT": {
+    "TITLE": "パスワードを忘れた",
+    "HEADING": "アカウントを探す",
+    "INSTRUCTIONS": "メールアドレスを入力してください。パスワードリセットリンクを送信します。",
+    "EMAIL_PLACEHOLDER": "メールアドレス",
+    "SEND_LINK_BUTTON": "リンク送信",
+    "BACK_TO_LOGIN": "ログインに戻る",
+    "ENTER_EMAIL_PROMPT": "メールアドレスを入力してください。",
+    "SUCCESS_MESSAGE": " パスワードリセットリンクが送信されました。メールを確認してください（迷惑メールフォルダも含む）。",
+    "SUCCESS_MESSAGE_SHORT": "パスワードリセットリンク送信済み！",
+    "ERROR_MESSAGE": "❌ エラー：リンクを送信できませんでした。メールを確認するか、後で再試行してください。"
+  },
+  "RESET": {
+    "TITLE": "パスワードリセット",
+    "HEADING": "新しいパスワードを作成",
+    "INSTRUCTIONS": "下に新しいパスワードを入力してください。強く覚えやすいパスワードにしてください。",
+    "EMAIL_LABEL": "メール",
+    "NEW_PASSWORD_LABEL": "新しいパスワード",
+    "PASSWORD_PLACEHOLDER": "8文字以上入力",
+    "CONFIRM_PASSWORD_LABEL": "新しいパスワード確認",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "新しいパスワードを再入力",
+    "RESET_BUTTON": "パスワードをリセット",
+    "INVALID_LINK": "リセットリンクが無効であるか期限切れです。",
+    "FILL_ALL_FIELDS": "両方のパスワード欄を入力してください。",
+    "PASSWORD_MISMATCH": "パスワードが一致しません。",
+    "SUCCESS_MESSAGE": "パスワードが正常にリセットされました！",
+    "LOGIN_PROMPT": "新しいパスワードでログインできます。",
+    "ERROR_MESSAGE": "パスワードリセットに失敗しました。リンクが無効または期限切れの可能性があります。"
+  },
+  "CHOOSE_ROLE": {
+    "WELCOME": {
+      "TITLE": "ようこそ！",
+      "TEXT": "私たちはあなたの就職・採用の旅をサポートします。"
+    },
+    "ROLE": {
+      "SEEKER": {
+        "TITLE": "求職者",
+        "TEXT": "あなたに適した仕事を迅速かつ簡単に見つけましょう。",
+        "CHIP": "仕事を探す"
+      },
+      "EMPLOYER": {
+        "TITLE": "採用担当者",
+        "TEXT": "求人を投稿し、応募者を管理し、効率的に採用してください。",
+        "CHIP": "採用"
+      }
+    },
+    "QUICK": {
+      "SEEKER": "私は求職者です",
+      "EMPLOYER": "私は採用担当者です"
+    }
+  }
+}

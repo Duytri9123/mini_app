@@ -1,0 +1,226 @@
+<!-- Bell button -->
+<button
+  *ngIf="showNotification && isAuthenticated"
+  (click)="toggleNotifications($event)"
+  class="relative size-10 flex items-center justify-center rounded-full bg-gray-100 border border-gray-200 shadow-sm hover:bg-gray-200 transition-all group"
+  aria-label="Thông báo">
+
+  <!-- Bell SVG icon -->
+  <span class="w-5 h-5 text-gray-700 group-hover:text-black transition-colors" [class.text-black]="isOpen"
+    [innerHTML]="(prefs.enabled ? icons.BELL : icons.BELL_OFF) | safeSvg">
+  </span>
+
+  <!-- Unread badge -->
+  <span *ngIf="unreadCount > 0 && prefs.enabled"
+    class="absolute -top-1 -right-1 size-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white/30 animate-pulse">
+    {{ unreadCount > 9 ? '9+' : unreadCount }}
+  </span>
+</button>
+
+<!-- Dropdown -->
+<div *ngIf="isOpen"
+  class="bj-notif-dropdown absolute right-0 top-[calc(100%+10px)] w-[calc(100vw-24px)] sm:w-[400px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_10px_40px_rgba(0,173,239,0.18)] overflow-hidden z-50 animate-fade-in">
+
+  <!-- Arrow pointing up to bell button -->
+  <div class="bj-dropdown-arrow"></div>
+
+  <!-- ═══ VIEW 1: NOTIFICATIONS LIST ═══ -->
+  <ng-container *ngIf="!showSettings">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+      <div class="flex items-center gap-2">
+        <span class="w-4 h-4 text-primary" [innerHTML]="icons.BELL | safeSvg"></span>
+        <span class="text-sm font-bold text-on-surface">Thông báo</span>
+        <span *ngIf="unreadCount > 0"
+          class="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary border border-primary/20">
+          {{ unreadCount }} MỚI
+        </span>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <!-- Refresh -->
+        <button (click)="refreshNotifications($event)"
+          class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-all"
+          title="Làm mới">
+          <span class="w-4 h-4" [class.animate-spin]="isLoading" [innerHTML]="icons.REFRESH | safeSvg"></span>
+        </button>
+
+        <!-- Đọc tất cả -->
+        <button *ngIf="unreadCount > 0" (click)="markAllAsRead($event)"
+          class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-all"
+          title="Đọc tất cả">
+          <span class="w-4 h-4" [innerHTML]="icons.DONE_ALL | safeSvg"></span>
+        </button>
+
+        <!-- Settings -->
+        <button (click)="toggleSettings($event)"
+          class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-primary transition-all"
+          title="Cài đặt">
+          <span class="w-4 h-4" [innerHTML]="icons.NAV_SETTING | safeSvg"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- List body -->
+    <div class="max-h-[350px] overflow-y-auto custom-scrollbar">
+
+      <!-- Loading skeleton -->
+      <div *ngIf="isLoading && notifications.length === 0" class="p-4 space-y-4">
+        <div *ngFor="let i of [1,2,3]" class="flex gap-3 animate-pulse">
+          <div class="size-9 bg-slate-100 dark:bg-slate-800 rounded-xl shrink-0"></div>
+          <div class="flex-1 space-y-2">
+            <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded w-3/4"></div>
+            <div class="h-2 bg-slate-50 dark:bg-slate-800/50 rounded w-1/2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="!isLoading && notifications.length === 0"
+        class="flex flex-col items-center justify-center py-12 text-slate-400">
+        <span class="w-10 h-10 mb-2 opacity-30" [innerHTML]="icons.BELL_OFF | safeSvg"></span>
+        <p class="text-xs font-medium">Bạn chưa có thông báo nào</p>
+      </div>
+
+      <!-- Notification list -->
+      <div *ngIf="!isLoading && notifications.length > 0" class="divide-y divide-slate-50 dark:divide-slate-800">
+        <div *ngFor="let n of notifications"
+          (click)="onNotificationClick(n, $event)"
+          class="flex gap-3 px-4 py-3 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50"
+          [class.bg-primary/5]="!n.is_read">
+
+          <!-- Icon -->
+          <div class="size-9 shrink-0 rounded-xl flex items-center justify-center border border-slate-100 dark:border-slate-700"
+            [ngClass]="getNotificationIcon(n.type).bg">
+            <span class="w-[18px] h-[18px]" [ngClass]="getNotificationIcon(n.type).text"
+              [innerHTML]="getNotificationSvg(n.type) | safeSvg">
+            </span>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-start gap-1">
+              <p class="text-[13px] font-bold text-on-surface line-clamp-1" [class.text-primary]="!n.is_read">
+                {{ n.title }}
+              </p>
+              <div *ngIf="!n.is_read" class="size-1.5 bg-primary rounded-full shrink-0 mt-1"></div>
+            </div>
+            <p class="text-[11px] text-on-surface-variant line-clamp-2 mt-0.5 leading-relaxed">{{ n.message }}</p>
+            <div class="flex items-center gap-2 mt-1.5">
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                [ngClass]="[getNotificationIcon(n.type).bg, getNotificationIcon(n.type).text]">
+                {{ getTypeLabel(n.type) }}
+              </span>
+              <p class="text-[9px] text-slate-400 font-medium uppercase tracking-wider">
+                {{ n.created_at_human || formatTime(n.created_at) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-2 border-t border-slate-100 dark:border-slate-800">
+      <button (click)="goToNotificationsPage($event)"
+        class="w-full py-2.5 text-[12px] font-black text-primary uppercase tracking-widest hover:bg-primary/5 rounded-xl transition-all">
+        Xem tất cả thông báo
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- ═══ VIEW 2: SETTINGS ═══ -->
+  <ng-container *ngIf="showSettings">
+
+    <!-- Settings header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+      <div class="flex items-center gap-2">
+        <!-- Back → về list thông báo -->
+        <button (click)="showSettings = false"
+          class="size-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-on-surface transition-all">
+          <span class="w-4 h-4" [innerHTML]="icons.ARROW_BACK | safeSvg"></span>
+        </button>
+        <span class="text-sm font-bold text-on-surface">Cài đặt thông báo</span>
+      </div>
+      <button (click)="isOpen = false"
+        class="size-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-on-surface transition-all">
+        <span class="w-4 h-4" [innerHTML]="icons.CLOSE | safeSvg"></span>
+      </button>
+    </div>
+
+    <div class="p-4 space-y-5 overflow-y-auto max-h-[350px]">
+
+      <!-- Master toggle -->
+      <div class="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/10">
+        <div class="flex items-center gap-3">
+          <span class="w-5 h-5 text-primary" [innerHTML]="icons.BELL_RING | safeSvg"></span>
+          <div>
+            <p class="text-[13px] font-bold text-on-surface">Bật thông báo</p>
+            <p class="text-[11px] text-on-surface-variant">Nhận thông báo realtime</p>
+          </div>
+        </div>
+        <div class="bj-switch" [class.active]="prefs.enabled" (click)="toggleMasterEnabled()">
+          <div class="bj-switch-handle"></div>
+        </div>
+      </div>
+
+      <!-- Sub options (display preferences) -->
+      <div class="space-y-4" *ngIf="prefs.enabled">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[2px] px-1">Lựa chọn hiển thị</p>
+
+        <div class="flex items-center justify-between px-1">
+          <div class="flex items-center gap-3">
+            <span class="w-[18px] h-[18px] text-slate-400" [innerHTML]="icons.VOLUME | safeSvg"></span>
+            <span class="text-[12px] text-on-surface">Âm thanh thông báo</span>
+          </div>
+          <div class="bj-switch size-sm" [class.active]="prefs.playSound" (click)="toggleSound()">
+            <div class="bj-switch-handle"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between px-1">
+          <div class="flex items-center gap-3">
+            <span class="w-[18px] h-[18px] text-slate-400" [innerHTML]="icons.OPEN_IN_NEW | safeSvg"></span>
+            <span class="text-[12px] text-on-surface">Toast Popup (App)</span>
+          </div>
+          <div class="bj-switch size-sm" [class.active]="prefs.showToast" (click)="toggleToast()">
+            <div class="bj-switch-handle"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification type toggles -->
+      <div class="space-y-3" *ngIf="prefs.enabled">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[2px] px-1">Loại thông báo</p>
+
+        <div *ngFor="let item of allTypes" class="flex items-center justify-between px-1 py-1">
+          <div class="flex items-center gap-3">
+            <div class="size-7 rounded-lg flex items-center justify-center"
+              [ngClass]="typeConfig[item.type].bg">
+              <span class="w-4 h-4" [ngClass]="typeConfig[item.type].text"
+                [innerHTML]="getNotificationSvg(item.type) | safeSvg"></span>
+            </div>
+            <span class="text-[12px] text-on-surface font-medium">{{ item.label }}</span>
+          </div>
+          <div class="bj-switch size-sm" [class.active]="isTypeEnabled(item.type)" (click)="toggleType(item.type)">
+            <div class="bj-switch-handle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+      <button *ngIf="unreadCount > 0" (click)="markAllAsRead($event)"
+        class="flex-1 py-2.5 text-[11px] font-bold text-primary border border-primary/20 rounded-xl hover:bg-primary/5 transition-all flex items-center justify-center gap-1.5">
+        <span class="w-3.5 h-3.5" [innerHTML]="icons.DONE_ALL | safeSvg"></span>
+        Đọc tất cả
+      </button>
+      <button (click)="showSettings = false"
+        class="flex-1 py-2.5 text-[11px] font-bold text-slate-500 hover:text-on-surface border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-wider">
+        Hoàn tất
+      </button>
+    </div>
+  </ng-container>
+</div>

@@ -1,0 +1,61 @@
+<section class="px-4 py-8">
+  <!-- Header -->
+  <div class="mb-6">
+    <h2 class="text-lg font-extrabold tracking-tight">Quy Trình Rửa Xe</h2>
+  </div>
+
+  <!-- Timeline -->
+  <div class="relative">
+    <!-- Vertical line -->
+    <div class="absolute left-[22px] top-0 bottom-0 w-0.5 bg-outline-variant"></div>
+
+    <div *ngFor="let s of steps; let i = index" class="relative flex gap-4 mb-5 last:mb-0">
+
+      <!-- Step circle (đan xen màu) -->
+      <div class="relative z-10 flex-shrink-0">
+        <div
+          class="w-11 h-11 rounded-full flex items-center justify-center shadow-md"
+          [ngClass]="{
+            'bg-primary text-white':        i % 3 === 0,
+            'bg-secondary text-white':      i % 3 === 1,
+            'bg-tertiary text-white':       i % 3 === 2
+          }">
+          <span class="material-symbols-outlined text-[20px]">{{ s.icon }}</span>
+        </div>
+      </div>
+
+      <!-- Content card -->
+      <div
+        class="flex-1 rounded-2xl p-4 border shadow-sm mb-1"
+        [ngClass]="{
+          'bg-primary/5 border-primary/15':   i % 3 === 0,
+          'bg-secondary/5 border-secondary/15': i % 3 === 1,
+          'bg-tertiary/5 border-tertiary/15':  i % 3 === 2
+        }">
+        <p
+          class="text-[10px] font-extrabold uppercase tracking-wider mb-0.5"
+          [ngClass]="{
+            'text-primary':   i % 3 === 0,
+            'text-secondary': i % 3 === 1,
+            'text-tertiary':  i % 3 === 2
+          }">
+          Bước {{ s.step }}
+        </p>
+        <h3 class="text-sm font-bold text-on-surface leading-snug mb-1">{{ s.title }}</h3>
+        <p class="text-[11px] text-on-surface-variant leading-relaxed">{{ s.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom CTA -->
+  <!-- <div class="mt-6 bg-primary/5 rounded-2xl p-4 border border-primary/10 flex items-center gap-3">
+    <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+      <span class="material-symbols-outlined text-white text-xl">play_circle</span>
+    </div>
+    <div class="flex-1">
+      <p class="text-sm font-bold text-on-surface">Xem video hướng dẫn</p>
+      <p class="text-[11px] text-on-surface-variant">Hướng dẫn chi tiết từng bước sử dụng</p>
+    </div>
+    <span class="material-symbols-outlined text-primary">chevron_right</span>
+  </div> -->
+</section>

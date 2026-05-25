@@ -1,0 +1,78 @@
+<div class="bg-white dark:bg-slate-900 w-full h-full flex flex-col shadow-xl">
+  <!-- Header -->
+  <div class="px-4 py-3 border-b border-slate-50 dark:border-slate-800">
+    <h3 class="text-slate-400 dark:text-slate-500 text-sm font-medium">Thông báo Mới Nhận</h3>
+  </div>
+
+  <!-- List -->
+  <div class="flex-1 overflow-y-auto min-h-0">
+    <div *ngIf="isLoading && notifications.length === 0" class="flex flex-col p-4 gap-4">
+      <div *ngFor="let i of [1,2,3,4]" class="flex gap-3">
+        <div class="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded animate-pulse shrink-0"></div>
+        <div class="flex-1 space-y-2">
+          <div class="h-4 bg-slate-100 dark:bg-slate-800 rounded w-3/4 animate-pulse"></div>
+          <div class="h-3 bg-slate-50 dark:bg-slate-800/50 rounded animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoading && notifications.length === 0" class="flex flex-col items-center justify-center py-12 px-8 text-center text-slate-400">
+      <svg class="w-10 h-10 mb-2 opacity-20 fill-current" viewBox="0 0 24 24">
+        <path d="M20 18.69L7.84 6.14 5.27 3.49 4 4.76l2.8 2.8v.01c-.52.99-.8 2.16-.8 3.42v5l-2 2v1h13.73l2 2L21 19.72l-1-1.03zM12 22c1.11 0 2-.89 2-2h-4c0 1.11.89 2 2 2zm6-7.32V11c0-3.08-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68c-.15.03-.29.08-.42.12-.1.03-.2.07-.3.11l1.66 1.66c.03-.01.05-.02.08-.02C12.48 6.5 14 8.48 14 11v5.67l2 2v.01z"/>
+      </svg>
+      <p class="text-xs">Không có thông báo mới</p>
+    </div>
+
+    <!-- Notification Items -->
+    <div class="divide-y divide-slate-50 dark:divide-slate-800">
+      <div 
+        *ngFor="let n of notifications" 
+        (click)="onItemClick(n)"
+        class="flex gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+        [ngClass]="{'bg-blue-50/30 dark:bg-blue-900/10': !n.is_read}"
+      >
+        <!-- Icon/Image -->
+        <div class="w-12 h-12 shrink-0 rounded border border-slate-100 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary text-2xl">
+            {{ 
+              n.type === 'wallet_topup' ? 'account_balance_wallet' : 
+              n.type === 'wallet_withdraw' ? 'swap_horiz' : 
+              n.type === 'withdraw_request' ? 'request_quote' : 
+              n.type === 'booking' ? 'calendar_month' : 
+              n.type === 'system' ? 'info' :
+              'notifications' 
+            }}
+          </span>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 min-w-0">
+          <h4 class="text-slate-900 dark:text-slate-100 text-sm font-semibold leading-relaxed line-clamp-2">
+            {{ n.title }}
+          </h4>
+          <p class="text-slate-500 dark:text-slate-400 text-[11px] leading-normal mt-0.5 line-clamp-2">
+            {{ n.message }}
+          </p>
+          
+          <!-- Booking confirmed banner -->
+          <div *ngIf="n.type === 'booking'" class="mt-2 rounded-md overflow-hidden border border-slate-100 dark:border-slate-800">
+            <div class="bg-blue-500 p-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-white text-xs">verified</span>
+              <span class="text-white text-[10px] font-bold uppercase">Booking</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="border-t border-slate-50 dark:border-slate-800">
+    <button 
+      (click)="viewAll()"
+      class="w-full py-4 text-slate-600 dark:text-slate-400 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+    >
+      Xem tất cả
+    </button>
+  </div>
+</div>

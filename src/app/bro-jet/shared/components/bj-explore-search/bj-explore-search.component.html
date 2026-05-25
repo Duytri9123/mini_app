@@ -1,0 +1,82 @@
+<div class="w-full flex flex-col justify-center md:justify-self-start gap-2 relative">
+  <div class="flex items-center gap-1.5 flex-1 z-[5] max-w-full">
+    <!-- Search Box -->
+    <div
+      class="flex h-11 py-1.5 px-1 items-center gap-1 flex-1 min-w-0 rounded-full
+             bg-white/95 backdrop-blur-md
+             shadow-[0_4px_20px_rgba(0,0,0,0.14),0_1px_4px_rgba(0,0,0,0.08)]
+             focus-within:shadow-[0_4px_24px_rgba(0,173,239,0.25),0_1px_4px_rgba(0,0,0,0.08)]
+             focus-within:ring-2 focus-within:ring-primary/30
+             border border-white/80
+             transition-all duration-300"
+    >
+      <!-- Search Icon -->
+      <div class="flex-shrink-0 mx-2 text-[#6b7280]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" class="w-5 h-5 opacity-60">
+          <path d="M9.16663 16.6667C13.3088 16.6667 16.6666 13.3088 16.6666 9.16666C16.6666 5.02452 13.3088 1.66666 9.16663 1.66666C5.02449 1.66666 1.66663 5.02452 1.66663 9.16666C1.66663 13.3088 5.02449 16.6667 9.16663 16.6667Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M15.7749 17.2415C16.2166 18.5748 17.2249 18.7082 17.9999 17.5415C18.7082 16.4748 18.2416 15.5998 16.9582 15.5998C16.0082 15.5915 15.4749 16.3332 15.7749 17.2415Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+
+      <!-- Input Field -->
+      <input
+        type="text"
+        [placeholder]="placeholder"
+        [(ngModel)]="searchText"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        (keyup.enter)="onSearchClick()"
+        (ngModelChange)="onInputChange()"
+        class="flex-1 min-w-0 w-0 bg-transparent border-none outline-none text-[#111827] text-[15px] leading-6 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
+      />
+
+      <!-- Clear Button -->
+      <button
+        *ngIf="searchText.length > 0"
+        (click)="clearSearch()"
+        class="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 rounded-full transition-all"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 20 20" fill="none" class="w-4 h-4">
+          <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+
+      <!-- Search Button -->
+      <button
+        *ngIf="searchText.length > 0"
+        (click)="onSearchClick()"
+        class="flex-shrink-0 px-4 py-1.5 rounded-full bg-primary text-white text-[13px] font-bold hover:brightness-110 active:scale-95 transition-all whitespace-nowrap ml-1 mr-1 shadow-sm"
+      >
+        Tìm kiếm
+      </button>
+    </div>
+  </div>
+
+  <!-- Dropdown Suggestions -->
+  <div *ngIf="isFocused && searchText && (mapAddresses.length > 0 || matchedStations.length > 0)"
+       class="absolute top-[52px] left-0 right-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden z-[1000] flex flex-col max-h-[300px] overflow-y-auto">
+      
+      <!-- Addresses -->
+      <div *ngIf="mapAddresses.length > 0" class="py-2">
+        <div class="px-4 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Địa chỉ</div>
+        <button *ngFor="let loc of mapAddresses" (click)="onSelectMapAddress(loc)"
+                class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors">
+          <span class="material-symbols-outlined text-slate-400 text-[20px]">location_on</span>
+          <span class="text-[13px] text-slate-700 dark:text-slate-200 truncate">{{loc.address}}</span>
+        </button>
+      </div>
+
+      <!-- Stations -->
+      <div *ngIf="matchedStations.length > 0" class="py-2 border-t border-slate-100 dark:border-slate-800">
+        <div class="px-4 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Trạm rửa xe</div>
+        <button *ngFor="let station of matchedStations" (click)="onSelectStation(station)"
+                class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors">
+          <span class="material-symbols-outlined text-slate-400 text-[20px]">local_car_wash</span>
+          <div class="flex flex-col overflow-hidden">
+            <span class="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate">{{station.name}}</span>
+            <span class="text-[11px] text-slate-500 truncate">{{station.address}}</span>
+          </div>
+        </button>
+      </div>
+  </div>
+</div>

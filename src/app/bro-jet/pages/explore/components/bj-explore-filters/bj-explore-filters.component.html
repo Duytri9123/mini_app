@@ -1,0 +1,13 @@
+<div class="flex gap-2 overflow-x-auto scrollbar-hide" [class.pb-1]="variant === 'overlay'"
+  [class.pointer-events-auto]="variant === 'overlay'">
+  <button *ngFor="let chip of chips" (click)="onChipClick(chip.key)"
+    class="flex-shrink-0 px-3.5 py-2 lg:px-4 lg:py-2 rounded-full text-sm font-semibold transition-all active:scale-95"
+    [ngClass]="{
+      'shadow-[0_2px_12px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.08)]': variant === 'overlay',
+      'bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-lg shadow-cyan-200/50': isActive(chip.key),
+      'bg-white/95 backdrop-blur-md text-gray-700 border border-white/70': !isActive(chip.key) && variant === 'overlay',
+      'bg-gray-100 text-gray-700': !isActive(chip.key) && variant === 'inline'
+    }">
+    {{ chip.label }}
+  </button>
+</div>

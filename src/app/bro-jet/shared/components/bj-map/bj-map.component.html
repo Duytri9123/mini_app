@@ -1,0 +1,25 @@
+<div class="relative w-full h-full">
+  <div [id]="containerId" class="w-full h-full"></div>
+
+  <!-- Layer switch button -->
+  <button (click)="switchMapLayer()"
+    class="absolute top-[25%] right-3 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
+    aria-label="Chuyển đổi lớp bản đồ">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </svg>
+  </button>
+
+  <!-- My location button -->
+  <button (click)="onMyLocationButtonClick()"
+    class="absolute top-[35%] right-3 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
+    aria-label="Về vị trí của tôi">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+      <circle cx="12" cy="12" r="8" />
+    </svg>
+  </button>
+</div>

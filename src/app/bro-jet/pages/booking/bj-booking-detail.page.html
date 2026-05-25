@@ -1,0 +1,233 @@
+<div class="relative flex min-h-screen w-full flex-col bg-white overflow-x-hidden font-display">
+  <app-bj-loading-spinner *ngIf="loading" />
+
+  <app-bj-error-state
+    *ngIf="error && !loading"
+    message="Không thể tải thông tin lịch rửa."
+    (backClick)="goBack()"
+  />
+
+  <main *ngIf="booking && !loading" class="flex-1 w-full max-w-3xl mx-auto pb-40">
+
+    <!-- Wash Progress Card -->
+    <div *ngIf="isInProgress" class="px-4 pt-4 animate-in slide-in-from-top-4 duration-500">
+      <app-bj-wash-progress
+        [progress]="washProgress?.progress ?? 0"
+        [status]="washProgress?.status ?? 'Đang rửa xe...'"
+        [etaSeconds]="washProgress?.etaSeconds ?? 0"
+      />
+    </div>
+
+    <!-- Hero Status Banner -->
+    <div class="px-4 pt-4 pb-2">
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 p-5 shadow-lg shadow-cyan-200/40">
+        <!-- Background pattern -->
+        <div class="absolute inset-0 opacity-10">
+          <svg width="100%" height="100%" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="350" cy="20" r="80" fill="white"/>
+            <circle cx="60" cy="160" r="60" fill="white"/>
+          </svg>
+        </div>
+        <div class="relative flex items-center justify-between">
+          <div class="flex flex-col gap-1">
+            <span class="text-white/70 text-[10px] font-bold uppercase tracking-widest">Mã đặt lịch</span>
+            <span class="text-white text-lg font-black tracking-wider">#{{ booking.id.split('-')[0].toUpperCase() }}</span>
+          </div>
+          <div class="flex flex-col items-end gap-1.5">
+            <span class="text-white/70 text-[10px] font-bold uppercase tracking-widest">Trạng thái</span>
+            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-white/20 text-white backdrop-blur-sm">
+              {{ statusLabel }}
+            </span>
+          </div>
+        </div>
+        <!-- Scheduled time -->
+        <div class="relative mt-4 flex items-center gap-2 text-white/80">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span class="text-sm font-semibold">{{ formattedScheduledAt }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="p-4">
+      <h3 class="text-slate-900 text-base font-bold mb-3">Thông tin dịch vụ</h3>
+      <div class="space-y-3">
+
+        <!-- Station -->
+        <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div class="flex items-center justify-center rounded-xl bg-cyan-50 shrink-0 size-12">
+            <svg class="w-5 h-5 text-cyan-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 13.43C13.72 13.43 15.12 12.03 15.12 10.31C15.12 8.59 13.72 7.19 12 7.19C10.28 7.19 8.88 8.59 8.88 10.31C8.88 12.03 10.28 13.43 12 13.43Z"/>
+              <path d="M3.62 8.49C5.59 -0.17 18.42 -0.16 20.38 8.5C21.53 13.58 18.37 17.88 15.6 20.54C13.59 22.48 10.41 22.48 8.39 20.54C5.63 17.88 2.47 13.57 3.62 8.49Z"/>
+            </svg>
+          </div>
+          <div class="flex flex-col flex-1 min-w-0">
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Trạm rửa xe</p>
+            <p class="text-slate-900 text-[15px] font-semibold mt-0.5 truncate">{{ booking.stationName ?? booking.stationId }}</p>
+          </div>
+        </div>
+
+        <!-- Vehicle -->
+        <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div class="flex items-center justify-center rounded-xl bg-emerald-50 shrink-0 size-12">
+            <svg class="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-4h12l2 4h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/>
+              <circle cx="7.5" cy="17" r="1.5"/>
+              <circle cx="16.5" cy="17" r="1.5"/>
+            </svg>
+          </div>
+          <div class="flex flex-col flex-1 min-w-0">
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Phương tiện</p>
+            <p class="text-slate-900 text-[15px] font-mono font-semibold mt-0.5">{{ booking.licensePlate ?? booking.vehicleId }}</p>
+          </div>
+        </div>
+
+        <!-- Package -->
+        <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <div class="flex items-center justify-center rounded-xl bg-violet-50 shrink-0 size-12">
+            <svg class="w-5 h-5 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <div class="flex flex-col flex-1 min-w-0">
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Gói dịch vụ</p>
+            <p class="text-slate-900 text-[15px] font-semibold mt-0.5 truncate">{{ booking.packageName ?? booking.packageId }}</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Payment Section -->
+    <!-- <div class="px-4 pb-4">
+      <h3 class="text-slate-900 text-base font-bold mb-3">Thanh toán</h3>
+      <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+        <div class="p-4 space-y-3">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-500">Giá dịch vụ</span>
+            <span class="text-slate-900 font-medium">{{ formatCurrency(booking.totalAmount) }}</span>
+          </div>
+          <div *ngIf="booking.discountAmount > 0" class="flex justify-between text-sm text-emerald-600">
+            <span>Giảm giá</span>
+            <span class="font-medium">-{{ formatCurrency(booking.discountAmount) }}</span>
+          </div>
+          <div class="pt-3 border-t border-dashed border-slate-100 flex justify-between items-center">
+            <span class="text-slate-900 font-bold">Tổng cộng</span>
+            <span class="text-emerald-600 text-xl font-extrabold tracking-tight">{{ formatCurrency(booking.finalAmount) }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-t border-slate-100">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <span class="text-xs font-medium text-slate-600">{{ paymentMethodLabel }}</span>
+          </div>
+          <div class="flex items-center gap-1.5"
+            [ngClass]="booking.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-500'">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ng-container *ngIf="booking.paymentStatus === 'paid'">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </ng-container>
+              <ng-container *ngIf="booking.paymentStatus !== 'paid'">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </ng-container>
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wider">
+              {{ booking.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Reward Points -->
+    <!-- <div *ngIf="booking.loyaltyPointsEarned" class="px-4 pb-4">
+      <div class="flex items-center gap-4 bg-amber-50 p-4 rounded-2xl border border-amber-100">
+        <div class="flex items-center justify-center rounded-xl bg-amber-100 shrink-0 size-12">
+          <svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <p class="text-sm font-bold text-amber-900">Bạn đã nhận được thưởng!</p>
+          <p class="text-xs text-amber-700 mt-0.5"><strong>+{{ booking.loyaltyPointsEarned }} điểm</strong> đã được cộng vào ví của bạn.</p>
+        </div>
+      </div>
+    </div> -->
+
+  </main>
+
+  <!-- Sticky Cancel Action -->
+  <div *ngIf="booking && isConfirmed"
+    class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg p-4 border-t border-slate-100"
+    style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem)">
+    <div class="max-w-md mx-auto">
+      <button (click)="openCancelModal()"
+        class="w-full py-4 text-red-500 font-bold border-2 border-red-100 rounded-xl hover:bg-red-50 active:scale-95 transition-all">
+        Hủy lịch đặt
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Modal (Bottom Sheet) -->
+<div *ngIf="showCancelModal" class="fixed inset-0 z-[100] flex items-end justify-center animate-in fade-in duration-300">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeCancelModal()"></div>
+  <div class="relative w-full max-w-lg bg-white rounded-t-[32px] p-6 pb-12 shadow-2xl animate-in slide-in-from-bottom-full duration-500">
+    <!-- Handle -->
+    <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8"></div>
+
+    <div class="space-y-6">
+      <div class="text-center space-y-2">
+        <div class="size-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-black text-slate-900">Hủy lịch rửa xe?</h3>
+        <p class="text-sm text-slate-500">Rất tiếc khi bạn muốn hủy lịch. Vui lòng cho biết lý do để chúng tôi cải thiện dịch vụ tốt hơn.</p>
+      </div>
+
+      <div class="space-y-2">
+        <textarea
+          [formControl]="cancelReasonControl"
+          rows="3"
+          placeholder="Lý do hủy (ví dụ: bận việc đột xuất, đổi ý...)"
+          class="w-full bg-slate-50 border-2 border-transparent focus:border-red-300 rounded-2xl px-4 py-3.5 text-sm font-medium outline-none transition-all placeholder:font-normal placeholder:text-slate-400 resize-none"
+        ></textarea>
+        <p *ngIf="cancelReasonControl.touched && cancelReasonControl.invalid" class="text-xs font-bold text-red-500 ml-2">
+          Vui lòng nhập lý do (tối thiểu 5 ký tự)
+        </p>
+      </div>
+
+      <p *ngIf="cancelError" class="p-3 bg-red-50 border border-red-100 rounded-xl text-xs font-bold text-red-600">{{ cancelError }}</p>
+
+      <div class="flex gap-4 pt-2">
+        <button (click)="closeCancelModal()"
+          class="flex-1 py-4 bg-slate-100 text-slate-600 font-bold rounded-xl active:scale-95 transition-all">
+          Quay lại
+        </button>
+        <button
+          (click)="onCancelBooking()"
+          [disabled]="cancelling"
+          class="flex-1 bg-red-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-red-200/50 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+          <span *ngIf="!cancelling">Xác nhận hủy</span>
+          <ion-spinner *ngIf="cancelling" name="crescent" class="size-5"></ion-spinner>
+          <span *ngIf="cancelling" class="text-sm">Đang hủy...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

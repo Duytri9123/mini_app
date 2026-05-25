@@ -1,0 +1,53 @@
+// bj-banner-carousel.component.scss
+.bj-banner-swiper {
+  --swiper-pagination-bottom: 16px;
+  --swiper-pagination-color: #ffffff;
+  --swiper-pagination-bullet-inactive-color: #ffffff;
+  --swiper-pagination-bullet-inactive-opacity: 0.4;
+  --swiper-pagination-bullet-size: 7px;
+  --swiper-pagination-bullet-horizontal-gap: 4px;
+
+  // Pagination container — inside the slide area
+  ::ng-deep .swiper-pagination {
+    position: absolute;
+    bottom: 16px !important;
+    left: 50% !important;
+    transform: translateX(-50%);
+    width: auto !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    pointer-events: none;
+    gap: 4px;
+  }
+
+  // Pill shape for active bullet
+  ::ng-deep .swiper-pagination-bullet {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::ng-deep .swiper-pagination-bullet-active {
+    width: 22px !important;
+    height: 7px !important;
+    border-radius: 4px !important;
+    background: #ffffff !important;
+    opacity: 1 !important;
+  }
+
+  // Slide transition effect
+  ::ng-deep .swiper-slide {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.95);
+    opacity: 0.7;
+
+    &-active {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}

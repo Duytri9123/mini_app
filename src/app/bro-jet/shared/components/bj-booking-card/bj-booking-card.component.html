@@ -1,0 +1,35 @@
+<div class="group flex flex-col p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-lg hover:shadow-emerald-100/50 transition-all active:scale-[0.98]"
+  (click)="onDetailClick()">
+
+  <!-- Header: ID + Status -->
+  <div class="flex justify-between items-start mb-3">
+    <div class="flex flex-col">
+      <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Mã: #{{ booking.id.substring(0, 7).toUpperCase() }}</span>
+      <h4 class="text-base font-bold text-slate-900 mt-0.5">{{ booking.packageName }}</h4>
+    </div>
+    <span class="px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-tight" [ngClass]="statusClass">
+      {{ statusLabel }}
+    </span>
+  </div>
+
+  <!-- Info: License plate + Date -->
+  <div class="flex items-center text-slate-500 text-xs mb-3 gap-4">
+    <div class="flex items-center gap-1.5">
+      <span class="w-4 h-4 text-slate-400" [innerHTML]="carIcon"></span>
+      <span class="font-medium">{{ booking.licensePlate }}</span>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <span class="w-4 h-4 text-slate-400" [innerHTML]="calendarIcon"></span>
+      <span>{{ formattedDate }}</span>
+    </div>
+  </div>
+
+  <!-- Footer: Detail link + Price -->
+  <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+    <div class="flex items-center gap-1.5 text-cyan-600">
+      <span class="w-4 h-4" [innerHTML]="receiptIcon"></span>
+      <span class="text-[11px] font-semibold">Xem chi tiết</span>
+    </div>
+    <!-- <span class="text-base font-bold text-slate-900">{{ formatCurrency(booking.finalAmount) }}</span> -->
+  </div>
+</div>

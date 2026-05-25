@@ -1,0 +1,43 @@
+{
+  "LOGIN": {
+    "EMAIL": "Email atau Nomor Telepon",
+    "PASSWORD": "Kata Sandi",
+    "LOGIN": "Masuk",
+    "OR": "atau",
+    "GOOGLE": "Daftar dengan Google",
+    "FACEBOOK": "Daftar dengan Facebook",
+    "REMEMBER_ME": "Ingat saya",
+    "FORGOT_PASSWORD": "Lupa kata sandi?",
+    "REGISTER": "Daftar sekarang",
+    "NO_ACCOUNT": "Belum punya akun?"
+  },
+  "FORGOT": {
+    "TITLE": "Lupa Kata Sandi",
+    "HEADING": "Temukan Akun Anda",
+    "INSTRUCTIONS": "Silakan masukkan alamat email Anda. Kami akan mengirimkan tautan untuk mereset kata sandi.",
+    "EMAIL_PLACEHOLDER": "Alamat Email",
+    "SEND_LINK_BUTTON": "Kirim Tautan",
+    "BACK_TO_LOGIN": "Kembali ke Masuk",
+    "ENTER_EMAIL_PROMPT": "Silakan masukkan alamat email.",
+    "SUCCESS_MESSAGE": " Tautan reset kata sandi telah dikirim. Periksa email Anda (termasuk folder spam).",
+    "SUCCESS_MESSAGE_SHORT": "Tautan reset kata sandi dikirim!",
+    "ERROR_MESSAGE": "❌ Kesalahan: Tidak dapat mengirim tautan. Periksa email Anda atau coba lagi nanti."
+  },
+  "RESET": {
+    "TITLE": "Reset Kata Sandi",
+    "HEADING": "Buat Kata Sandi Baru",
+    "INSTRUCTIONS": "Silakan masukkan kata sandi baru Anda di bawah. Pastikan kuat dan mudah diingat.",
+    "EMAIL_LABEL": "Email",
+    "NEW_PASSWORD_LABEL": "Kata Sandi Baru",
+    "PASSWORD_PLACEHOLDER": "Masukkan minimal 8 karakter",
+    "CONFIRM_PASSWORD_LABEL": "Konfirmasi Kata Sandi Baru",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "Masukkan kembali kata sandi baru Anda",
+    "RESET_BUTTON": "Reset Kata Sandi",
+    "INVALID_LINK": "Tautan reset tidak valid atau telah kedaluwarsa.",
+    "FILL_ALL_FIELDS": "Silakan isi kedua bidang kata sandi.",
+    "PASSWORD_MISMATCH": "Kata sandi tidak cocok.",
+    "SUCCESS_MESSAGE": "Kata sandi berhasil direset!",
+    "LOGIN_PROMPT": "Sekarang Anda dapat masuk dengan kata sandi baru.",
+    "ERROR_MESSAGE": "Gagal mereset kata sandi. Tautan mungkin tidak valid atau kedaluwarsa."
+  }
+}

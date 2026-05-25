@@ -1,0 +1,196 @@
+<!-- Overlay đóng menu khi click ra ngoài -->
+<div *ngIf="showUserMenu || showNotifMenu" class="fixed inset-0 z-40"
+  (click)="showUserMenu = false; showNotifMenu = false"></div>
+
+<header class="bj-header sticky top-0 z-50 backdrop-blur-md flex items-center ">
+
+  <div class="w-full flex items-center h-16 px-4 lg:px-6 gap-3 relative">
+
+    <!-- ═══ TRÁI ═══ -->
+    <div class="flex items-center gap-3 min-w-0 flex-1">
+
+      <!-- Nút back -->
+      <button *ngIf="showBack" (click)="goBack()"
+        class="size-10 flex items-center justify-center rounded-full bg-gray-100 border border-gray-200 hover:bg-gray-200 transition-colors flex-shrink-0"
+        aria-label="Quay lại">
+        <span class="w-5 h-5 text-black" [innerHTML]="icons.ARROW_BACK | safeSvg"></span>
+      </button>
+
+      <ng-container *ngIf="!showBack && !isAuthPage && user">
+
+        <!-- Logo + Tên (luôn hiện ở mọi breakpoint) -->
+        <div *ngIf="!hideLogo" class="flex items-center gap-2.5 flex-shrink-0 cursor-pointer" (click)="menuNavigate('/bro-jet/home')">
+          <div class="size-12 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+            <img src="assets/images/logo_bro_jet.jpg" alt="BRO JET" class="size-12 object-contain"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <!-- Tên nổi bật hơn -->
+            <span class="text-[17px] lg:text-[20px] font-black text-primary tracking-widest leading-none">
+              BRO JET
+            </span>
+            <span class="text-[12px] mt-0.5 font-semibold text-green-600 tracking-[0.15em] uppercase leading-none">Auto Spa</span>
+            <!-- <button
+              class="hidden lg:flex items-center gap-1.5 text-gray-600 hover:text-black transition-colors flex-shrink-0 group mt-0.5"
+              (click)="onLocationTap()">
+              <span class="material-symbols-outlined text-[13px] text-gray-700">location_on</span>
+              <span class="text-[12px] truncate max-w-[180px] font-medium">{{ currentAddress || 'Chọn vị trí' }}</span>
+              <span class="material-symbols-outlined text-[13px] opacity-60 group-hover:opacity-100 text-gray-700">expand_more</span>
+            </button> -->
+          </div>
+        </div>
+
+        <!-- Divider mobile -->
+        <div class="block lg:hidden h-4 w-px bg-slate-200 dark:bg-slate-700 flex-shrink-0"></div>
+
+        <!-- Vị trí mobile — nhỏ gọn, truncate -->
+        <!-- <button class="flex lg:hidden items-center gap-1 min-w-0 max-w-[130px] sm:max-w-[200px]"
+          (click)="onLocationTap()">
+          <span class="material-symbols-outlined text-[13px] text-blue-500 flex-shrink-0">location_on</span>
+          <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate leading-none">
+            {{ currentAddress || 'Chọn vị trí' }}
+          </span>
+          <span class="material-symbols-outlined text-[11px] text-slate-400 flex-shrink-0">expand_more</span>
+        </button> -->
+
+
+        <!-- Vị trí desktop -->
+
+
+        <!-- Divider desktop -->
+        <!-- <div class="hidden lg:block h-5 w-px bg-slate-200 dark:bg-slate-700 flex-shrink-0"></div> -->
+
+        <!-- Search bar desktop -->
+        <!-- <div class="hidden lg:flex flex-1 max-w-md">
+          <app-bj-explore-search *ngIf="showSearch" placeholder="Tìm trạm rửa xe, dịch vụ..." [searchText]="searchQuery"
+            (search)="search.emit($event)" (searchTextChange)="searchQuery = $event; search.emit($event)"
+            (clear)="searchQuery = ''; search.emit('')" class="w-full">
+          </app-bj-explore-search>
+        </div> -->
+
+      </ng-container>
+    </div>
+
+    <!-- ═══ GIỮA ═══ -->
+    <div *ngIf="title && !isAuthPage && user" class="absolute inset-x-0 flex items-center justify-center pointer-events-none">
+      <h1 class="text-base font-bold text-black truncate max-w-[55%]">{{ title }}</h1>
+    </div>
+
+    <!-- ═══ PHẢI ═══ -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+
+      <!-- Thông báo component mới -->
+      <div class="relative">
+        <app-bj-notification-bell 
+          [showNotification]="showNotification && !!user && !isAuthPage"
+          (notificationClick)="onNotifClick($event)"
+          (opened)="showUserMenu = false">
+        </app-bj-notification-bell>
+      </div>
+
+      <!-- User avatar -->
+      <div *ngIf="!isAuthPage && !hideUser && user" class="relative">
+
+        <!-- Mobile: avatar tròn -->
+        <button
+          class="lg:hidden flex-shrink-0 size-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shadow-sm focus:outline-none"
+          (click)="toggleUserMenu($event)" aria-label="Menu người dùng">
+          <img [src]="user.avatarUrl || 'assets/img/avata_default.png'" [alt]="user.fullName"
+            class="w-full h-full object-cover" />
+        </button>
+
+        <!-- Desktop: pill với tên -->
+        <button
+          class="hidden lg:flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border border-gray-200 bg-gray-100 hover:bg-gray-200 shadow-sm transition-colors focus:outline-none"
+          (click)="toggleUserMenu($event)" aria-label="Menu người dùng">
+          <div class="size-7 rounded-full bg-gray-100 overflow-hidden border border-gray-200 flex-shrink-0">
+            <img [src]="user.avatarUrl || 'assets/img/avata_default.png'" [alt]="user.fullName"
+              class="w-full h-full object-cover" />
+          </div>
+          <span class="text-[13px] font-medium text-gray-800 max-w-[120px] truncate">
+            {{ userFirstName || user.fullName }}
+          </span>
+          <span class="material-symbols-outlined text-[14px] text-gray-500">expand_more</span>
+        </button>
+
+        <div *ngIf="showUserMenu"
+          class="absolute right-0 top-full mt-3 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_10px_40px_rgba(0,173,239,0.15)] overflow-hidden z-50 animate-fade-in">
+          
+          <!-- Arrow -->
+          <div class="user-dropdown-arrow"></div>
+
+          <!-- User info -->
+          <div class="px-4 py-4 border-b border-slate-100 dark:border-slate-800 relative z-10 bg-gradient-to-r from-primary/5 to-transparent">
+            <div class="flex items-center gap-3">
+              <div class="size-9 rounded-full overflow-hidden border-2 border-primary/20 flex-shrink-0">
+                <img [src]="user.avatarUrl || 'assets/img/avata_default.png'" [alt]="user.fullName" class="w-full h-full object-cover" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-on-surface truncate">{{ user.fullName }}</p>
+                <p class="text-xs text-on-surface-variant truncate">{{ user.email }}</p>
+              </div>
+            </div>
+
+            <!-- Thông tin ví — chỉ hiện mobile (ẩn tạm) -->
+            <!-- <div class="lg:hidden mt-3 flex items-center justify-between bg-primary/8 rounded-xl px-3 py-2.5 border border-primary/10">
+              <div class="flex items-center gap-2">
+                <span class="w-4 h-4 text-primary" [innerHTML]="icons.NAV_WALLET | safeSvg"></span>
+                <span class="text-[11px] font-semibold text-on-surface-variant">Ví BRO JET</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[13px] font-black text-primary">0 đ</span>
+                <span class="material-symbols-outlined text-[14px] text-primary/60">chevron_right</span>
+              </div>
+            </div> -->
+          </div>
+
+          <!-- Menu items -->
+          <div class="py-1">
+            <button (click)="menuNavigate('/bro-jet/profile')"
+              class="w-full flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-primary/5 hover:text-primary transition-all">
+              <span class="w-5 h-5 text-on-surface-variant" [innerHTML]="icons.PERSON | safeSvg"></span>
+              <span class="font-medium">Hồ sơ</span>
+            </button>
+            <!-- <button (click)="menuNavigate('/bro-jet/wallet')"
+              class="w-full flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-primary/5 hover:text-primary transition-all">
+              <span class="w-5 h-5 text-on-surface-variant" [innerHTML]="icons.NAV_WALLET | safeSvg"></span>
+              <span class="font-medium">Ví BRO JET</span>
+            </button> -->
+            <button (click)="menuNavigate('/bro-jet/vehicles')"
+              class="w-full flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-primary/5 hover:text-primary transition-all">
+              <span class="w-5 h-5 text-on-surface-variant" [innerHTML]="icons.CAR | safeSvg"></span>
+              <span class="font-medium">Xe của tôi</span>
+            </button>
+            <button (click)="menuNavigate('/bro-jet/settings')"
+              class="w-full flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-primary/5 hover:text-primary transition-all">
+              <span class="w-5 h-5 text-on-surface-variant" [innerHTML]="icons.NAV_SETTING | safeSvg"></span>
+              <span class="font-medium">Cài đặt</span>
+            </button>
+          </div>
+
+          <!-- Logout -->
+          <div class="border-t border-slate-100 dark:border-slate-800 py-1.5">
+            <button (click)="logout()"
+              class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
+              <span class="w-5 h-5" [innerHTML]="icons.LOGOUT | safeSvg"></span>
+              <span class="font-bold">Đăng xuất</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guest actions -->
+      <ng-container *ngIf="!user && !isAuthPage">
+        <!-- <button (click)="goToRegister()"
+          class="px-4 py-2 text-sm font-bold rounded-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors">
+          Đăng ký
+        </button> -->
+        <button (click)="goToLogin()"
+          class="px-5 py-2 text-sm font-bold rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500 text-white hover:from-cyan-600 hover:to-emerald-600 shadow-lg shadow-cyan-200/50 transition-all">
+          Đăng nhập
+        </button>
+      </ng-container>
+
+    </div>
+  </div>
+</header>

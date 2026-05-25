@@ -1,0 +1,7 @@
+{
+  "name": "job-go-go",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

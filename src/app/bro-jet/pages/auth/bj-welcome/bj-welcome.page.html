@@ -1,0 +1,66 @@
+<div class="bj-auth-page">
+  <div class="bj-auth-bg-particles">
+    <div class="bj-particle bj-particle-1"></div>
+    <div class="bj-particle bj-particle-2"></div>
+  </div>
+
+  <main class="bj-auth-main">
+    <!-- Brand -->
+    <div class="bj-auth-brand">
+      <!-- <div class="bj-auth-logo-wrapper">
+        <div class="bj-auth-logo-glow"></div>
+        <div class="bj-auth-logo-container">
+          <img alt="BROJET" src="assets/images/logo_bro_jet.jpg" class="bj-auth-logo-img" />
+        </div>
+      </div> -->
+      <h1 class="bj-auth-brand-name">BROJET</h1>
+      <p class="bj-auth-brand-tagline">Chào mừng bạn!</p>
+    </div>
+
+    <!-- Card -->
+    <section class="bj-auth-card">
+      <div class="bj-auth-card-glow"></div>
+
+      <!-- Slide Image -->
+      <div class="bj-welcome-slide-image">
+        <img [src]="current.image" [alt]="current.title" />
+      </div>
+
+      <!-- Slide Content -->
+      <div class="bj-welcome-slide-content">
+        <h2 class="bj-welcome-slide-title">{{ current.title }}</h2>
+        <p class="bj-welcome-slide-desc">{{ current.description }}</p>
+      </div>
+
+      <!-- Dots -->
+      <div class="bj-welcome-dots">
+        <button
+          *ngFor="let slide of slides; let i = index"
+          type="button"
+          (click)="setSlide(i)"
+          class="bj-welcome-dot"
+          [class.bj-welcome-dot-active]="i === activeIndex"
+          [attr.aria-label]="'Trang ' + (i + 1)"
+        ></button>
+      </div>
+
+      <!-- Action Button -->
+      <button type="button" (click)="nextSlide()" class="bj-auth-btn-primary" style="margin-top: 1.5rem;">
+        {{ activeIndex === slides.length - 1 ? 'BẮT ĐẦU NGAY' : 'TIẾP TỤC' }}
+      </button>
+
+      <!-- Skip -->
+      <button *ngIf="activeIndex < slides.length - 1" type="button" (click)="startNow()" class="bj-auth-btn-link" style="margin-top: 0.5rem;">
+        Bỏ qua
+      </button>
+
+      <!-- Logout -->
+      <div class="bj-welcome-logout">
+        <button type="button" (click)="logout()" [disabled]="isLoggingOut" class="bj-welcome-logout-btn">
+          <span class="bj-auth-icon-xs" [innerHTML]="icons.LOGOUT | safeSvg"></span>
+          {{ isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất' }}
+        </button>
+      </div>
+    </section>
+  </main>
+</div>

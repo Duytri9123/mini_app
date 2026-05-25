@@ -1,0 +1,43 @@
+{
+  "LOGIN": {
+    "EMAIL": "Email ou numéro de téléphone",
+    "PASSWORD": "Mot de passe",
+    "LOGIN": "Connexion",
+    "OR": "ou",
+    "GOOGLE": "S'inscrire avec Google",
+    "FACEBOOK": "S'inscrire avec Facebook",
+    "REMEMBER_ME": "Se souvenir de moi",
+    "FORGOT_PASSWORD": "Mot de passe oublié ?",
+    "REGISTER": "Inscrivez-vous maintenant",
+    "NO_ACCOUNT": "Vous n'avez pas de compte ?"
+  },
+  "FORGOT": {
+    "TITLE": "Mot de passe oublié",
+    "HEADING": "Retrouver votre compte",
+    "INSTRUCTIONS": "Veuillez entrer votre adresse e-mail. Nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+    "EMAIL_PLACEHOLDER": "Adresse e-mail",
+    "SEND_LINK_BUTTON": "Envoyer le lien",
+    "BACK_TO_LOGIN": "Retour à la connexion",
+    "ENTER_EMAIL_PROMPT": "Veuillez entrer une adresse e-mail.",
+    "SUCCESS_MESSAGE": " Le lien de réinitialisation du mot de passe a été envoyé. Vérifiez votre e-mail (y compris le dossier spam).",
+    "SUCCESS_MESSAGE_SHORT": "Lien de réinitialisation envoyé !",
+    "ERROR_MESSAGE": "❌ Erreur : Impossible d'envoyer le lien. Vérifiez votre e-mail ou réessayez plus tard."
+  },
+  "RESET": {
+    "TITLE": "Réinitialiser le mot de passe",
+    "HEADING": "Créer un nouveau mot de passe",
+    "INSTRUCTIONS": "Veuillez entrer votre nouveau mot de passe ci-dessous. Assurez-vous qu'il soit fort et mémorable.",
+    "EMAIL_LABEL": "Email",
+    "NEW_PASSWORD_LABEL": "Nouveau mot de passe",
+    "PASSWORD_PLACEHOLDER": "Entrez au moins 8 caractères",
+    "CONFIRM_PASSWORD_LABEL": "Confirmer le nouveau mot de passe",
+    "CONFIRM_PASSWORD_PLACEHOLDER": "Saisissez à nouveau votre nouveau mot de passe",
+    "RESET_BUTTON": "Réinitialiser le mot de passe",
+    "INVALID_LINK": "Le lien de réinitialisation est invalide ou a expiré.",
+    "FILL_ALL_FIELDS": "Veuillez remplir les deux champs de mot de passe.",
+    "PASSWORD_MISMATCH": "Les mots de passe ne correspondent pas.",
+    "SUCCESS_MESSAGE": "Votre mot de passe a été réinitialisé avec succès !",
+    "LOGIN_PROMPT": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+    "ERROR_MESSAGE": "Échec de la réinitialisation du mot de passe. Le lien peut être invalide ou expiré."
+  }
+}

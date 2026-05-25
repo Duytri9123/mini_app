@@ -1,0 +1,9 @@
+.bj-footer {
+  touch-action: none;
+}
+
+button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}

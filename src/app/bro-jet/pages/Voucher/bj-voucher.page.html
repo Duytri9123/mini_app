@@ -1,0 +1,120 @@
+<ion-content style="--background: #f8fffe">
+    <!-- Top Banner -->
+    <div class="flex flex-col gap-4 p-4">
+        <div class="relative w-full h-32 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-50 to-cyan-50 flex items-center p-6 border border-emerald-100">
+            <div class="z-10 flex flex-col gap-1">
+                <span class="text-emerald-600 font-bold text-xs uppercase tracking-wider">Thành viên BroJet</span>
+                <h3 class="text-[#1a1a1a] text-lg font-bold leading-tight">Nâng cấp để nhận thêm 10
+                    voucher mỗi tháng</h3>
+            </div>
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+                <span class="w-16 h-16 block text-emerald-500" [innerHTML]="voucherIconLarge"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-4 flex flex-col gap-6">
+
+        <!-- Voucher Validate Section -->
+        <div class="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-100">
+                <h3 class="text-[#1a1a1a] text-base font-bold flex items-center gap-2">
+                    <span class="w-5 h-5 text-emerald-500" [innerHTML]="voucherIcon"></span>
+                    Kiểm tra mã voucher
+                </h3>
+                <p class="text-[#6b7280] text-xs mt-1">Nhập mã để xem thông tin và mức giảm giá</p>
+            </div>
+
+            <div class="p-4 flex flex-col gap-4">
+                <!-- Input Row -->
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#9ca3af]" [innerHTML]="voucherIcon"></span>
+                        <input
+                            [(ngModel)]="voucherCode"
+                            (keyup.enter)="validateVoucher()"
+                            [disabled]="isValidating"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm font-medium uppercase tracking-widest focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none disabled:opacity-60 placeholder:normal-case placeholder:tracking-normal"
+                            placeholder="Nhập mã ưu đãi..."
+                            type="text" />
+                    </div>
+                    <button
+                        (click)="validateVoucher()"
+                        [disabled]="isValidating || !voucherCode.trim()"
+                        class="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white px-5 py-3 rounded-xl text-sm font-bold hover:from-cyan-600 hover:to-emerald-600 active:scale-[0.97] transition-all shadow-lg shadow-cyan-200/50 disabled:opacity-50 flex items-center justify-center min-w-[90px]">
+                        <ion-spinner *ngIf="isValidating" name="crescent" color="light" class="size-4"></ion-spinner>
+                        <span *ngIf="!isValidating">Kiểm tra</span>
+                    </button>
+                </div>
+
+                <!-- Error message -->
+                <div *ngIf="voucherError" class="flex items-center gap-2 text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    <span>{{ voucherError }}</span>
+                </div>
+
+                <!-- Success result -->
+                <div *ngIf="voucherResult?.valid"
+                    class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                    <div class="flex items-center justify-center rounded-full bg-emerald-100 size-10 shrink-0">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <div class="flex flex-col gap-1 flex-1">
+                        <p class="text-emerald-700 font-bold text-sm">Mã hợp lệ!</p>
+                        <p class="text-emerald-600 text-xs font-medium">
+                            Mã <span class="font-extrabold uppercase">{{ voucherCode }}</span>
+                            giảm <span class="font-extrabold">{{ formatCurrency(voucherResult!.discount) }}</span>
+                        </p>
+                        <div *ngIf="voucherResult?.voucher" class="mt-1 text-xs text-[#6b7280] space-y-0.5">
+                            <p *ngIf="voucherResult!.voucher!.minOrder > 0">
+                                Đơn tối thiểu: {{ formatCurrency(voucherResult!.voucher!.minOrder) }}
+                            </p>
+                            <p *ngIf="voucherResult!.voucher!.validUntil">
+                                HSD: {{ voucherResult!.voucher!.validUntil | date:'dd/MM/yyyy' }}
+                            </p>
+                        </div>
+                    </div>
+                    <button (click)="clearVoucher()"
+                        class="text-[#9ca3af] hover:text-red-500 transition-colors shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nav tabs -->
+        <div>
+            <app-bj-navbar [items]="navItems" [activeKey]="activeTab"
+                (activeKeyChange)="onTabChange($event)"></app-bj-navbar>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="isLoadingVouchers" class="flex justify-center py-8">
+            <ion-spinner name="crescent" color="primary"></ion-spinner>
+        </div>
+
+        <!-- Empty state -->
+        <div *ngIf="!isLoadingVouchers && visibleVouchers.length === 0" class="pt-4">
+            <app-bj-empty-state
+                title="Chưa có voucher"
+                description="Bạn chưa có voucher nào. Hãy quay lại sau để nhận ưu đãi nhé!">
+            </app-bj-empty-state>
+        </div>
+
+        <!-- Voucher Cards -->
+        <div *ngIf="!isLoadingVouchers && visibleVouchers.length > 0" class="space-y-3">
+            <app-bj-voucher-card *ngFor="let voucher of visibleVouchers"
+                                 [voucher]="voucher"
+                                 [showAction]="voucher.status === 'active'"
+                                 (actionClick)="useVoucher($event)">
+            </app-bj-voucher-card>
+        </div>
+
+    </div>
+</ion-content>

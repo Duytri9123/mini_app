@@ -1,0 +1,31 @@
+// For information on how to create your own theme, please see:
+// http://ionicframework.com/docs/theming/
+@import "quill/dist/quill.snow.css";
+
+// ─── BJ Header Color Variables ───────────────────────────────────────────────
+:root {
+  --bj-header-background: url('/assets/images/background_header.png');
+  --bj-header-bg: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%);
+  --bj-header-border: rgba(0, 173, 239, 0.15);
+  --bj-header-text: #1A2B4C;
+  --bj-header-text-muted: #475569;
+  --bj-header-icon-bg: rgba(0, 173, 239, 0.08);
+  --bj-header-icon-hover-bg: rgba(0, 173, 239, 0.15);
+  --bj-header-logo-bg: #00ADEF;
+  --bj-header-shadow: 0 4px 12px rgba(0, 173, 239, 0.1);
+  --bj-header-bg-opacity: 0.8;
+}
+
+[data-theme="dark"],
+.dark {
+  --bj-header-background: url('/assets/images/background_header.png');
+  --bj-header-bg: rgba(15, 23, 42, 0.85);
+  --bj-header-border: rgba(51, 65, 85, 0.6);
+  --bj-header-text: #f1f5f9;
+  --bj-header-text-muted: #94a3b8;
+  --bj-header-icon-bg: #1e293b;
+  --bj-header-icon-hover-bg: #334155;
+  --bj-header-logo-bg: #2563eb;
+  --bj-header-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+// ─────────────────────────────────────────────────────────────────────────────

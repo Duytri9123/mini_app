@@ -1,0 +1,157 @@
+<bj-map-sidebar [sidebarWidth]="450" [showMobileSheet]="true" [state]="sheetState" [hideHandle]="!!selectedStation" (stateChange)="sheetState = $event" class="block w-full h-full">
+
+  <!-- ==================== MAP CONTENT ==================== -->
+  <div mapContent class="relative w-full h-full">
+
+    <!-- Floating Search & Filter overlay (mobile: full width, desktop: floating card) -->
+    <div class="absolute left-0 right-0 md:top-5 md:left-5 md:right-auto z-[1002]
+                px-3 pt-2 pb-2 md:p-0 pointer-events-none space-y-2.5"
+         style="top: calc(env(safe-area-inset-top, 0px) + 0.5rem)">
+      <app-bj-explore-search [searchText]="searchText" (searchTextChange)="onSearchTextChange($event)" [placeholder]="placeholder" [stations]="allStations"
+        [hasActiveFilters]="hasActiveFilters" (search)="onSearchClick()" (clear)="clearSearch()"
+        (filterToggle)="onFilterToggle()" (focusChange)="onSearchFocus($event)" (selectStation)="onSearchSelectStation($event)"
+        (selectMapLocation)="onSearchSelectLocation($event)"
+        class="pointer-events-auto block md:hidden" />
+
+      <app-bj-explore-filters [chips]="filterChips" [activeFilter]="activeFilter" variant="overlay"
+        (filterChange)="setFilter($event)" class="pointer-events-auto block" />
+    </div>
+
+    <!-- Map -->
+    <app-bj-map class="block w-full h-full" [stations]="stationMarkers" [currentLat]="userLat" [currentLng]="userLng"
+      [selectedStationId]="selectedStationId" [selectedClusterId]="selectedClusterId"
+      [searchLat]="searchLat" [searchLng]="searchLng"
+      (stationClick)="onStationClick($event)"
+      (clusterClick)="onClusterClick($event)" (myLocationClick)="onMyLocationClick()" />
+  </div>
+
+  <!-- ==================== DESKTOP SIDEBAR CONTENT ==================== -->
+  <div sidebarContent class="flex flex-col h-full font-display">
+    <ng-container *ngIf="!selectedStation">
+      <app-bj-explore-search [searchText]="searchText" (searchTextChange)="onSearchTextChange($event)" [placeholder]="placeholder" [stations]="allStations"
+        [hasActiveFilters]="hasActiveFilters" (search)="onSearchClick()" (clear)="clearSearch()"
+        (filterToggle)="onFilterToggle()" (focusChange)="onSearchFocus($event)" (selectStation)="onSearchSelectStation($event)"
+        (selectMapLocation)="onSearchSelectLocation($event)"
+        class="pointer-events-auto hidden md:block p-4" />
+
+
+      <!-- Sidebar title header -->
+      <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+        <ng-container *ngIf="clusterStations; else checkFilterTitle">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
+                Khu vực này có {{ clusterStations.length }} trạm
+              </p>
+            </div>
+            <button type="button" class="text-xs text-blue-500 hover:text-blue-700 font-semibold shrink-0"
+              (click)="clearCluster()">
+              Xem tất cả
+            </button>
+          </div>
+        </ng-container>
+        <ng-template #checkFilterTitle>
+          <p *ngIf="hasActiveFilters || searchText.trim().length > 0 || isMapSearchActive; else defaultSidebarTitle"
+            class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
+            <ng-container *ngIf="isMapSearchActive; else searchTitle">Các trạm gần đây<ng-container *ngIf="filteredStations.length > 0"> ({{ filteredStations.length }})</ng-container></ng-container>
+            <ng-template #searchTitle>
+              <ng-container *ngIf="filteredStations.length > 0; else noStationsTitle">Đã tìm thấy {{ filteredStations.length }} trạm</ng-container>
+              <ng-template #noStationsTitle>Không tìm thấy trạm nào</ng-template>
+            </ng-template>
+          </p>
+          <ng-template #defaultSidebarTitle>
+            <p class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">Khám phá trạm rửa
+              xe</p>
+          </ng-template>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <!-- Station list / Detail view -->
+    <div class="flex-1 overflow-y-auto scroll-smooth">
+      <ng-container *ngIf="!selectedStation; else stationDetailSidebar">
+        <app-bj-explore-list [stations]="filteredStations" [selectedId]="selectedStationId" [loading]="loading"
+          [hasGpsPermission]="hasGpsPermission"
+          (cardClick)="onCardClick($event)" (bookClick)="onBookClick($event)" class="px-3 py-2 block" />
+      </ng-container>
+      <ng-template #stationDetailSidebar>
+        <app-bj-station-detail [stationId]="selectedStationId" [showHeader]="false" (close)="closeBottomSheet()" />
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ==================== MOBILE SHEET CONTENT ==================== -->
+  <div sheetContent class="flex flex-col h-full bg-white dark:bg-slate-900 font-display">
+    <ng-container *ngIf="selectedStation; else stationListSheet">
+      <!-- <div class="px-4 pb-3 pt-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">Thông tin trạm</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chi tiết dịch vụ & đánh giá</p>
+          </div>
+          <button type="button"
+            class="size-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 transition-colors"
+            (click)="closeBottomSheet()">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+      </div> -->
+
+      <div class="flex-1 min-h-0 overflow-hidden">
+        <app-bj-station-detail [stationId]="selectedStationId" [showHeader]="false" (close)="closeBottomSheet()" />
+      </div>
+    </ng-container>
+
+    <ng-template #stationListSheet>
+      <!-- Cluster banner -->
+      <ng-container *ngIf="clusterStations; else checkFilterTitleMobile">
+        <div
+          class="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-500 text-lg">location_on</span>
+            <div>
+              <p class="text-sm font-bold text-blue-700 dark:text-blue-300">Khu vực này có {{ clusterStations.length }}
+                trạm</p>
+              <p class="text-[11px] text-blue-500 dark:text-blue-400">Nhấn "Xem tất cả" để quay lại</p>
+            </div>
+          </div>
+          <button type="button" class="text-xs text-blue-600 dark:text-blue-300 font-semibold shrink-0 hover:underline"
+            (click)="clearCluster()">
+            Xem tất cả
+          </button>
+        </div>
+      </ng-container>
+
+      <ng-template #checkFilterTitleMobile>
+        <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <p *ngIf="hasActiveFilters || searchText.trim().length > 0 || isMapSearchActive; else defaultMobileTitle"
+            class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
+            <ng-container *ngIf="isMapSearchActive; else searchTitleMobile">Các trạm gần đây<ng-container *ngIf="filteredStations.length > 0"> ({{ filteredStations.length }})</ng-container></ng-container>
+            <ng-template #searchTitleMobile>
+              <ng-container *ngIf="filteredStations.length > 0; else noStationsTitleMobile">Đã tìm thấy {{ filteredStations.length }} trạm</ng-container>
+              <ng-template #noStationsTitleMobile>Không tìm thấy trạm nào</ng-template>
+            </ng-template>
+          </p>
+          <ng-template #defaultMobileTitle>
+            <p class="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">Khám phá trạm rửa
+              xe</p>
+          </ng-template>
+        </div>
+      </ng-template>
+
+      <!-- Filters -->
+      <!-- <div class="px-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <app-bj-explore-filters [chips]="filterChips" [activeFilter]="activeFilter" variant="inline"
+          (filterChange)="setFilter($event)" />
+      </div> -->
+
+      <!-- Station list -->
+      <div class="flex-1 overflow-y-auto px-3 py-2 pb-16">
+        <app-bj-explore-list [stations]="filteredStations" [selectedId]="null" [loading]="loading"
+          [hasGpsPermission]="hasGpsPermission"
+          (cardClick)="onCardClick($event)" (bookClick)="onBookClick($event)" />
+      </div>
+    </ng-template>
+  </div>
+
+</bj-map-sidebar>

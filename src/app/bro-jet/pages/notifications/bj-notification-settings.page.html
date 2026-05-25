@@ -1,0 +1,97 @@
+<ion-content class="bg-[#f8fffe]">
+  <div class="min-h-full pb-20 max-w-2xl mx-auto">
+
+    <!-- ── Loading ─────────────────────────────────────────────── -->
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-32 gap-4">
+      <ion-spinner name="crescent" color="primary" class="size-10"></ion-spinner>
+      <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Đang tải cấu hình...</p>
+    </div>
+
+    <ng-container *ngIf="!isLoading">
+
+      <!-- ── Master Toggle Banner ──────────────────────────────── -->
+      <div class="relative mx-4 mt-5 rounded-[1.75rem] overflow-hidden shadow-xl shadow-primary/15">
+        <div class="absolute inset-0 bg-gradient-to-br from-cyan-500 to-emerald-500"></div>
+        <div class="absolute -top-10 -right-10 size-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 size-32 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="relative flex items-center justify-between px-6 py-5">
+          <div class="flex items-center gap-4">
+            <div class="size-12 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
+              <span class="size-6 text-white" [innerHTML]="icon('BELL')"></span>
+            </div>
+            <div>
+              <p class="text-[15px] font-black text-white">Tất cả thông báo</p>
+              <p class="text-[11px] text-white/50 font-medium mt-0.5">
+                {{ enabledCount }}/{{ totalCount }} kênh đang bật
+              </p>
+            </div>
+          </div>
+
+          <!-- Toggle switch -->
+          <button (click)="toggleMaster()"
+            class="relative w-14 h-8 rounded-full transition-all duration-300 flex-shrink-0"
+            [class]="allNotificationsEnabled ? 'bg-white/25' : 'bg-white/10'">
+            <div class="absolute top-1 left-1 size-6 rounded-full transition-all duration-300 shadow-md"
+              [class]="allNotificationsEnabled ? 'translate-x-6 bg-white' : 'translate-x-0 bg-white/50'">
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Notification Groups ───────────────────────────────── -->
+      <div class="px-4 mt-6 space-y-6">
+        <div *ngFor="let group of groups" class="space-y-3">
+          <!-- Group title -->
+          <h3 class="px-2 text-[11px] font-black text-slate-400 uppercase tracking-widest">{{ group.title }}</h3>
+
+          <!-- Group card -->
+          <div class="bg-white rounded-[1.75rem] shadow-sm border border-slate-100/50 overflow-hidden">
+            <div *ngFor="let channel of group.channels; let last = last"
+              class="flex items-center justify-between p-4 transition-colors"
+              [class.border-b]="!last"
+              [class.border-slate-50]="!last"
+              [class.opacity-50]="!allNotificationsEnabled">
+
+              <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                <!-- Icon -->
+                <div class="flex-shrink-0 size-11 rounded-2xl flex items-center justify-center"
+                  [ngClass]="[channel.iconBg, channel.iconColor]">
+                  <span class="size-5" [innerHTML]="icon(channel.icon)"></span>
+                </div>
+
+                <!-- Label & description -->
+                <div class="min-w-0 flex-1">
+                  <p class="text-[14px] font-bold text-slate-800 truncate">{{ channel.label }}</p>
+                  <p class="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{{ channel.description }}</p>
+                </div>
+              </div>
+
+              <!-- Toggle -->
+              <button (click)="toggleChannel(channel)"
+                [disabled]="!allNotificationsEnabled"
+                class="relative w-12 h-7 rounded-full transition-all duration-300 flex-shrink-0 ml-3"
+                [class]="channel.enabled && allNotificationsEnabled ? 'bg-primary' : 'bg-slate-200'">
+                <div class="absolute top-0.5 left-0.5 size-6 rounded-full bg-white shadow-sm transition-all duration-300"
+                  [class]="channel.enabled && allNotificationsEnabled ? 'translate-x-5' : 'translate-x-0'">
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Info Note ─────────────────────────────────────────── -->
+      <div class="mx-4 mt-6 flex items-start gap-3 bg-primary/5 rounded-2xl px-4 py-3.5 border border-primary/10">
+        <span class="size-5 text-primary flex-shrink-0 mt-0.5" [innerHTML]="icon('SHIELD_CHECK')"></span>
+        <div>
+          <p class="text-[12px] font-bold text-slate-700">Quyền riêng tư</p>
+          <p class="text-[11px] text-slate-500 leading-relaxed mt-0.5">
+            Bạn có thể tắt bất kỳ kênh thông báo nào. Các thông báo quan trọng về bảo mật tài khoản sẽ luôn được gửi.
+          </p>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+</ion-content>
