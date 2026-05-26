@@ -1,0 +1,50 @@
+<section class="px-4 py-5">
+  <ng-container *ngIf="booking$ | async as booking; else missing">
+    <div class="mb-4 rounded-2xl bg-emerald-50 p-4 text-emerald-800">
+      <p class="text-sm font-bold">Don da duoc tao</p>
+      <p class="mt-1 text-sm">Mã đơn {{ booking.id }} đang tìm tài xế hoặc đội hỗ trợ phù hợp.</p>
+    </div>
+
+    <app-gm-route-summary
+      [pickup]="booking.pickup"
+      [dropoff]="booking.dropoff"
+      [distanceKm]="booking.distanceKm"
+      [durationMin]="booking.durationMin"
+      [finalAmount]="booking.finalAmount"
+    ></app-gm-route-summary>
+
+    <div class="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+      <div class="flex justify-between py-2 text-sm">
+        <span class="text-slate-500">Trang thai</span>
+        <span class="font-bold text-slate-900">{{ booking.status }}</span>
+      </div>
+      <div class="flex justify-between py-2 text-sm">
+        <span class="text-slate-500">Thanh toan</span>
+        <span class="font-bold text-slate-900">{{ booking.paymentMethod }}</span>
+      </div>
+      <div class="flex justify-between py-2 text-sm">
+        <span class="text-slate-500">Bê hộ hàng</span>
+        <span class="font-bold text-slate-900">{{ formatAmount(booking.porterFare || 0) }}</span>
+      </div>
+      <div class="flex justify-between py-2 text-sm">
+        <span class="text-slate-500">Dịch vụ thêm</span>
+        <span class="font-bold text-slate-900">{{ formatAmount(booking.additionalServiceFare || 0) }}</span>
+      </div>
+      <div class="flex justify-between py-2 text-sm">
+        <span class="text-slate-500">Tong tien</span>
+        <span class="font-bold text-[#008c95]">{{ formatAmount(booking.finalAmount) }}</span>
+      </div>
+    </div>
+
+    <a routerLink="/gap-move/bookings" class="mt-5 block rounded-2xl bg-[#008c95] px-4 py-4 text-center font-bold text-white">
+      Xem don cua toi
+    </a>
+  </ng-container>
+
+  <ng-template #missing>
+    <div class="rounded-2xl bg-white p-6 text-center shadow-sm">
+      <h2 class="text-lg font-extrabold text-slate-950">Khong tim thay don</h2>
+      <a routerLink="/gap-move/booking/new" class="mt-4 block rounded-2xl bg-[#008c95] px-4 py-3 font-bold text-white">Tạo đơn mới</a>
+    </div>
+  </ng-template>
+</section>

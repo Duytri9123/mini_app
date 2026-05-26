@@ -53,10 +53,10 @@
   --font-label: "Be Vietnam Pro", sans-serif;
 
   /* App Primary Colors (Cyan → Green gradient brand) */
-  --color-primary: #06b6d4;
-  --color-primary-dark: #10b981;
-  --color-primary-light: #67e8f9;
-  --color-primary-soft: rgba(6, 182, 212, 0.1);
+  --color-primary: #008c95;
+  --color-primary-dark: #006f76;
+  --color-primary-light: #36c6cc;
+  --color-primary-soft: rgba(0, 140, 149, 0.1);
 
   /* Bro Jet Brand Colors (Vibrant Green from Logo) */
   --color-brand-green: #2CC462;
@@ -76,26 +76,26 @@
   --color-surface-container-high: #f0f4f9;
   --color-on-secondary: #ffffff;
   --color-on-background: #1A2B4C;
-  --color-on-primary-fixed-variant: #0891b2;
-  --color-primary-container: #cffafe;
+  --color-on-primary-fixed-variant: #00747b;
+  --color-primary-container: #d6f6f7;
   --color-outline: #cbd5e1;
-  --color-primary-dim: #0891b2;
-  --color-primary-fixed: #06b6d4;
+  --color-primary-dim: #00747b;
+  --color-primary-fixed: #008c95;
   --color-on-primary: #ffffff;
   --color-on-error-container: #510017;
   --color-secondary-fixed: #2CC462;
   --color-secondary-fixed-dim: #1e8a44;
   --color-inverse-on-surface: #94a3b8;
   --color-tertiary-fixed-dim: #1A2B4C;
-  --color-primary-fixed-dim: #0891b2;
+  --color-primary-fixed-dim: #00747b;
   --color-on-tertiary-container: #1A2B4C;
   --color-on-tertiary-fixed: #1A2B4C;
   --color-secondary-container: #dcfce7;
   --color-on-secondary-fixed: #1e8a44;
   --color-tertiary-dim: #1A2B4C;
-  --color-inverse-primary: #66ceff;
+  --color-inverse-primary: #ff8a3d;
   --color-inverse-surface: #1A2B4C;
-  --color-surface-tint: #00ADEF;
+  --color-surface-tint: #008c95;
   --color-outline-variant: #e2e8f0;
   --color-on-tertiary: #ffffff;
   --color-tertiary-fixed: #1A2B4C;
@@ -301,8 +301,8 @@ ion-alert.quick-reply-alert {
 
       &:focus {
         outline: none !important;
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        border-color: #008c95 !important;
+        box-shadow: 0 0 0 3px rgba(0, 140, 149, 0.1) !important;
       }
 
       &::placeholder {
@@ -370,21 +370,21 @@ ion-alert.quick-reply-alert {
     }
 
     &:not(.alert-button-role-cancel) {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+      background: linear-gradient(135deg, #008c95 0%, #ff5a00 100%) !important;
       color: white !important;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+      box-shadow: 0 2px 8px rgba(0, 140, 149, 0.3) !important;
 
       &:hover {
         background: linear-gradient(135deg,
-            #2563eb 0%,
-            #1d4ed8 100%) !important;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+            #00747b 0%,
+            #e64f00 100%) !important;
+        box-shadow: 0 4px 12px rgba(0, 140, 149, 0.4) !important;
         transform: translateY(-1px) !important;
       }
 
       &:active {
         transform: translateY(0) !important;
-        box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3) !important;
+        box-shadow: 0 2px 6px rgba(0, 140, 149, 0.3) !important;
       }
     }
   }
@@ -411,7 +411,7 @@ ion-alert.quick-reply-alert {
 
   .alert-head {
     padding: 16px 20px !important;
-    background: #3b82f6 !important;
+    background: #008c95 !important;
     color: white !important;
 
     h2 {
@@ -457,8 +457,8 @@ ion-alert.quick-reply-alert {
 
       &:focus {
         outline: none !important;
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        border-color: #008c95 !important;
+        box-shadow: 0 0 0 3px rgba(0, 140, 149, 0.1) !important;
       }
 
       &::placeholder {
@@ -503,11 +503,11 @@ ion-alert.quick-reply-alert {
     }
 
     &:not(.alert-button-role-cancel) {
-      background: #3b82f6 !important;
+      background: #008c95 !important;
       color: white !important;
 
       &:hover {
-        background: #2563eb !important;
+        background: #ff5a00 !important;
       }
     }
   }
@@ -1458,4 +1458,9 @@ body.video-modal-open .fixed.z-50:has(app-bj-footer) {
 
 body.video-modal-open .fixed.bottom-0.left-0.right-0.bg-white.z-40 {
   display: none !important;
+}
+
+.gm-auth-shell {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, rgba(0, 140, 149, 0.12) 0%, #f8fafc 45%, #ffffff 100%);
 }

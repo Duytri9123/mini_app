@@ -1,0 +1,32 @@
+<section class="relative h-full overflow-hidden bg-slate-900">
+  <app-gm-map class="block h-full" [pickup]="center" [drivers]="drivers$ | async"></app-gm-map>
+
+  <div class="absolute bottom-0 left-0 right-0 z-10 p-4 lg:bottom-6 lg:left-6 lg:right-auto lg:w-[420px] lg:p-0">
+    <div class="rounded-3xl bg-white p-4 shadow-2xl">
+      <div class="mb-3 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-black uppercase tracking-wide text-[#ff5a00]">Bản đồ</p>
+          <h1 class="text-xl font-extrabold text-slate-950">Tài xế GapMove đang hoạt động</h1>
+        </div>
+        <a routerLink="/gap-move/booking/new" class="rounded-xl bg-[#008c95] px-3 py-2 text-xs font-extrabold text-white">
+          Đặt đơn
+        </a>
+      </div>
+
+      <div class="max-h-64 space-y-2 overflow-y-auto">
+        <button
+          *ngFor="let driver of drivers$ | async"
+          type="button"
+          class="flex w-full items-center justify-between rounded-2xl bg-slate-50 p-3 text-left"
+          (click)="bookWithDriver(driver)"
+        >
+          <span>
+            <span class="block text-sm font-bold text-slate-950">{{ driver.fullName }}</span>
+            <span class="text-xs text-slate-500">{{ driver.vehicle.name }} - {{ driver.rating }} sao</span>
+          </span>
+          <span class="rounded-full bg-[#008c95] px-3 py-1 text-xs font-bold text-white">Đặt</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

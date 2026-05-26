@@ -1,0 +1,18 @@
+<section class="min-h-full bg-slate-50 px-4 py-5 lg:px-8 lg:py-8">
+  <div class="mx-auto max-w-4xl">
+    <div class="mb-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-black uppercase tracking-wide text-[#ff5a00]">Địa chỉ</p>
+        <h1 class="mt-1 text-3xl font-black text-slate-950">Địa chỉ đã lưu</h1>
+      </div>
+      <button type="button" class="rounded-2xl bg-[#008c95] px-4 py-3 text-sm font-extrabold text-white">Thêm địa chỉ</button>
+    </div>
+    <div class="space-y-3">
+      <article *ngFor="let item of addresses" class="rounded-3xl bg-white p-5 shadow-sm">
+        <h2 class="font-extrabold text-slate-950">{{ item.label }}</h2>
+        <p class="mt-1 text-sm leading-6 text-slate-600">{{ item.address }}</p>
+        <p class="mt-2 text-xs font-semibold text-slate-400">{{ item.note }}</p>
+      </article>
+    </div>
+  </div>
+</section>

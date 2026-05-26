@@ -14,6 +14,12 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 // import { BetaRouteBlockGuard } from './gogo/guards/beta-route-block.guard';
 
 const routes: Routes = [
+  // ── GapMove delivery and ride booking ─────────────────────────────────────
+  {
+    path: 'gap-move',
+    loadChildren: () =>
+      import('./gap-move/gapmove.module').then((m) => m.GapMoveModule),
+  },
   // ── BRO JET Auto Spa ──────────────────────────────────────────────────────
   {
     path: 'bro-jet',
@@ -22,7 +28,7 @@ const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'bro-jet',
+    redirectTo: 'gap-move',
     pathMatch: 'full',
   },
 

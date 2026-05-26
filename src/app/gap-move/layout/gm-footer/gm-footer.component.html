@@ -1,0 +1,24 @@
+<nav class="gm-footer fixed bottom-0 left-0 right-0 z-50 border-t border-slate-100 bg-white px-2 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
+  <div class="mx-auto grid h-[72px] max-w-xl grid-cols-5 items-center">
+    <button
+      *ngFor="let tab of tabs"
+      type="button"
+      class="flex flex-col items-center justify-center gap-1 text-xs font-semibold"
+      [ngClass]="activeTab === tab.tab ? 'text-[#008c95]' : 'text-slate-400'"
+      (click)="navigate(tab.route)"
+    >
+      <span
+        class="flex items-center justify-center"
+        [class.h-12]="tab.center"
+        [class.w-12]="tab.center"
+        [class.rounded-full]="tab.center"
+        [ngClass]="tab.center ? 'bg-[#008c95]' : ''"
+        [class.text-white]="tab.center"
+        [class.shadow-lg]="tab.center"
+      >
+        <ion-icon [name]="tab.icon" class="text-2xl"></ion-icon>
+      </span>
+      <span>{{ tab.label }}</span>
+    </button>
+  </div>
+</nav>

@@ -1,0 +1,16 @@
+<section class="px-4 py-5">
+  <ng-container *ngIf="user$ | async as user">
+    <div class="rounded-3xl bg-white p-5 text-center shadow-sm">
+      <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#008c95]/10">
+        <img src="assets/images/logo_gapmove.png" alt="GapMove" class="h-14 w-14 object-contain" />
+      </div>
+      <h1 class="mt-4 text-2xl font-extrabold text-slate-950">{{ user.fullName }}</h1>
+      <p class="mt-1 text-sm text-slate-500">{{ user.email || user.phone }}</p>
+      <p class="mt-1 text-xs font-semibold uppercase text-[#008c95]">{{ user.role }}</p>
+    </div>
+
+    <button type="button" class="mt-5 w-full rounded-2xl bg-slate-950 px-4 py-4 font-bold text-white" (click)="logout()">
+      Dang xuat
+    </button>
+  </ng-container>
+</section>

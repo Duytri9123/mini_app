@@ -1,0 +1,13 @@
+<section class="min-h-full bg-slate-50 px-4 py-5 lg:px-8 lg:py-8">
+  <div class="mx-auto max-w-5xl">
+    <p class="text-xs font-black uppercase tracking-wide text-[#ff5a00]">Rewards</p>
+    <h1 class="mt-1 text-3xl font-black text-slate-950">Ưu đãi & điểm thưởng</h1>
+    <div class="mt-5 grid gap-4 md:grid-cols-3">
+      <article *ngFor="let voucher of vouchers" class="rounded-3xl bg-white p-5 shadow-sm">
+        <p class="text-xs font-black text-[#008c95]">{{ voucher.code }}</p>
+        <h2 class="mt-2 text-lg font-extrabold text-slate-950">{{ voucher.title }}</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-500">{{ voucher.description }}</p>
+      </article>
+    </div>
+  </div>
+</section>

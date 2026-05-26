@@ -1,0 +1,38 @@
+<section class="gm-auth-shell flex min-h-[100dvh] flex-col justify-end px-5 pb-8 pt-10">
+  <div class="mb-8">
+    <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm">
+      <img src="assets/images/logo_gapmove.png" alt="GapMove" class="h-12 w-12 object-contain" />
+    </div>
+    <h1 class="text-3xl font-extrabold text-slate-950">GapMove</h1>
+    <p class="mt-2 text-sm leading-6 text-slate-500">Dat xe va giao hang trong mot ung dung.</p>
+  </div>
+
+  <form class="rounded-3xl bg-white p-5 shadow-sm" (ngSubmit)="login()">
+    <label class="block text-sm font-semibold text-slate-700" for="login-phone">Email hoac so dien thoai</label>
+    <input
+      id="login-phone"
+      name="phoneOrEmail"
+      [(ngModel)]="phoneOrEmail"
+      class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+      autocomplete="username"
+    />
+
+    <label class="mt-4 block text-sm font-semibold text-slate-700" for="login-password">Mat khau</label>
+    <input
+      id="login-password"
+      name="password"
+      type="password"
+      [(ngModel)]="password"
+      class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+      autocomplete="current-password"
+    />
+
+    <button type="submit" class="mt-5 w-full rounded-2xl bg-[#008c95] px-4 py-3 font-bold text-white">
+      {{ isSubmitting ? 'Dang xu ly...' : 'Dang nhap' }}
+    </button>
+
+    <a routerLink="/gap-move/register" class="mt-4 block text-center text-sm font-semibold text-[#ff5a00]">
+      Tao tai khoan GapMove
+    </a>
+  </form>
+</section>

@@ -1,0 +1,21 @@
+<section class="gm-auth-shell min-h-[100dvh] px-5 py-8">
+  <a routerLink="/gap-move/login" class="text-sm font-semibold text-[#ff5a00]">Đăng nhập</a>
+  <h1 class="mt-8 text-3xl font-extrabold text-slate-950">Tao tai khoan</h1>
+  <form class="mt-6 rounded-3xl bg-white p-5 shadow-sm" (ngSubmit)="register()">
+    <label class="block text-sm font-semibold text-slate-700" for="register-name">Ho ten</label>
+    <input id="register-name" name="fullName" [(ngModel)]="fullName" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+
+    <label class="mt-4 block text-sm font-semibold text-slate-700" for="register-phone">So dien thoai</label>
+    <input id="register-phone" name="phone" [(ngModel)]="phone" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+
+    <label class="mt-4 block text-sm font-semibold text-slate-700" for="register-email">Email</label>
+    <input id="register-email" name="email" [(ngModel)]="email" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+
+    <label class="mt-4 block text-sm font-semibold text-slate-700" for="register-password">Mat khau</label>
+    <input id="register-password" name="password" type="password" [(ngModel)]="password" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+
+    <button type="submit" class="mt-5 w-full rounded-2xl bg-[#008c95] px-4 py-3 font-bold text-white">
+      Tao tai khoan
+    </button>
+  </form>
+</section>

@@ -1,0 +1,14 @@
+<div class="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
+  <a
+    *ngFor="let banner of banners"
+    [routerLink]="banner.actionUrl || '/gap-move/home'"
+    class="relative h-36 min-w-[82%] overflow-hidden rounded-2xl bg-slate-900 text-white shadow-sm"
+  >
+    <img [src]="banner.imageUrl" [alt]="banner.title" class="absolute inset-0 h-full w-full object-cover opacity-60" />
+    <div class="absolute inset-0 bg-gradient-to-r from-slate-950/80 to-slate-950/10"></div>
+    <div class="relative flex h-full max-w-[75%] flex-col justify-end p-4">
+      <h2 class="text-xl font-extrabold">{{ banner.title }}</h2>
+      <p class="mt-1 text-xs leading-5 text-white/80">{{ banner.subtitle }}</p>
+    </div>
+  </a>
+</div>

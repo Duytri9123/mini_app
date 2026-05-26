@@ -1,0 +1,26 @@
+.gm-booking-shell {
+  min-height: 100%;
+}
+
+.gm-service-strip {
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.gm-service-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.gm-service-strip > button {
+  scroll-snap-align: start;
+}
+
+@media (min-width: 1024px) {
+  .gm-booking-shell {
+    height: 100dvh;
+  }
+
+  .gm-order-panel {
+    max-height: 100dvh;
+  }
+}

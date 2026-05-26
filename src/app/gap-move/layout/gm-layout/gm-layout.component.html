@@ -1,0 +1,23 @@
+<div class="flex h-[100dvh] flex-col overflow-hidden bg-slate-50 text-slate-950" [class.gm-desktop-shell]="isDesktop">
+  <app-gm-header
+    *ngIf="showHeader"
+    [title]="pageTitle"
+    [showBack]="showBack"
+    [hideUser]="hideUser"
+    [showNotification]="showNotification"
+    [hideLogo]="hideLogo"
+    [useHomeHeader]="useHomeHeader"
+  ></app-gm-header>
+
+  <main
+    class="min-h-0 flex-1"
+    [class.overflow-y-auto]="!isMapPage"
+    [class.overflow-hidden]="isMapPage"
+    [style.padding-bottom]="contentPaddingBottom"
+  >
+    <router-outlet></router-outlet>
+  </main>
+
+  <app-gm-footer *ngIf="shouldShowFooter"></app-gm-footer>
+  <app-gm-toast></app-gm-toast>
+</div>

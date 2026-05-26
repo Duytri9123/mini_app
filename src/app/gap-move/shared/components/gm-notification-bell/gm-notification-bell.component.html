@@ -1,0 +1,14 @@
+<a
+  routerLink="/gap-move/notifications"
+  class="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-sm"
+  aria-label="Thong bao"
+>
+  <ion-icon name="notifications-outline" class="text-xl"></ion-icon>
+  <span
+    *ngIf="(unreadCount$ | async) as count"
+    class="absolute right-1 top-1 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-4 text-white"
+    [class.hidden]="count === 0"
+  >
+    {{ count }}
+  </span>
+</a>

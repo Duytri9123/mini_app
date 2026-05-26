@@ -1,0 +1,25 @@
+<form class="space-y-4 px-4 py-5" (ngSubmit)="submit()">
+  <section class="rounded-2xl bg-white p-4 shadow-sm">
+    <label class="block text-sm font-semibold text-slate-700" for="vehicleName">Ten phuong tien</label>
+    <input id="vehicleName" name="name" [(ngModel)]="name" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+
+    <label class="mt-4 block text-sm font-semibold text-slate-700" for="plate">Bien so</label>
+    <input id="plate" name="licensePlate" [(ngModel)]="licensePlate" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+
+    <label class="mt-4 block text-sm font-semibold text-slate-700" for="type">Loai xe</label>
+    <select id="type" name="vehicleType" [(ngModel)]="vehicleType" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm">
+      <option value="motorbike">Xe may</option>
+      <option value="car">Oto</option>
+      <option value="van">Van</option>
+      <option value="truck">Xe tai</option>
+    </select>
+
+    <label class="mt-4 block text-sm font-semibold text-slate-700" for="brand">Hang xe</label>
+    <input id="brand" name="brand" [(ngModel)]="brand" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+
+    <label class="mt-4 block text-sm font-semibold text-slate-700" for="model">Dong xe</label>
+    <input id="model" name="model" [(ngModel)]="model" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+  </section>
+
+  <button type="submit" class="w-full rounded-2xl bg-[#008c95] px-4 py-4 font-bold text-white">Lưu phương tiện</button>
+</form>

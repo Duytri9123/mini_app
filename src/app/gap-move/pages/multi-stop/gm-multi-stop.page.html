@@ -1,0 +1,421 @@
+<section class="min-h-full bg-[#f5f6f8] text-slate-950">
+  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white">
+    <div class="grid min-h-[60px] grid-cols-[minmax(230px,1fr)_minmax(320px,560px)_minmax(220px,1fr)] items-center gap-3 px-5">
+      <div class="flex items-center gap-3">
+        <button type="button" class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700" (click)="goBack()" aria-label="Quay lại">
+          <ion-icon name="chevron-back-outline" class="text-lg"></ion-icon>
+        </button>
+        <img src="assets/images/logo_gapmove.png" alt="GapMove" class="h-9 w-12 rounded-lg bg-white object-contain" />
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg font-black">Đa đơn - Đa điểm</h1>
+          <ion-icon name="information-circle-outline" class="text-base text-slate-500"></ion-icon>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <button *ngFor="let step of steps; let i = index" type="button" class="relative" (click)="activeStep = i">
+          <span class="mx-auto flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black" [ngClass]="stepClass(i)">
+            <ion-icon *ngIf="i < activeStep" name="checkmark-outline" class="text-base"></ion-icon>
+            <span *ngIf="i >= activeStep">{{ i + 1 }}</span>
+          </span>
+          <span class="mt-0.5 block text-[11px] font-bold" [ngClass]="i <= activeStep ? 'text-[#ff5a00]' : 'text-slate-500'">{{ step }}</span>
+        </button>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <button type="button" class="rounded-lg bg-slate-100 px-5 py-2 text-xs font-bold text-slate-800" (click)="goBack()">Quay lại</button>
+        <button *ngIf="activeStep < 2" type="button" class="rounded-lg bg-[#008c95] px-6 py-2 text-xs font-black text-white shadow-lg shadow-teal-900/15" (click)="continue()">Tiếp tục</button>
+        <button *ngIf="activeStep === 2" type="button" class="rounded-lg bg-[#008c95] px-6 py-2 text-xs font-black text-white shadow-lg shadow-teal-900/15" (click)="createOrder()">Tạo đơn hàng</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="w-full border-b border-slate-100 bg-white px-5 py-2">
+    <div class="flex items-center justify-between gap-6">
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
+          <ion-icon name="square" class="text-xs"></ion-icon>
+        </span>
+        <p class="shrink-0 text-xs font-black">Thông tin người gửi</p>
+        <p class="min-w-0 truncate text-xs text-slate-500">{{ pickupAddress }}</p>
+      </div>
+      <button type="button" class="flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700">
+        Chỉnh sửa
+        <ion-icon name="create-outline" class="text-base"></ion-icon>
+      </button>
+    </div>
+  </section>
+
+  <ng-container [ngSwitch]="activeStep">
+    <section *ngSwitchCase="0" class="w-full px-4 py-4 lg:px-5">
+      <div class="mb-3 flex items-center justify-between gap-5">
+        <div class="flex items-center gap-3">
+          <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff5a00] text-white">
+            <ion-icon name="arrow-down" class="text-xs"></ion-icon>
+          </span>
+          <h2 class="text-sm font-black">Thông tin điểm giao</h2>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-2 text-xs font-black">
+            <span class="relative inline-flex h-5 w-9 items-center rounded-full transition" [ngClass]="ghlhEnabled ? 'bg-[#008c95]' : 'bg-slate-200'">
+              <input type="checkbox" name="ghlhEnabled" [(ngModel)]="ghlhEnabled" class="sr-only" />
+              <span class="h-4 w-4 rounded-full bg-white shadow transition" [ngClass]="ghlhEnabled ? 'translate-x-4' : 'translate-x-0.5'"></span>
+            </span>
+            GHLT
+          </label>
+          <button type="button" class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold" (click)="addDropoff()">
+            Thêm điểm giao
+            <ion-icon name="add-outline" class="text-base"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div class="flex w-full flex-wrap items-center gap-3 border-b border-slate-100 p-3 text-xs">
+          <label class="flex h-9 min-w-[280px] flex-1 items-center gap-2 rounded-lg border border-slate-200 px-3 xl:max-w-[460px]">
+            <ion-icon name="search-outline" class="text-base text-slate-400"></ion-icon>
+            <input name="searchTerm" [(ngModel)]="searchTerm" placeholder="Tìm kiếm..." class="min-w-0 flex-1 border-0 bg-transparent text-xs outline-none" />
+          </label>
+
+          <div class="relative flex items-center gap-3">
+            <span class="text-sm font-black">Điểm giao</span>
+            <button type="button" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50" (click)="isDropoffFilterOpen = !isDropoffFilterOpen; isServiceFilterOpen = false">
+              {{ dropoffFilter === 'all' ? 'Tất cả' : dropoffFilter === 'valid' ? 'Hợp lệ' : 'Không hợp lệ' }}
+              <ion-icon name="chevron-down-outline"></ion-icon>
+            </button>
+            <div *ngIf="isDropoffFilterOpen" class="absolute left-20 top-11 z-20 w-44 overflow-hidden rounded-xl border border-slate-100 bg-white p-1 shadow-xl">
+              <button type="button" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50" (click)="setDropoffFilter('all')">Tất cả <ion-icon *ngIf="dropoffFilter === 'all'" name="checkmark-outline"></ion-icon></button>
+              <button type="button" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50" (click)="setDropoffFilter('valid')">Hợp lệ <ion-icon *ngIf="dropoffFilter === 'valid'" name="checkmark-outline"></ion-icon></button>
+              <button type="button" class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50" (click)="setDropoffFilter('invalid')">Không hợp lệ <ion-icon *ngIf="dropoffFilter === 'invalid'" name="checkmark-outline"></ion-icon></button>
+            </div>
+          </div>
+
+          <div class="relative flex items-center gap-3">
+            <span class="text-sm font-black">Dịch vụ</span>
+            <button type="button" class="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700" (click)="isServiceFilterOpen = !isServiceFilterOpen; isDropoffFilterOpen = false">
+              {{ selectedServiceFilterLabel }}
+              <ion-icon name="chevron-down-outline"></ion-icon>
+            </button>
+            <div *ngIf="isServiceFilterOpen" class="absolute left-16 top-11 z-20 w-64 overflow-hidden rounded-xl border border-slate-100 bg-white p-2 shadow-xl">
+              <button type="button" class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50" (click)="setServiceFilter('all')">
+                <span class="flex h-5 w-5 items-center justify-center rounded-md border border-slate-200">
+                  <ion-icon *ngIf="serviceFilter === 'all'" name="checkmark-outline"></ion-icon>
+                </span>
+                Tất cả
+              </button>
+              <button *ngFor="let service of serviceOptions" type="button" class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50" (click)="setServiceFilter(service.id)">
+                <span class="flex h-5 w-5 items-center justify-center rounded-md border border-slate-200">
+                  <ion-icon *ngIf="serviceFilter === service.id" name="checkmark-outline"></ion-icon>
+                </span>
+                {{ service.label }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="gm-table-scroll overflow-x-auto">
+          <table class="gm-multi-stop-table min-w-[1580px] table-fixed text-left">
+            <colgroup>
+              <col style="width: 44px" />
+              <col style="width: 210px" />
+              <col style="width: 300px" />
+              <col style="width: 130px" />
+              <col style="width: 130px" />
+              <col style="width: 120px" />
+              <col style="width: 120px" />
+              <col style="width: 112px" />
+              <col style="width: 112px" />
+              <col style="width: 112px" />
+              <col style="width: 112px" />
+              <col style="width: 120px" />
+              <col style="width: 58px" />
+            </colgroup>
+            <thead class="bg-slate-50 text-slate-700">
+              <tr>
+                <th><input type="checkbox" /></th>
+                <th class="font-black"><span class="block truncate">Dịch vụ <ion-icon name="chevron-expand-outline" class="align-middle text-slate-400"></ion-icon></span></th>
+                <th class="font-black"><span class="block truncate">Địa chỉ <ion-icon name="chevron-expand-outline" class="align-middle text-slate-400"></ion-icon></span></th>
+                <th class="font-black"><span class="block truncate">Tên người nhận</span></th>
+                <th class="font-black"><span class="block truncate">Số điện thoại</span></th>
+                <th class="font-black"><span class="block truncate">Tiền thu hộ (COD)</span></th>
+                <th class="font-black"><span class="block truncate">Giá trị hàng hoá</span></th>
+                <th class="font-black"><span class="block truncate">Khối lượng (kg)</span></th>
+                <th class="font-black"><span class="block truncate">Chiều dài (cm)</span></th>
+                <th class="font-black"><span class="block truncate">Chiều rộng (cm)</span></th>
+                <th class="font-black"><span class="block truncate">Chiều cao (cm)</span></th>
+                <th class="font-black"><span class="block truncate">Mã vận đơn</span></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of filteredRows" class="border-t border-slate-100 bg-sky-50/80">
+                <td class="px-4 py-3"><input type="checkbox" /></td>
+
+                <td class="relative">
+                  <button type="button" class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl px-1.5 py-1.5 text-left font-black hover:bg-white" (click)="toggleServiceMenu(row)">
+                    <span class="flex min-w-0 items-center gap-2">
+                      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-[#ff5a00]">
+                        <ion-icon [name]="row.icon" class="text-base"></ion-icon>
+                      </span>
+                      <span class="truncate">{{ row.service }}</span>
+                    </span>
+                    <ion-icon name="chevron-expand-outline" class="shrink-0 text-slate-400"></ion-icon>
+                  </button>
+
+                  <div *ngIf="serviceMenuRowId === row.id" class="absolute left-4 top-16 z-30 w-[360px] overflow-hidden rounded-2xl border border-slate-100 bg-white p-3 shadow-2xl">
+                    <div *ngFor="let group of ['Giao hàng Xe máy', 'Giao hàng Xe tải']" class="mb-3 last:mb-0">
+                      <p class="mb-2 text-sm font-black">{{ group }}</p>
+                      <button *ngFor="let service of serviceOptions" type="button" class="mb-2 flex w-full items-center justify-between rounded-xl border px-3 py-3 text-left last:mb-0" [ngClass]="row.serviceId === service.id ? 'border-[#ff5a00] bg-orange-50' : 'border-slate-100'" [hidden]="service.group !== group" (click)="chooseService(row, service)">
+                        <span class="flex items-center gap-3">
+                          <span class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-[#ff5a00]">
+                            <ion-icon [name]="service.icon"></ion-icon>
+                          </span>
+                          <span>
+                            <span class="block font-black">{{ service.label }}</span>
+                            <span class="block text-xs text-slate-500">{{ service.description }}</span>
+                          </span>
+                        </span>
+                        <span class="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200">
+                          <span *ngIf="row.serviceId === service.id" class="h-2.5 w-2.5 rounded-full bg-slate-950"></span>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="relative">
+                  <button type="button" class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left text-slate-600 hover:bg-white" (click)="toggleAddressMenu(row)">
+                    <span class="block min-w-0 truncate">{{ row.address || 'Chọn địa chỉ...' }}</span>
+                    <ion-icon name="chevron-expand-outline" class="shrink-0 text-slate-400"></ion-icon>
+                  </button>
+
+                  <div *ngIf="addressMenuRowId === row.id" class="absolute left-4 top-16 z-30 w-[500px] overflow-hidden rounded-xl border border-slate-100 bg-white shadow-2xl">
+                    <label class="flex h-12 items-center gap-3 border-b border-slate-100 px-4">
+                      <ion-icon name="search-outline" class="text-xl text-slate-400"></ion-icon>
+                      <input name="addressSearchTerm" [(ngModel)]="addressSearchTerm" placeholder="Chọn địa chỉ..." class="min-w-0 flex-1 border-0 bg-transparent text-sm outline-none" />
+                    </label>
+                    <button type="button" class="flex w-full items-start gap-3 bg-slate-50 px-4 py-3 text-left hover:bg-slate-100" (click)="useCurrentAddress(row)">
+                      <ion-icon name="pin-outline" class="mt-1 text-xl text-pink-500"></ion-icon>
+                      <span class="text-sm font-medium">{{ currentAddress }}</span>
+                    </button>
+                    <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50" (click)="chooseMapAddress(row)">
+                      <ion-icon name="location-outline" class="text-xl"></ion-icon>
+                      <span class="text-sm font-medium">Chọn vị trí trên bản đồ</span>
+                    </button>
+                  </div>
+                </td>
+
+                <td><input [(ngModel)]="row.receiver" [name]="'receiver' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" placeholder="Tên người nhận" /></td>
+                <td><input [(ngModel)]="row.phone" [name]="'phone' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" placeholder="Số điện thoại" /></td>
+                <td><input type="number" [(ngModel)]="row.cod" [name]="'cod' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" /></td>
+                <td><input type="number" [(ngModel)]="row.declaredValue" [name]="'declaredValue' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" /></td>
+                <td><input type="number" [(ngModel)]="row.weightKg" [name]="'weight' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" /></td>
+                <td><input type="number" [(ngModel)]="row.lengthCm" [name]="'length' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" /></td>
+                <td><input type="number" [(ngModel)]="row.widthCm" [name]="'width' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" /></td>
+                <td><input type="number" [(ngModel)]="row.heightCm" [name]="'height' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" /></td>
+                <td><input [(ngModel)]="row.trackingCode" [name]="'tracking' + row.id" class="w-full rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 outline-none focus:border-slate-200 focus:bg-white" placeholder="Tuỳ chọn" /></td>
+                <td class="relative">
+                  <button type="button" class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm" (click)="toggleRowMenu(row)" aria-label="Tác vụ dòng">
+                    <ion-icon name="ellipsis-vertical-outline" class="text-lg"></ion-icon>
+                  </button>
+                  <div *ngIf="rowMenuId === row.id" class="absolute right-4 top-14 z-30 w-44 overflow-hidden rounded-xl border border-slate-100 bg-white p-2 shadow-xl">
+                    <button type="button" class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50" (click)="saveRow()">
+                      <ion-icon name="save-outline"></ion-icon>
+                      Lưu
+                    </button>
+                    <button type="button" class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50" (click)="removeRow(row)">
+                      <ion-icon name="close-circle-outline"></ion-icon>
+                      Huỷ
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div *ngIf="!rows.length" class="flex min-h-[420px] flex-col items-center justify-center px-6 py-14 text-center">
+            <div class="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-slate-100 text-slate-300">
+              <ion-icon name="file-tray-outline" class="text-6xl"></ion-icon>
+            </div>
+            <h3 class="text-2xl font-black">Chưa có thông tin điểm giao</h3>
+            <p class="mt-3 max-w-xl text-base text-slate-500">Hãy thêm địa chỉ và thông tin người nhận. Bấm “Thêm điểm giao” để tạo từng dòng.</p>
+            <button type="button" class="mt-6 rounded-xl bg-[#008c95] px-5 py-3 text-sm font-black text-white" (click)="addDropoff()">Thêm điểm giao đầu tiên</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-slate-100 px-5 py-3 text-sm text-slate-500">
+          <span>Hiển thị kết quả {{ filteredRows.length ? '1 - ' + filteredRows.length : '0' }} trên {{ rows.length }}</span>
+          <span>Kéo ngang để xem đầy đủ các cột vận hành</span>
+        </div>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="1" class="grid gap-5 px-8 py-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div class="border-b border-slate-100 p-5">
+          <h2 class="text-xl font-black">Chọn hình thức tối ưu gom đơn</h2>
+          <p class="mt-2 text-sm text-slate-500">Hệ thống sẽ nhóm các điểm giao thành các đơn hàng theo nhu cầu gom đơn của bạn</p>
+        </div>
+
+        <div class="space-y-5 p-5">
+          <button type="button" class="flex w-full items-center justify-between rounded-xl border p-5 text-left" [ngClass]="optimizationMode === 'route' ? 'border-[#ff5a00] bg-orange-50/40' : 'border-slate-200 bg-white'" (click)="optimizationMode = 'route'">
+            <span>
+              <span class="block text-base font-black">Gom đơn theo tuyến đường</span>
+              <span class="mt-2 block text-sm text-slate-500">Tự động gom và tối ưu đơn hàng theo tuyến đường phù hợp để có giá tốt nhất</span>
+            </span>
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-200">
+              <span *ngIf="optimizationMode === 'route'" class="h-2.5 w-2.5 rounded-full bg-slate-950"></span>
+            </span>
+          </button>
+
+          <button type="button" class="flex w-full items-center justify-between rounded-xl border p-5 text-left" [ngClass]="optimizationMode === 'manual' ? 'border-[#ff5a00] bg-orange-50/40' : 'border-slate-200 bg-white'" (click)="optimizationMode = 'manual'">
+            <span>
+              <span class="block text-base font-black">Thiết lập thủ công điều kiện gom đơn</span>
+              <span class="mt-2 block text-sm text-slate-500">Thiết lập thủ công các điều kiện để gom và tối ưu đơn hàng</span>
+            </span>
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-200">
+              <span *ngIf="optimizationMode === 'manual'" class="h-2.5 w-2.5 rounded-full bg-slate-950"></span>
+            </span>
+          </button>
+
+          <div class="pt-6 text-sm italic leading-7 text-slate-500">
+            <p class="font-black">*Lưu ý:</p>
+            <p>• Tính năng gom đơn chỉ áp dụng cho dịch vụ Siêu tốc (Xe máy - Xe tải).</p>
+            <p>• Dịch vụ 2H, 4H, Đồng Giá, Xe tải Tiêu Chuẩn, Xe tải Tiết kiệm sẽ được lên đơn hàng loạt với số điểm giao tối đa cho mỗi đơn là 1.</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="rounded-2xl border border-slate-200 bg-white">
+        <div class="border-b border-slate-100 p-5">
+          <h2 class="text-xl font-black">Thông tin đơn hàng</h2>
+          <p class="mt-2 text-sm text-slate-500">Áp dụng cho tất cả các đơn hàng</p>
+        </div>
+        <div class="space-y-5 p-5">
+          <label class="block text-sm font-black">
+            Hẹn giờ lấy hàng
+            <span class="mt-2 flex h-12 items-center gap-3 rounded-xl border border-slate-200 px-4 text-slate-500">
+              <input type="datetime-local" name="scheduledPickup" [(ngModel)]="scheduledPickup" class="min-w-0 flex-1 border-0 bg-transparent outline-none" />
+              <ion-icon name="calendar-outline" class="text-xl"></ion-icon>
+            </span>
+          </label>
+
+          <label class="block text-sm font-black">
+            Ghi chú đơn hàng
+            <textarea name="orderNote" [(ngModel)]="orderNote" rows="7" maxlength="250" placeholder="Nhập ghi chú đơn hàng" class="mt-2 w-full resize-none rounded-xl border border-slate-200 p-4 text-sm font-medium outline-none"></textarea>
+            <span class="mt-2 block text-right text-xs font-medium text-slate-400">{{ orderNote.length }}/250 ký tự</span>
+          </label>
+        </div>
+      </aside>
+    </section>
+
+    <section *ngSwitchCase="2" class="px-8 py-6">
+      <div class="mb-7 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-6">
+          <h2 class="text-base font-black">Thông tin đơn hàng</h2>
+          <span class="text-base text-slate-500">Số đơn hàng: <strong class="font-black text-[#ff5a00]">{{ rows.length || 1 }} đơn</strong></span>
+          <span class="text-base text-slate-500">Tổng phí: <strong class="font-black text-[#ff5a00]">{{ formatAmount(totalFee || 22000) }}</strong> <span class="line-through">{{ formatAmount(originalFee || 31000) }}</span></span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="button" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold">
+            <ion-icon name="download-outline" class="text-lg"></ion-icon>
+            Xuất dữ liệu
+          </button>
+          <div class="flex overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <button type="button" class="flex h-11 w-11 items-center justify-center" [ngClass]="viewMode === 'list' ? 'bg-slate-100' : ''" (click)="viewMode = 'list'"><ion-icon name="list-outline" class="text-xl"></ion-icon></button>
+            <button type="button" class="flex h-11 w-11 items-center justify-center border-l border-slate-200" [ngClass]="viewMode === 'grid' ? 'bg-slate-100' : ''" (click)="viewMode = 'grid'"><ion-icon name="grid-outline" class="text-xl"></ion-icon></button>
+            <button type="button" class="flex h-11 w-11 items-center justify-center border-l border-slate-200" [ngClass]="viewMode === 'map' ? 'bg-slate-100' : ''" (click)="viewMode = 'map'"><ion-icon name="map-outline" class="text-xl"></ion-icon></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div class="relative h-48 bg-slate-100">
+            <div class="absolute inset-0 opacity-70" style="background-image: linear-gradient(90deg, rgba(148, 163, 184, .25) 1px, transparent 1px), linear-gradient(rgba(148, 163, 184, .25) 1px, transparent 1px); background-size: 34px 34px;"></div>
+            <div class="absolute left-12 top-8 rounded-full bg-white px-3 py-1 text-xs font-black shadow">#1</div>
+            <div class="absolute left-24 top-8 rounded-full bg-white px-3 py-1 text-xs font-black shadow">COD: {{ formatAmount(rows[0]?.cod || 2000) }}</div>
+            <div class="absolute bottom-8 left-1/2 h-28 w-1 -translate-x-1/2 rounded-full bg-sky-500"></div>
+            <span class="absolute bottom-8 left-1/2 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-slate-900 text-sm font-black text-white">0</span>
+            <span class="absolute left-1/2 top-10 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full bg-[#ff5a00] text-sm font-black text-white">1</span>
+          </div>
+
+          <div class="p-4">
+            <div class="flex items-start gap-3">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-[#ff5a00]">
+                <ion-icon name="rocket-outline" class="text-xl"></ion-icon>
+              </span>
+              <div>
+                <h3 class="font-black">{{ rows[0]?.service || 'Siêu Tốc - Tiết Kiệm' }}</h3>
+                <p class="mt-1 text-sm text-slate-500">{{ rows.length || 1 }} điểm giao • {{ routeDistanceKm }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 border-t border-slate-100 text-sm">
+            <button type="button" class="flex items-center gap-2 border-r border-slate-100 px-4 py-3 text-left font-medium">
+              <ion-icon name="cube-outline"></ion-icon>
+              Thêm yêu cầu đặc biệt
+            </button>
+            <button type="button" class="flex items-center gap-2 px-4 py-3 text-left font-medium">
+              <ion-icon name="calendar-outline"></ion-icon>
+              Giao ngay
+            </button>
+            <button type="button" class="flex items-center gap-2 border-r border-t border-slate-100 px-4 py-3 text-left font-medium">
+              <ion-icon name="git-network-outline" class="text-[#ff5a00]"></ion-icon>
+              DADONDIEM
+            </button>
+            <button type="button" class="flex items-center gap-2 border-t border-slate-100 px-4 py-3 text-left font-medium">
+              <ion-icon name="cash-outline" class="text-emerald-500"></ion-icon>
+              Người gửi trả phí
+            </button>
+          </div>
+
+          <div class="flex items-end justify-between border-t border-slate-100 p-4">
+            <div>
+              <p class="text-sm font-medium text-slate-500">Tổng phí <ion-icon name="information-circle-outline"></ion-icon></p>
+              <p class="mt-2 text-sm text-slate-400 line-through">{{ formatAmount(originalFee || 31000) }} <span class="text-lg font-black text-[#ff5a00] no-underline">{{ formatAmount(totalFee || 22000) }}</span></p>
+            </div>
+            <button type="button" class="rounded-xl bg-[#008c95] px-9 py-3 text-sm font-black text-white" (click)="createOrder()">Đặt đơn</button>
+          </div>
+        </article>
+
+        <section class="rounded-2xl border border-slate-200 bg-white p-6">
+          <h3 class="text-xl font-black">Kiểm tra trước khi tạo đơn</h3>
+          <div class="mt-5 grid gap-3 lg:grid-cols-3">
+            <div class="rounded-xl bg-slate-50 p-4">
+              <p class="text-xs font-black uppercase text-slate-400">Người gửi</p>
+              <p class="mt-2 line-clamp-2 text-sm font-bold">{{ pickupAddress }}</p>
+            </div>
+            <div class="rounded-xl bg-slate-50 p-4">
+              <p class="text-xs font-black uppercase text-slate-400">Điểm giao</p>
+              <p class="mt-2 text-sm font-bold">{{ rows.length || 1 }} điểm</p>
+            </div>
+            <div class="rounded-xl bg-slate-50 p-4">
+              <p class="text-xs font-black uppercase text-slate-400">Tối ưu</p>
+              <p class="mt-2 text-sm font-bold">{{ optimizationMode === 'route' ? 'Gom theo tuyến đường' : 'Thiết lập thủ công' }}</p>
+            </div>
+          </div>
+
+          <div class="mt-6 overflow-hidden rounded-xl border border-slate-100">
+            <div class="grid grid-cols-[1.4fr_1fr_140px_120px] bg-slate-50 px-4 py-3 text-sm font-black text-slate-600">
+              <span>Địa chỉ</span>
+              <span>Người nhận</span>
+              <span>COD</span>
+              <span>Khối lượng</span>
+            </div>
+            <div *ngFor="let row of rows" class="grid grid-cols-[1.4fr_1fr_140px_120px] border-t border-slate-100 px-4 py-3 text-sm">
+              <span class="line-clamp-1 font-semibold">{{ row.address || 'Chưa chọn địa chỉ' }}</span>
+              <span>{{ row.receiver || 'Chưa nhập' }}</span>
+              <span>{{ formatAmount(row.cod) }}</span>
+              <span>{{ row.weightKg || 0 }}kg</span>
+            </div>
+            <div *ngIf="!rows.length" class="px-4 py-5 text-sm text-slate-500">Chưa có dòng điểm giao. Quay lại bước 1 để thêm điểm giao.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </ng-container>
+</section>
