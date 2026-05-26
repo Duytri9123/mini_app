@@ -20,7 +20,7 @@ export class GmLocationService {
 
   refresh(): Promise<GmCoordinate> {
     this.hasGpsPermission = true;
-    const coordinate = { ...GM_DEFAULT_CENTER, address: 'Quan 1, Ho Chi Minh City' };
+    const coordinate = { ...GM_DEFAULT_CENTER, address: 'Phường Bến Nghé, TP. Hồ Chí Minh' };
     this.current$.next(coordinate);
     this.address$.next(coordinate.address || GM_DEFAULT_CENTER.address);
     return Promise.resolve(coordinate);

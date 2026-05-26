@@ -26,6 +26,229 @@
   display: none;
 }
 
+.gm-mobile-hero {
+  min-height: 116px;
+}
+
+.gm-mobile-mode-tabs {
+  transform: translateY(40px);
+}
+
+.gm-mobile-mode-tabs button {
+  letter-spacing: 0;
+}
+
+.gm-mobile-mode-icon {
+  position: relative;
+  display: inline-flex;
+  width: 40px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff7ed;
+}
+
+.gm-mobile-mode-icon::before {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 25px;
+  height: 14px;
+  content: '';
+  border-radius: 8px 10px 6px 6px;
+  background: #ff5a00;
+}
+
+.gm-mobile-mode-icon::after {
+  position: absolute;
+  right: 9px;
+  bottom: 4px;
+  width: 20px;
+  height: 6px;
+  content: '';
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 3.5px 3px, #1f2937 0 3px, transparent 3.5px),
+    radial-gradient(circle at 16.5px 3px, #1f2937 0 3px, transparent 3.5px);
+}
+
+.gm-mobile-mode-icon ion-icon {
+  position: relative;
+  z-index: 1;
+  margin-left: -12px;
+  color: #008c95;
+  font-size: 19px;
+}
+
+.gm-mobile-mode-icon-delivery::before {
+  width: 22px;
+  height: 20px;
+  border-radius: 6px;
+}
+
+.gm-mobile-mode-icon-delivery::after {
+  display: none;
+}
+
+.gm-mobile-mode-icon-delivery ion-icon {
+  margin-left: 0;
+  color: #ff5a00;
+  font-size: 24px;
+}
+
+.gm-mobile-mode-icon-ride {
+  overflow: visible;
+  background: transparent;
+}
+
+.gm-mobile-mode-icon-ride::before,
+.gm-mobile-mode-icon-ride::after {
+  display: none;
+}
+
+.gm-mobile-mode-icon-ride img {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 5px 7px rgba(15, 23, 42, 0.12));
+  transform: scale(1.1);
+}
+
+.gm-mobile-address-card {
+  min-height: 174px;
+}
+
+.gm-mobile-address-input {
+  min-height: 50px;
+}
+
+.gm-mobile-address-field {
+  height: 28px;
+  line-height: 28px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.gm-mobile-address-field::-webkit-scrollbar {
+  display: none;
+}
+
+.gm-mobile-vehicle-row {
+  min-height: 62px;
+}
+
+.gm-mobile-vehicle-art {
+  position: relative;
+  display: inline-flex;
+  width: 38px;
+  height: 36px;
+  flex: 0 0 38px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #fff7ed;
+}
+
+.gm-mobile-vehicle-art::before {
+  position: absolute;
+  right: 5px;
+  bottom: 8px;
+  width: 27px;
+  height: 14px;
+  content: '';
+  border-radius: 10px 12px 7px 7px;
+  background: #ff5a00;
+  box-shadow: 0 8px 14px rgba(255, 90, 0, 0.18);
+}
+
+.gm-mobile-vehicle-art::after {
+  position: absolute;
+  right: 7px;
+  bottom: 5px;
+  width: 22px;
+  height: 7px;
+  content: '';
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 5px 4px, #1f2937 0 4px, transparent 4.5px),
+    radial-gradient(circle at 25px 4px, #1f2937 0 4px, transparent 4.5px);
+}
+
+.gm-mobile-vehicle-art ion-icon {
+  position: relative;
+  z-index: 1;
+  margin-top: -7px;
+  margin-left: -10px;
+  color: #0f766e;
+  font-size: 26px;
+}
+
+.gm-mobile-vehicle-art-image {
+  overflow: visible;
+  background: transparent;
+}
+
+.gm-mobile-vehicle-art-image::before,
+.gm-mobile-vehicle-art-image::after {
+  display: none;
+}
+
+.gm-mobile-vehicle-art-image img {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 8px 10px rgba(15, 23, 42, 0.14));
+  transform: scale(0.98);
+}
+
+.gm-mobile-vehicle-art-bike::before {
+  width: 34px;
+  height: 18px;
+  border-radius: 999px 999px 7px 7px;
+}
+
+.gm-mobile-vehicle-art-bike ion-icon {
+  color: #ff5a00;
+}
+
+.gm-mobile-vehicle-art-car::before {
+  background: #008c95;
+}
+
+.gm-mobile-vehicle-art-car ion-icon {
+  color: #008c95;
+}
+
+.gm-mobile-vehicle-art-van::before {
+  width: 43px;
+  height: 24px;
+  border-radius: 9px 14px 7px 7px;
+}
+
+.gm-mobile-vehicle-art-truck::before {
+  width: 44px;
+  height: 24px;
+  border-radius: 5px 12px 7px 7px;
+}
+
+.gm-mobile-vehicle-art-box-truck {
+  background: #fff7ed;
+}
+
+.gm-mobile-vehicle-art-box-truck::before {
+  width: 42px;
+  height: 25px;
+  border-radius: 4px 10px 7px 7px;
+  background: linear-gradient(90deg, #f59e0b 0 55%, #ff5a00 55% 100%);
+}
+
+.gm-mobile-vehicle-art-box-truck ion-icon {
+  color: #f59e0b;
+}
+
 .gm-typing-title {
   min-height: 56px;
   white-space: normal;

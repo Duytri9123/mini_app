@@ -5,8 +5,9 @@ import { Router, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { map, Observable } from 'rxjs';
 import { GmBanner } from '../../core/interfaces/banner.interface';
-import { GmBooking } from '../../core/interfaces/booking.interface';
+import { GmBooking, GmBookingType } from '../../core/interfaces/booking.interface';
 import { GmCoordinate } from '../../core/interfaces/location.interface';
+import { GmVehicleType } from '../../core/interfaces/vehicle.interface';
 import { GmBannerService } from '../../core/services/gm-banner.service';
 import { GmBookingService } from '../../core/services/gm-booking.service';
 import { GmArticle, GmArticleService } from '../../core/services/gm-article.service';
@@ -15,6 +16,26 @@ import { GM_SERVICE_OPTIONS, GmServiceOption } from '../../core/constants/gm-ser
 import { GmBannerCarouselComponent } from '../../shared/components/gm-banner-carousel/gm-banner-carousel.component';
 import { GmBookingCardComponent } from '../../shared/components/gm-booking-card/gm-booking-card.component';
 import { GmMapComponent } from '../../shared/components/gm-map/gm-map.component';
+
+type GmHomeMode = 'delivery' | 'ride';
+
+interface GmHomeModeOption {
+  id: GmHomeMode;
+  label: string;
+  badge?: string;
+}
+
+interface GmHomeVehicleOption {
+  id: string;
+  title: string;
+  subtitle?: string;
+  icon: string;
+  artClass: string;
+  imageUrl?: string;
+  bookingType: GmBookingType;
+  vehicleType: GmVehicleType;
+  showMore?: boolean;
+}
 
 @Component({
   selector: 'app-gm-home',
@@ -29,6 +50,134 @@ export class GmHomePage implements OnInit, OnDestroy {
   articles$!: Observable<GmArticle[]>;
 
   services = GM_SERVICE_OPTIONS;
+  mobileModes: GmHomeModeOption[] = [
+    { id: 'delivery', label: 'Giao hàng' },
+    { id: 'ride', label: 'Đặt xe' },
+  ];
+  activeMobileMode: GmHomeMode = 'delivery';
+  mobileVehicles: Record<GmHomeMode, GmHomeVehicleOption[]> = {
+    delivery: [
+      {
+        id: 'delivery-bike',
+        title: 'Xe Máy',
+        icon: 'bicycle-outline',
+        artClass: 'gm-mobile-vehicle-art-bike',
+        imageUrl: 'assets/icon/xemay.png',
+        bookingType: 'delivery',
+        vehicleType: 'motorbike',
+      },
+      {
+        id: 'delivery-bike-rack',
+        title: 'Xe Máy có Baga / Cáng',
+        icon: 'cube-outline',
+        artClass: 'gm-mobile-vehicle-art-bike',
+        imageUrl: 'assets/icon/xebaga.png',
+        bookingType: 'delivery',
+        vehicleType: 'motorbike',
+      },
+      {
+        id: 'delivery-van-500',
+        title: 'Xe Van 500 kg',
+        icon: 'bus-outline',
+        artClass: 'gm-mobile-vehicle-art-van',
+        imageUrl: 'assets/icon/Van.png',
+        bookingType: 'truck',
+        vehicleType: 'van',
+      },
+      {
+        id: 'delivery-van-750',
+        title: 'Xe Van 750 kg',
+        icon: 'bus-outline',
+        artClass: 'gm-mobile-vehicle-art-van',
+        imageUrl: 'assets/icon/Van.png',
+        bookingType: 'truck',
+        vehicleType: 'van',
+      },
+      {
+        id: 'delivery-van-1000',
+        title: 'Xe Van 1000 kg',
+        icon: 'bus-outline',
+        artClass: 'gm-mobile-vehicle-art-van',
+        imageUrl: 'assets/icon/Van.png',
+        bookingType: 'truck',
+        vehicleType: 'truck',
+      },
+      {
+        id: 'delivery-pickup',
+        title: 'Xe Bán Tải',
+        icon: 'car-outline',
+        artClass: 'gm-mobile-vehicle-art-truck',
+        imageUrl: 'assets/icon/pickup_truck.png',
+        bookingType: 'truck',
+        vehicleType: 'truck',
+      },
+      {
+        id: 'delivery-truck-500',
+        title: 'Xe Tải 500 kg',
+        icon: 'cube-outline',
+        artClass: 'gm-mobile-vehicle-art-box-truck',
+        imageUrl: 'assets/icon/truck.png',
+        bookingType: 'truck',
+        vehicleType: 'truck',
+      },
+      {
+        id: 'delivery-truck-750',
+        title: 'Xe Tải 750 kg',
+        icon: 'cube-outline',
+        artClass: 'gm-mobile-vehicle-art-box-truck',
+        imageUrl: 'assets/icon/truck.png',
+        bookingType: 'truck',
+        vehicleType: 'truck',
+      },
+      {
+        id: 'delivery-truck-1000',
+        title: 'Xe Tải 1000 kg',
+        icon: 'cube-outline',
+        artClass: 'gm-mobile-vehicle-art-box-truck',
+        imageUrl: 'assets/icon/truck.png',
+        bookingType: 'truck',
+        vehicleType: 'truck',
+      },
+      {
+        id: 'delivery-truck-1250',
+        title: 'Xe Tải 1250 kg',
+        icon: 'cube-outline',
+        artClass: 'gm-mobile-vehicle-art-box-truck',
+        imageUrl: 'assets/icon/truck.png',
+        bookingType: 'truck',
+        vehicleType: 'truck',
+      },
+    ],
+    ride: [
+      {
+        id: 'ride-bike',
+        title: 'Xe Máy',
+        subtitle: 'Di chuyển nhanh trong thành phố',
+        icon: 'bicycle-outline',
+        artClass: 'gm-mobile-vehicle-art-bike',
+        bookingType: 'ride',
+        vehicleType: 'motorbike',
+      },
+      {
+        id: 'ride-car',
+        title: 'Ô tô 4 chỗ',
+        subtitle: 'Đi nhóm nhỏ, có hành lý gọn',
+        icon: 'car-outline',
+        artClass: 'gm-mobile-vehicle-art-car',
+        bookingType: 'ride',
+        vehicleType: 'car',
+      },
+      {
+        id: 'ride-car-7',
+        title: 'Ô tô 7 chỗ',
+        subtitle: 'Gia đình hoặc nhóm đông hơn',
+        icon: 'car-sport-outline',
+        artClass: 'gm-mobile-vehicle-art-car',
+        bookingType: 'ride',
+        vehicleType: 'car',
+      },
+    ],
+  };
   desktopStats = [
     { value: 'Giao hàng', label: 'dịch vụ chính' },
     { value: '24/7', label: 'đặt đơn nhanh' },
@@ -99,6 +248,10 @@ export class GmHomePage implements OnInit, OnDestroy {
     private router: Router,
   ) {}
 
+  get activeMobileVehicles(): GmHomeVehicleOption[] {
+    return this.mobileVehicles[this.activeMobileMode];
+  }
+
   ngOnInit(): void {
     this.banners$ = this.bannerService.getBanners();
     this.activeBookings$ = this.bookingService.getBookings().pipe(
@@ -117,24 +270,41 @@ export class GmHomePage implements OnInit, OnDestroy {
   }
 
   selectService(service: GmServiceOption): void {
-    const queryParams = this.buildAddressQuery(service.id);
-    if (service.id === 'multi_stop') {
+    this.selectServiceById(service.id);
+  }
+
+  selectServiceById(serviceId: GmBookingType): void {
+    const queryParams = this.buildAddressQuery(serviceId);
+    if (serviceId === 'multi_stop') {
       this.router.navigate(['/gap-move/multi-stop'], { queryParams });
       return;
     }
-    if (service.id === 'porter') {
+    if (serviceId === 'porter') {
       this.router.navigate(['/gap-move/carry'], { queryParams });
       return;
     }
-    if (service.id === 'truck') {
+    if (serviceId === 'truck') {
       this.router.navigate(['/gap-move/truck'], { queryParams });
       return;
     }
-    if (service.id === 'moving') {
+    if (serviceId === 'moving') {
       this.router.navigate(['/gap-move/moving'], { queryParams });
       return;
     }
     this.router.navigate(['/gap-move/booking/new'], { queryParams });
+  }
+
+  setMobileMode(mode: GmHomeMode): void {
+    this.activeMobileMode = mode;
+  }
+
+  selectMobileVehicle(vehicle: GmHomeVehicleOption): void {
+    this.router.navigate(['/gap-move/booking/new'], {
+      queryParams: {
+        ...this.buildAddressQuery(vehicle.bookingType),
+        vehicleType: vehicle.vehicleType,
+      },
+    });
   }
 
   startQuickBooking(): void {
@@ -333,7 +503,7 @@ export class GmHomePage implements OnInit, OnDestroy {
     return mapClasses[service.accent];
   }
 
-  private buildAddressQuery(type: GmServiceOption['id']): Record<string, string> {
+  private buildAddressQuery(type: GmBookingType): Record<string, string> {
     const queryParams: Record<string, string> = { type };
     if (this.pickupAddress.trim()) {
       queryParams['pickup'] = this.pickupAddress.trim();

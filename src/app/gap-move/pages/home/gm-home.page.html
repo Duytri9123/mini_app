@@ -23,7 +23,6 @@
           </div>
         </div>
       </div>
-
       <div class="flex h-full min-h-[420px] flex-col justify-center rounded-[28px] border border-[#008c95]/10 bg-white p-6 shadow-xl shadow-slate-200/70">
         <div class="mb-5 flex items-center gap-3">
           <img src="assets/images/logo_gapmove.png" alt="GapMove" class="h-14 w-14 rounded-2xl object-contain" />
@@ -41,21 +40,82 @@
     </div>
   </section>
 
-  <app-gm-banner-carousel class="lg:hidden" [banners]="banners$ | async"></app-gm-banner-carousel>
+  <section class="gm-mobile-hero relative bg-[#008c95] px-4 pt-6 lg:hidden">
+    <div class="gm-mobile-mode-tabs mx-auto grid max-w-[540px] grid-cols-2 overflow-hidden rounded-[18px] bg-slate-100 p-1 shadow-lg shadow-slate-900/12">
+      <button *ngFor="let mode of mobileModes" type="button"
+        class="relative flex min-h-[82px] flex-col items-center justify-center gap-1.5 rounded-[15px] text-[15px] font-extrabold transition"
+        [ngClass]="activeMobileMode === mode.id ? 'bg-white text-slate-950 shadow-md shadow-slate-900/10' : 'text-slate-500'"
+        (click)="setMobileMode(mode.id)">
+        <span class="gm-mobile-mode-icon" [ngClass]="mode.id === 'delivery' ? 'gm-mobile-mode-icon-delivery' : 'gm-mobile-mode-icon-ride'">
+          <ion-icon *ngIf="mode.id === 'delivery'; else rideModeIcon" name="cube-outline"></ion-icon>
+          <ng-template #rideModeIcon>
+            <img src="assets/icon/xemay.png" alt="Xe máy" class="h-full w-full object-contain" />
+          </ng-template>
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span>{{ mode.label }}</span>
+          <span *ngIf="mode.badge"
+            class="rounded-md bg-orange-50 px-1.5 py-0.5 text-xs font-black text-[#ff5a00]">{{ mode.badge }}</span>
+        </span>
+      </button>
+    </div>
+  </section>
 
-  <section class="relative z-10 -mt-1 px-4 py-3 lg:hidden">
-    <div
-      class="rounded-[28px] border border-[#008c95]/15 bg-gradient-to-br from-white via-white to-[#e8fbfb] px-4 py-4 shadow-2xl shadow-teal-900/10 ring-1 ring-[#008c95]/10">
-      <div class="mb-3">
-        <div>
-          <p class="text-xs font-black uppercase tracking-wide text-[#ff5a00]">GapMove</p>
-          <h2 class="gm-typing-title mt-1 min-h-[28px] text-lg font-black leading-7 text-slate-950">
-            <span>{{ typedQuickTitle }}</span><span class="gm-typing-cursor" aria-hidden="true"></span>
-          </h2>
+  <section class="relative z-10 bg-white px-4 pb-4 pt-16 lg:hidden">
+    <div class="gm-mobile-address-card rounded-[20px] border border-slate-100 bg-white p-3 shadow-lg shadow-slate-900/10">
+      <div class="grid grid-cols-[34px_minmax(0,1fr)] gap-y-3">
+        <div class="row-span-2 flex flex-col items-center pt-5">
+          <span class="h-3.5 w-3.5 rounded-full border-2 border-[#ff5a00] bg-white"></span>
+          <span class="h-[44px] border-l-2 border-dashed border-slate-300"></span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#ff5a00] text-white">
+            <ion-icon name="location" class="text-sm"></ion-icon>
+          </span>
         </div>
+
+        <label class="gm-mobile-address-input min-w-0 rounded-2xl border border-slate-100 bg-slate-50 px-3.5 py-2.5">
+          <input name="homeMobilePickup" type="text" [(ngModel)]="pickupAddress"
+            (ngModelChange)="onAddressInput('pickup')" placeholder="Từ"
+            class="gm-mobile-address-field block w-full border-0 bg-transparent p-0 text-sm font-bold text-slate-950 outline-none placeholder:text-slate-400" />
+        </label>
+
+        <label class="gm-mobile-address-input min-w-0 rounded-2xl border border-slate-100 bg-slate-50 px-3.5 py-2.5">
+          <input name="homeMobileDropoff" type="text" [(ngModel)]="dropoffAddress"
+            (ngModelChange)="onAddressInput('dropoff')" placeholder="Đến"
+            class="gm-mobile-address-field block w-full border-0 bg-transparent p-0 text-sm font-bold text-slate-950 outline-none placeholder:text-slate-400" />
+        </label>
       </div>
 
-      <ng-container *ngTemplateOutlet="addressFields"></ng-container>
+      <div class="mt-3 flex items-center justify-between gap-3 pl-1">
+        <button type="button"
+          class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-3xl text-slate-700 shadow-sm"
+          aria-label="Thêm điểm đến" title="Thêm điểm đến" (click)="selectServiceById('multi_stop')">
+          <ion-icon name="add-outline"></ion-icon>
+        </button>
+
+        <button type="button"
+          class="flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-extrabold text-slate-900 shadow-sm"
+          (click)="openMapPicker('pickup')">
+          <ion-icon name="alarm-outline" class="text-lg text-slate-600"></ion-icon>
+          <span>Đặt ngay</span>
+          <ion-icon name="chevron-down-outline" class="text-lg text-slate-500"></ion-icon>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="pickupSuggestions.length" class="mt-3 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-lg shadow-slate-900/5">
+      <button *ngFor="let result of pickupSuggestions" type="button"
+        class="block w-full border-b border-slate-100 px-4 py-3 text-left text-xs font-semibold text-slate-600 last:border-b-0"
+        (click)="useSuggestion('pickup', result)">
+        {{ result.address }}
+      </button>
+    </div>
+
+    <div *ngIf="dropoffSuggestions.length" class="mt-3 overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-lg shadow-orange-900/5">
+      <button *ngFor="let result of dropoffSuggestions" type="button"
+        class="block w-full border-b border-orange-50 px-4 py-3 text-left text-xs font-semibold text-slate-600 last:border-b-0"
+        (click)="useSuggestion('dropoff', result)">
+        {{ result.address }}
+      </button>
     </div>
   </section>
 
@@ -116,7 +176,7 @@
     </div>
   </ng-template>
 
-  <section class="px-4 py-3 lg:mx-auto lg:max-w-7xl lg:py-8">
+  <section class="hidden px-4 py-3 lg:mx-auto lg:block lg:max-w-7xl lg:py-8">
     <div class="mb-3 flex items-center justify-between">
       <h2 class="text-lg font-extrabold text-slate-950">Dịch vụ</h2>
       <button type="button" class="text-sm font-bold text-[#008c95]" (click)="goToMap()">Chọn trên bản đồ</button>
@@ -136,6 +196,41 @@
         <span class="mt-2 hidden text-xs leading-5 text-slate-500 lg:block">{{ service.subtitle }}</span>
       </button>
     </div>
+  </section>
+
+  <section class="bg-white px-4 pb-3 pt-2 lg:hidden">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-extrabold text-slate-950">Phương tiện có sẵn</h2>
+      <span class="text-xs font-bold text-slate-400">{{ activeMobileMode === 'delivery' ? 'Giao hàng' : 'Đặt xe' }}</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <button *ngFor="let vehicle of activeMobileVehicles" type="button"
+        class="gm-mobile-vehicle-row flex min-w-0 items-center gap-2 rounded-xl border border-slate-100 bg-white px-2 py-2 text-left shadow-sm active:scale-[0.99]"
+        (click)="selectMobileVehicle(vehicle)">
+        <span class="gm-mobile-vehicle-art" [class.gm-mobile-vehicle-art-image]="vehicle.imageUrl"
+          [ngClass]="vehicle.artClass">
+          <img *ngIf="vehicle.imageUrl; else vehicleIonIcon" [src]="vehicle.imageUrl" [alt]="vehicle.title"
+            class="h-full w-full object-contain" />
+          <ng-template #vehicleIonIcon>
+            <ion-icon [name]="vehicle.icon"></ion-icon>
+          </ng-template>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-[13px] font-extrabold leading-[17px] text-slate-950"
+            [class.whitespace-nowrap]="vehicle.title.length <= 15">{{ vehicle.title }}</span>
+        </span>
+      </button>
+    </div>
+
+    <button type="button" class="mx-auto mt-2 flex items-center gap-1 text-sm font-semibold text-slate-400">
+      <span>Xem thêm</span>
+      <ion-icon name="chevron-down-outline" class="text-lg"></ion-icon>
+    </button>
+  </section>
+
+  <section class="py-2 lg:hidden">
+    <app-gm-banner-carousel [banners]="banners$ | async"></app-gm-banner-carousel>
   </section>
 
   <section class="px-4 py-2 lg:mx-auto lg:max-w-7xl">

@@ -1,7 +1,7 @@
 export const GM_DEFAULT_CENTER = {
   lat: 10.7769,
   lng: 106.7009,
-  address: 'Ho Chi Minh City',
+  address: 'Phường Bến Nghé, TP. Hồ Chí Minh',
 } as const;
 
 export const GM_MAP_DEFAULT_ZOOM = 14;
