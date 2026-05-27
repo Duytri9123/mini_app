@@ -1,5 +1,5 @@
-// const BASE_URL_VALUE = 'https://admin-jet.tinopage.com';
-const BASE_URL_VALUE = 'http://192.168.1.92:8000';
+const BASE_URL_VALUE = 'https://admin-jet.tinopage.com';
+// const BASE_URL_VALUE = 'http://192.168.1.92:8000';
 const GOOGLE_CLIENT_ID_VALUE =
   '764570307183-17o4dsc046ga93sojamt9p640irkgsc8.apps.googleusercontent.com';
 

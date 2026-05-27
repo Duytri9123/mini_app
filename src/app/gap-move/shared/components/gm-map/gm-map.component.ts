@@ -48,13 +48,15 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private map?: maplibregl.Map;
   private markers: maplibregl.Marker[] = [];
+  private lastMarkerSignature = '';
+  private lastViewportSignature = '';
 
   ngAfterViewInit(): void {
     this.initMap();
   }
 
   ngOnChanges(_changes: SimpleChanges): void {
-    this.renderMarkers();
+    this.syncMapState();
   }
 
   ngOnDestroy(): void {
@@ -103,13 +105,30 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     this.map.on('click', this.handleMapClick);
     this.map.once('load', () => {
-      this.renderMarkers();
-      this.fitRoute();
+      this.syncMapState(true);
     });
   }
 
   private getStyleUrl(): string {
     return `https://maptiles.openmap.vn/styles/day-v1/style.json?apikey=${environment.VIETMAP_API_KEY}`;
+  }
+
+  private syncMapState(forceViewport = false): void {
+    if (!this.map) {
+      return;
+    }
+
+    const markerSignature = this.buildMarkerSignature();
+    if (markerSignature !== this.lastMarkerSignature) {
+      this.lastMarkerSignature = markerSignature;
+      this.renderMarkers();
+    }
+
+    const viewportSignature = this.buildRouteViewportSignature();
+    if (forceViewport || viewportSignature !== this.lastViewportSignature) {
+      this.lastViewportSignature = viewportSignature;
+      this.focusVisibleRoute();
+    }
   }
 
   private renderMarkers(): void {
@@ -134,8 +153,46 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.addMarker(driver.currentLocation, 'driver', driver.vehicle.vehicleType);
       }
     }
+  }
 
-    this.focusVisibleRoute();
+  private buildMarkerSignature(): string {
+    const stops = (this.stops ?? [])
+      .map((stop, index) => `${this.stopIndexes?.[index] ?? index}:${this.coordinateSignature(stop)}`)
+      .join('|');
+    const drivers = (this.drivers ?? [])
+      .map((driver) => `${driver.id}:${driver.vehicle.vehicleType}:${this.coordinateSignature(driver.currentLocation)}`)
+      .join('|');
+
+    return [
+      `draggable:${this.draggable ? 1 : 0}`,
+      `pickup:${this.coordinateSignature(this.pickup)}`,
+      `dropoff:${this.coordinateSignature(this.dropoff)}`,
+      `stops:${stops}`,
+      `drivers:${drivers}`,
+    ].join(';');
+  }
+
+  private buildRouteViewportSignature(): string {
+    const stops = (this.stops ?? []).map((stop) => this.coordinateSignature(stop)).join('|');
+
+    return [
+      `compact:${this.compact ? 1 : 0}`,
+      `pickup:${this.coordinateSignature(this.pickup)}`,
+      `stops:${stops}`,
+      `dropoff:${this.coordinateSignature(this.dropoff)}`,
+    ].join(';');
+  }
+
+  private coordinateSignature(coordinate?: GmCoordinate | null): string {
+    if (!coordinate) {
+      return '';
+    }
+
+    return `${this.formatCoordinate(coordinate.lat)},${this.formatCoordinate(coordinate.lng)},${coordinate.address ?? ''}`;
+  }
+
+  private formatCoordinate(value: number): string {
+    return Number.isFinite(value) ? value.toFixed(6) : String(value);
   }
 
   private handleMapClick = (event: maplibregl.MapMouseEvent): void => {
