@@ -10,7 +10,7 @@ import {
   GmPaymentMethod,
   GmPorterOptions,
 } from '../../core/interfaces/booking.interface';
-import { GmCoordinate } from '../../core/interfaces/location.interface';
+import { GmCoordinate, GmCustomerAddress } from '../../core/interfaces/location.interface';
 import { GmVehicleType } from '../../core/interfaces/vehicle.interface';
 import {
   GM_ADDITIONAL_SERVICES,
@@ -23,6 +23,7 @@ import {
 import { GmBookingService } from '../../core/services/gm-booking.service';
 import { GmDriverService } from '../../core/services/gm-driver.service';
 import { GmGeocodingService, GmAddressSearchResult } from '../../core/services/gm-geocoding.service';
+import { GmCustomerAddressService } from '../../core/services/gm-customer-address.service';
 import { GmPaymentMethodOption, GmPaymentService } from '../../core/services/gm-payment.service';
 import { GmToastService } from '../../core/services/gm-toast.service';
 import { GmDriver } from '../../core/interfaces/driver.interface';
@@ -30,7 +31,18 @@ import { GmUser } from '../../core/interfaces/user.interface';
 import { GmAuthService } from '../../core/services/gm-auth.service';
 import { calculateGapMovePrice, GmPriceBreakdown } from '../../core/utils/booking-price.utils';
 import { formatVnd } from '../../core/utils/helpers';
-import { GmMapComponent } from '../../shared/components/gm-map/gm-map.component';
+import { GmMapComponent, GmMapMarkerDragEvent } from '../../shared/components/gm-map/gm-map.component';
+import { GmBookingMapPickerComponent } from './components/gm-booking-map-picker.component';
+import { GmBookingOrderDetailsComponent } from './components/gm-booking-order-details.component';
+import { GmBookingRouteFormComponent } from './components/gm-booking-route-form.component';
+import {
+  GmBookingAddressField,
+  GmBookingAddressTarget,
+  GmBookingDestinationPointMove,
+  GmBookingSavedAddressSelection,
+  GmBookingStopAddressChange,
+  GmBookingSuggestionSelection,
+} from './components/gm-booking-location.types';
 
 interface GmBookingDrawerItem {
   label: string;
@@ -46,10 +58,25 @@ interface GmBookingDrawerGroup {
   items: GmBookingDrawerItem[];
 }
 
+interface GmBookingRoutePointState {
+  address: string;
+  coordinate?: GmCoordinate;
+  suggestions: GmAddressSearchResult[];
+}
+
 @Component({
   selector: 'app-gm-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, IonicModule, GmMapComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    IonicModule,
+    GmMapComponent,
+    GmBookingRouteFormComponent,
+    GmBookingMapPickerComponent,
+    GmBookingOrderDetailsComponent,
+  ],
   templateUrl: './gm-booking.page.html',
   styleUrls: ['./gm-booking.page.scss'],
 })
@@ -64,6 +91,16 @@ export class GmBookingPage implements OnInit, OnDestroy {
   pickupAddress = 'Ben Thanh, Quận 1, TP.HCM';
   dropoffAddress = 'Thảo Điền, TP. Thủ Đức';
   packageInfo = '';
+  senderName = '';
+  senderPhone = '';
+  receiverName = '';
+  receiverPhone = '';
+  itemCount = 1;
+  weightKg = 0;
+  lengthCm = 0;
+  widthCm = 0;
+  heightCm = 0;
+  trackingCode = '';
   note = '';
   promoCode = '';
   codAmount = 0;
@@ -71,12 +108,18 @@ export class GmBookingPage implements OnInit, OnDestroy {
   scheduleMode: 'now' | 'scheduled' = 'now';
   scheduledAt = '';
   stopAddresses: string[] = [];
+  stopCoordinates: Array<GmCoordinate | undefined> = [];
   selectedAdditionalServices: GmAdditionalServiceKey[] = [];
   paymentMethods: GmPaymentMethodOption[] = [];
   nearbyDrivers: GmDriver[] = [];
   pickupSuggestions: GmAddressSearchResult[] = [];
   dropoffSuggestions: GmAddressSearchResult[] = [];
-  activeAddressField: 'pickup' | 'dropoff' = 'pickup';
+  stopSuggestions: GmAddressSearchResult[][] = [];
+  savedAddresses: GmCustomerAddress[] = [];
+  savedAddressesLoading = false;
+  activeAddressField: GmBookingAddressField = 'pickup';
+  activeStopIndex: number | null = null;
+  isRouteReorderMode = false;
   isMapPickerOpen = false;
   isLocating = false;
   isServiceDrawerOpen = false;
@@ -125,9 +168,11 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   private pickupSearchTimer?: ReturnType<typeof setTimeout>;
   private dropoffSearchTimer?: ReturnType<typeof setTimeout>;
+  private stopSearchTimers: Array<ReturnType<typeof setTimeout> | undefined> = [];
   private mapSearchTimer?: ReturnType<typeof setTimeout>;
   private driverSub?: Subscription;
   private authSub?: Subscription;
+  private savedAddressSub?: Subscription;
 
   pickupCoordinate: GmCoordinate = {
     lat: 10.7769,
@@ -157,6 +202,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
     private bookingService: GmBookingService,
     private driverService: GmDriverService,
     private geocodingService: GmGeocodingService,
+    private customerAddressService: GmCustomerAddressService,
     private paymentService: GmPaymentService,
     private toastService: GmToastService,
     private authService: GmAuthService,
@@ -213,18 +259,33 @@ export class GmBookingPage implements OnInit, OnDestroy {
       };
     }
 
+    const queryStops = this.getQueryStops();
+    this.stopAddresses = queryStops.map((stop) => stop.address);
+    this.stopCoordinates = queryStops.map((stop) => stop.coordinate);
+    this.stopSuggestions = this.stopAddresses.map(() => []);
+
+    const queryScheduleMode = this.route.snapshot.queryParamMap.get('scheduleMode');
+    const queryScheduledAt = this.route.snapshot.queryParamMap.get('scheduledAt');
+    if (queryScheduleMode === 'scheduled' && queryScheduledAt) {
+      this.scheduleMode = 'scheduled';
+      this.scheduledAt = queryScheduledAt;
+    }
+
     this.paymentService.getPaymentMethods().subscribe((methods) => (this.paymentMethods = methods));
     this.driverSub = this.driverService.getNearbyDrivers().subscribe((drivers) => (this.nearbyDrivers = drivers));
     this.authSub = this.authService.currentUser$.subscribe((user) => (this.user = user));
+    this.loadSavedAddresses();
     this.selectedDrawerItem = this.drawerGroups[0].items.find((item) => item.type === this.type) ?? this.drawerGroups[0].items[0];
   }
 
   ngOnDestroy(): void {
     clearTimeout(this.pickupSearchTimer);
     clearTimeout(this.dropoffSearchTimer);
+    this.stopSearchTimers.forEach((timer) => clearTimeout(timer));
     clearTimeout(this.mapSearchTimer);
     this.driverSub?.unsubscribe();
     this.authSub?.unsubscribe();
+    this.savedAddressSub?.unsubscribe();
   }
 
   get selectedService(): GmServiceOption {
@@ -252,17 +313,46 @@ export class GmBookingPage implements OnInit, OnDestroy {
   }
 
   get mapPickerPickup(): GmCoordinate {
-    if (this.activeAddressField === 'pickup' && this.pendingMapSelection) {
+    if (this.activeAddressField === 'pickup' && this.pendingMapSelection?.coordinate) {
       return this.pendingMapSelection.coordinate;
     }
     return this.pickupCoordinate;
   }
 
   get mapPickerDropoff(): GmCoordinate {
-    if (this.activeAddressField === 'dropoff' && this.pendingMapSelection) {
+    if (this.activeAddressField === 'dropoff' && this.pendingMapSelection?.coordinate) {
       return this.pendingMapSelection.coordinate;
     }
     return this.dropoffCoordinate;
+  }
+
+  get mapPickerStops(): GmCoordinate[] {
+    if (this.activeAddressField !== 'stop' || this.activeStopIndex === null || !this.pendingMapSelection?.coordinate) {
+      return this.routeStopCoordinates;
+    }
+
+    const pendingCoordinate = this.pendingMapSelection.coordinate;
+    return this.mapPickerStopIndexes.map((index) =>
+      index === this.activeStopIndex ? pendingCoordinate : this.stopCoordinates[index] ?? pendingCoordinate,
+    );
+  }
+
+  get mapPickerStopIndexes(): number[] {
+    const indexes = this.routeStopIndexes;
+    if (this.activeAddressField === 'stop' && this.activeStopIndex !== null && !indexes.includes(this.activeStopIndex)) {
+      return [...indexes, this.activeStopIndex];
+    }
+    return indexes;
+  }
+
+  get routeStopCoordinates(): GmCoordinate[] {
+    return this.stopCoordinates.filter((coordinate): coordinate is GmCoordinate => Boolean(coordinate));
+  }
+
+  get routeStopIndexes(): number[] {
+    return this.stopCoordinates
+      .map((coordinate, index) => (coordinate ? index : null))
+      .filter((index): index is number => index !== null);
   }
 
   get pendingMapAddress(): string {
@@ -346,10 +436,39 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   addStop(): void {
     this.stopAddresses = [...this.stopAddresses, ''];
+    this.stopCoordinates = [...this.stopCoordinates, undefined];
+    this.stopSuggestions = [...this.stopSuggestions, []];
   }
 
   removeStop(index: number): void {
+    clearTimeout(this.stopSearchTimers[index]);
     this.stopAddresses = this.stopAddresses.filter((_, itemIndex) => itemIndex !== index);
+    this.stopCoordinates = this.stopCoordinates.filter((_, itemIndex) => itemIndex !== index);
+    this.stopSuggestions = this.stopSuggestions.filter((_, itemIndex) => itemIndex !== index);
+    this.stopSearchTimers = this.stopSearchTimers.filter((_, itemIndex) => itemIndex !== index);
+    if (!this.stopAddresses.length) {
+      this.isRouteReorderMode = false;
+    }
+  }
+
+  toggleRouteReorder(): void {
+    if (!this.stopAddresses.length) {
+      return;
+    }
+
+    this.isRouteReorderMode = !this.isRouteReorderMode;
+  }
+
+  moveDestinationPoint(change: GmBookingDestinationPointMove): void {
+    const points = this.getDestinationPointStates();
+    const { fromIndex, toIndex } = change;
+    if (!points.length || fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= points.length || toIndex >= points.length) {
+      return;
+    }
+
+    const [movedPoint] = points.splice(fromIndex, 1);
+    points.splice(toIndex, 0, movedPoint);
+    this.applyDestinationPointStates(points);
   }
 
   goBack(): void {
@@ -407,14 +526,31 @@ export class GmBookingPage implements OnInit, OnDestroy {
     });
   }
 
+  searchStopAddress(index: number): void {
+    const query = this.stopAddresses[index] ?? '';
+    if (query.trim().length < 2) {
+      this.stopSuggestions[index] = [];
+      return;
+    }
+
+    this.geocodingService.searchAddress(query).subscribe((results) => {
+      this.stopSuggestions[index] = results.slice(0, 4);
+    });
+  }
+
   usePickupSuggestion(result: GmAddressSearchResult): void {
-    this.applyPickup(result);
-    this.pickupSuggestions = [];
+    this.useAddressSuggestion({ field: 'pickup', result });
   }
 
   useDropoffSuggestion(result: GmAddressSearchResult): void {
-    this.applyDropoff(result);
-    this.dropoffSuggestions = [];
+    this.useAddressSuggestion({ field: 'dropoff', result });
+  }
+
+  useAddressSuggestion(selection: GmBookingSuggestionSelection): void {
+    this.geocodingService.resolveAddress(selection.result).subscribe((resolved) => {
+      this.openMapPickerWithSelection(selection, resolved);
+      this.clearSuggestions(selection);
+    });
   }
 
   onAddressInput(field: 'pickup' | 'dropoff'): void {
@@ -426,6 +562,15 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
     clearTimeout(this.dropoffSearchTimer);
     this.dropoffSearchTimer = setTimeout(() => this.searchDropoff(), 250);
+  }
+
+  updateStopAddress(change: GmBookingStopAddressChange): void {
+    this.stopAddresses[change.index] = change.address;
+  }
+
+  onStopAddressInput(index: number): void {
+    clearTimeout(this.stopSearchTimers[index]);
+    this.stopSearchTimers[index] = setTimeout(() => this.searchStopAddress(index), 250);
   }
 
   useCurrentLocation(): void {
@@ -461,10 +606,11 @@ export class GmBookingPage implements OnInit, OnDestroy {
     );
   }
 
-  openMapPicker(field: 'pickup' | 'dropoff'): void {
+  openMapPicker(field: GmBookingAddressField, stopIndex: number | null = null): void {
     this.activeAddressField = field;
-    const currentCoordinate = field === 'pickup' ? this.pickupCoordinate : this.dropoffCoordinate;
-    const currentAddress = field === 'pickup' ? this.pickupAddress : this.dropoffAddress;
+    this.activeStopIndex = field === 'stop' ? stopIndex ?? this.activeStopIndex ?? 0 : null;
+    const currentCoordinate = this.getCurrentCoordinate(field, this.activeStopIndex);
+    const currentAddress = this.getCurrentAddress(field, this.activeStopIndex);
     this.pendingMapSelection = {
       address: currentAddress,
       coordinate: currentCoordinate,
@@ -474,10 +620,24 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.isMapPickerOpen = true;
   }
 
+  openMapPickerTarget(target: GmBookingAddressTarget): void {
+    this.openMapPicker(target.field, target.stopIndex ?? null);
+  }
+
+  openMapPickerWithSelection(target: GmBookingAddressTarget, selection: GmAddressSearchResult): void {
+    this.activeAddressField = target.field;
+    this.activeStopIndex = target.field === 'stop' ? target.stopIndex ?? 0 : null;
+    this.pendingMapSelection = selection;
+    this.mapSearchQuery = selection.address;
+    this.mapSearchResults = [];
+    this.isMapPickerOpen = true;
+  }
+
   closeMapPicker(): void {
     this.isMapPickerOpen = false;
     this.mapSearchResults = [];
     this.pendingMapSelection = undefined;
+    this.activeStopIndex = null;
   }
 
   useMapCoordinate(coordinate: GmCoordinate): void {
@@ -516,6 +676,21 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.pendingMapSelection = result;
     this.mapSearchQuery = result.address;
     this.mapSearchResults = [];
+    if (!result.coordinate) {
+      this.geocodingService.resolveAddress(result).subscribe((resolved) => {
+        this.pendingMapSelection = resolved;
+        this.mapSearchQuery = resolved.address;
+      });
+    }
+  }
+
+  handleMapMarkerDrag(event: GmMapMarkerDragEvent): void {
+    if (this.isMapPickerOpen && this.isActiveDragTarget(event)) {
+      this.useMapCoordinate(event.coordinate);
+      return;
+    }
+
+    this.applyDraggedRouteCoordinate(event);
   }
 
   locateMapPicker(): void {
@@ -555,13 +730,25 @@ export class GmBookingPage implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.activeAddressField === 'pickup') {
-      this.applyPickup(this.pendingMapSelection);
-    } else {
-      this.applyDropoff(this.pendingMapSelection);
-    }
+    this.geocodingService.resolveAddress(this.pendingMapSelection).subscribe((resolved) => {
+      if (this.activeAddressField === 'pickup') {
+        this.applyPickup(resolved);
+      } else if (this.activeAddressField === 'dropoff') {
+        this.applyDropoff(resolved);
+      } else if (this.activeStopIndex !== null) {
+        this.applyStop(this.activeStopIndex, resolved);
+      }
 
-    this.closeMapPicker();
+      this.closeMapPicker();
+    });
+  }
+
+  handleSavedAddressSelection(selection: GmBookingSavedAddressSelection): void {
+    const result: GmAddressSearchResult = {
+      address: selection.address.address,
+      coordinate: this.customerAddressService.toCoordinate(selection.address),
+    };
+    this.openMapPickerWithSelection(selection, result);
   }
 
   formatAmount(amount: number): string {
@@ -637,15 +824,16 @@ export class GmBookingPage implements OnInit, OnDestroy {
         scheduledAt: this.scheduleMode === 'scheduled' ? this.scheduledAt : undefined,
         note: this.buildNote(),
         stops: this.stopAddresses
-          .filter((address) => address.trim())
-          .map((address, index) => ({
+          .map((address, index) => ({ address, coordinate: this.stopCoordinates[index] }))
+          .filter((stop) => stop.address.trim())
+          .map((stop, index) => ({
             id: `stop-${index + 1}`,
             label: `Điểm dừng ${index + 1}`,
-            address,
-            coordinate: {
+            address: stop.address,
+            coordinate: stop.coordinate ?? {
               lat: this.pickupCoordinate.lat + (index + 1) * 0.01,
               lng: this.pickupCoordinate.lng + (index + 1) * 0.01,
-              address,
+              address: stop.address,
             },
           })),
         pickup: {
@@ -676,8 +864,16 @@ export class GmBookingPage implements OnInit, OnDestroy {
   private buildNote(): string {
     const noteParts = [
       this.note.trim(),
+      this.senderName.trim() ? `Người gửi: ${this.senderName.trim()}` : '',
+      this.senderPhone.trim() ? `SĐT người gửi: ${this.senderPhone.trim()}` : '',
+      this.receiverName.trim() ? `Người nhận: ${this.receiverName.trim()}` : '',
+      this.receiverPhone.trim() ? `SĐT người nhận: ${this.receiverPhone.trim()}` : '',
       this.codAmount > 0 ? `COD: ${this.codAmount}` : '',
       this.declaredValue > 0 ? `Giá trị khai báo: ${this.declaredValue}` : '',
+      this.itemCount > 0 ? `Số kiện: ${this.itemCount}` : '',
+      this.weightKg > 0 ? `Khối lượng: ${this.weightKg}kg` : '',
+      this.lengthCm > 0 || this.widthCm > 0 || this.heightCm > 0 ? `Kích thước: ${this.lengthCm}x${this.widthCm}x${this.heightCm}cm` : '',
+      this.trackingCode.trim() ? `Mã vận đơn: ${this.trackingCode.trim()}` : '',
     ].filter(Boolean);
 
     return noteParts.join(' | ');
@@ -685,12 +881,142 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   private applyPickup(result: GmAddressSearchResult): void {
     this.pickupAddress = result.address;
-    this.pickupCoordinate = result.coordinate;
+    if (result.coordinate) {
+      this.pickupCoordinate = result.coordinate;
+    }
   }
 
   private applyDropoff(result: GmAddressSearchResult): void {
     this.dropoffAddress = result.address;
-    this.dropoffCoordinate = result.coordinate;
+    if (result.coordinate) {
+      this.dropoffCoordinate = result.coordinate;
+    }
+  }
+
+  private applyStop(index: number, result: GmAddressSearchResult): void {
+    this.stopAddresses[index] = result.address;
+    if (result.coordinate) {
+      this.stopCoordinates[index] = result.coordinate;
+    }
+    this.stopSuggestions[index] = [];
+  }
+
+  private getDestinationPointStates(): GmBookingRoutePointState[] {
+    const stops = this.stopAddresses.map((address, index) => ({
+      address,
+      coordinate: this.stopCoordinates[index],
+      suggestions: this.stopSuggestions[index] ?? [],
+    }));
+
+    return [
+      ...stops,
+      {
+        address: this.dropoffAddress,
+        coordinate: this.dropoffCoordinate,
+        suggestions: this.dropoffSuggestions,
+      },
+    ];
+  }
+
+  private applyDestinationPointStates(points: GmBookingRoutePointState[]): void {
+    const nextDropoff = points[points.length - 1];
+    const nextStops = points.slice(0, -1);
+
+    this.stopAddresses = nextStops.map((point) => point.address);
+    this.stopCoordinates = nextStops.map((point) => point.coordinate);
+    this.stopSuggestions = nextStops.map((point) => point.suggestions);
+    this.stopSearchTimers = this.stopAddresses.map(() => undefined);
+
+    this.dropoffAddress = nextDropoff?.address ?? '';
+    this.dropoffCoordinate =
+      nextDropoff?.coordinate ?? {
+        lat: this.pickupCoordinate.lat + 0.02,
+        lng: this.pickupCoordinate.lng + 0.02,
+        address: nextDropoff?.address || 'Điểm giao / đến',
+      };
+    this.dropoffSuggestions = nextDropoff?.suggestions ?? [];
+  }
+
+  private applyDraggedRouteCoordinate(event: GmMapMarkerDragEvent): void {
+    const fallback: GmAddressSearchResult = {
+      address: event.coordinate.address || 'Vị trí đã chọn trên bản đồ',
+      coordinate: event.coordinate,
+    };
+
+    this.geocodingService.reverseGeocode(event.coordinate.lat, event.coordinate.lng).subscribe((result) => {
+      const resolved = result ?? fallback;
+      if (event.kind === 'pickup') {
+        this.applyPickup(resolved);
+      } else if (event.kind === 'dropoff') {
+        this.applyDropoff(resolved);
+      } else if (typeof event.index === 'number') {
+        this.applyStop(event.index, resolved);
+      }
+    });
+  }
+
+  private getCurrentAddress(field: GmBookingAddressField, stopIndex: number | null): string {
+    if (field === 'pickup') {
+      return this.pickupAddress;
+    }
+    if (field === 'dropoff') {
+      return this.dropoffAddress;
+    }
+    return stopIndex !== null ? this.stopAddresses[stopIndex] ?? '' : '';
+  }
+
+  private getCurrentCoordinate(field: GmBookingAddressField, stopIndex: number | null): GmCoordinate {
+    if (field === 'pickup') {
+      return this.pickupCoordinate;
+    }
+    if (field === 'dropoff') {
+      return this.dropoffCoordinate;
+    }
+
+    const stopCoordinate = stopIndex !== null ? this.stopCoordinates[stopIndex] : undefined;
+    return (
+      stopCoordinate ?? {
+        lat: this.dropoffCoordinate.lat,
+        lng: this.dropoffCoordinate.lng,
+        address: stopIndex !== null ? this.stopAddresses[stopIndex] || 'Điểm dừng' : 'Điểm dừng',
+      }
+    );
+  }
+
+  private clearSuggestions(target: GmBookingAddressTarget): void {
+    if (target.field === 'pickup') {
+      this.pickupSuggestions = [];
+      return;
+    }
+    if (target.field === 'dropoff') {
+      this.dropoffSuggestions = [];
+      return;
+    }
+    if (typeof target.stopIndex === 'number') {
+      this.stopSuggestions[target.stopIndex] = [];
+    }
+  }
+
+  private isActiveDragTarget(event: GmMapMarkerDragEvent): boolean {
+    if (event.kind === 'stop') {
+      return this.activeAddressField === 'stop';
+    }
+    return event.kind === this.activeAddressField;
+  }
+
+  private loadSavedAddresses(): void {
+    this.savedAddressesLoading = true;
+    this.savedAddressSub?.unsubscribe();
+    this.savedAddressSub = this.customerAddressService.getAddresses().subscribe({
+      next: (addresses) => {
+        this.savedAddresses = addresses;
+        this.savedAddressesLoading = false;
+      },
+      error: () => {
+        this.savedAddresses = [];
+        this.savedAddressesLoading = false;
+      },
+    });
   }
 
   private getQueryNumber(key: string): number | null {
@@ -702,6 +1028,32 @@ export class GmBookingPage implements OnInit, OnDestroy {
     return Number.isFinite(numericValue) ? numericValue : null;
   }
 
+  private getQueryStops(): Array<{ address: string; coordinate?: GmCoordinate }> {
+    const stops: Array<{ address: string; coordinate?: GmCoordinate }> = [];
+    for (let index = 1; index <= 20; index += 1) {
+      const value = this.route.snapshot.queryParamMap.get(`stop${index}`);
+      if (!value) {
+        continue;
+      }
+
+      const lat = this.getQueryNumber(`stop${index}Lat`);
+      const lng = this.getQueryNumber(`stop${index}Lng`);
+      stops.push({
+        address: value,
+        coordinate:
+          lat !== null && lng !== null
+            ? {
+                lat,
+                lng,
+                address: value,
+              }
+            : undefined,
+      });
+    }
+
+    return stops;
+  }
+
   private parseBookingType(value: unknown): GmBookingType | null {
     return value === 'ride' || value === 'delivery' || value === 'truck' || value === 'moving' || value === 'porter' || value === 'multi_stop'
       ? value
@@ -709,11 +1061,36 @@ export class GmBookingPage implements OnInit, OnDestroy {
   }
 
   private buildCurrentQuery(type: GmBookingType): Record<string, string> {
-    return {
+    const queryParams: Record<string, string> = {
       type,
       pickup: this.pickupAddress,
       dropoff: this.dropoffAddress,
     };
+
+    if (this.pickupCoordinate) {
+      queryParams['pickupLat'] = String(this.pickupCoordinate.lat);
+      queryParams['pickupLng'] = String(this.pickupCoordinate.lng);
+    }
+    if (this.dropoffCoordinate) {
+      queryParams['dropoffLat'] = String(this.dropoffCoordinate.lat);
+      queryParams['dropoffLng'] = String(this.dropoffCoordinate.lng);
+    }
+    this.stopAddresses.forEach((address, index) => {
+      if (address.trim()) {
+        queryParams[`stop${index + 1}`] = address.trim();
+        const coordinate = this.stopCoordinates[index];
+        if (coordinate) {
+          queryParams[`stop${index + 1}Lat`] = String(coordinate.lat);
+          queryParams[`stop${index + 1}Lng`] = String(coordinate.lng);
+        }
+      }
+    });
+    if (this.scheduleMode === 'scheduled' && this.scheduledAt) {
+      queryParams['scheduleMode'] = 'scheduled';
+      queryParams['scheduledAt'] = this.scheduledAt;
+    }
+
+    return queryParams;
   }
 
   private isVehicleType(value: unknown): value is GmVehicleType {

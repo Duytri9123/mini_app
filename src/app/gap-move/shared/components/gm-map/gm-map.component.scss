@@ -56,6 +56,10 @@
   background: #ff5a00;
 }
 
+:host ::ng-deep .gm-map-marker-stop {
+  background: #64748b;
+}
+
 :host ::ng-deep .gm-map-marker-driver {
   background: #0f172a;
 }

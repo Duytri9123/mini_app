@@ -1,18 +1,39 @@
-<section class="min-h-full bg-slate-50 px-4 py-5 lg:px-8 lg:py-8">
-  <div class="mx-auto max-w-4xl">
-    <div class="mb-5 flex items-center justify-between">
-      <div>
-        <p class="text-xs font-black uppercase tracking-wide text-[#ff5a00]">Địa chỉ</p>
-        <h1 class="mt-1 text-3xl font-black text-slate-950">Địa chỉ đã lưu</h1>
-      </div>
-      <button type="button" class="rounded-2xl bg-[#008c95] px-4 py-3 text-sm font-extrabold text-white">Thêm địa chỉ</button>
+<section class="min-h-full bg-white">
+  <header class="sticky top-0 z-30 border-b border-slate-100 bg-white px-4 py-4">
+    <div class="mx-auto grid max-w-2xl grid-cols-[44px_minmax(0,1fr)_44px] items-center">
+      <button type="button" class="flex h-10 w-10 items-center justify-center text-slate-600" aria-label="Quay lại" (click)="goBack()">
+        <ion-icon name="chevron-back-outline" class="text-3xl"></ion-icon>
+      </button>
+      <h1 class="text-center text-xl font-black text-slate-950">Địa chỉ đã lưu</h1>
+      <span></span>
     </div>
-    <div class="space-y-3">
-      <article *ngFor="let item of addresses" class="rounded-3xl bg-white p-5 shadow-sm">
-        <h2 class="font-extrabold text-slate-950">{{ item.label }}</h2>
-        <p class="mt-1 text-sm leading-6 text-slate-600">{{ item.address }}</p>
-        <p class="mt-2 text-xs font-semibold text-slate-400">{{ item.note }}</p>
-      </article>
-    </div>
-  </div>
+  </header>
+
+  <app-gm-saved-address-list
+    [addresses]="addresses"
+    [isLoading]="isLoading"
+    (addAddress)="openCreate()"
+    (editAddress)="openEdit($event)"
+    (setDefaultAddress)="setDefault($event)"
+    (deleteAddress)="deleteAddress($event)"
+  ></app-gm-saved-address-list>
+
+  <app-gm-saved-address-editor
+    *ngIf="isEditorOpen"
+    [title]="editorTitle"
+    [(label)]="addressLabel"
+    [(isDefault)]="addressIsDefault"
+    [(searchQuery)]="searchQuery"
+    [searchResults]="searchResults"
+    [coordinate]="editorCoordinate"
+    [pendingAddress]="pendingAddress"
+    [isLocating]="isLocating"
+    [isSaving]="isSaving"
+    (searchInput)="onSearchInput()"
+    (useSearchResult)="useSearchResult($event)"
+    (selectCoordinate)="useMapCoordinate($event)"
+    (locate)="locateEditor()"
+    (closeEditor)="closeEditor()"
+    (saveAddress)="saveEditor()"
+  ></app-gm-saved-address-editor>
 </section>

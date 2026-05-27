@@ -1,5 +1,5 @@
-const BASE_URL_VALUE = 'https://admin-jet.tinopage.com';
-// const BASE_URL_VALUE = 'http://192.168.1.92:8000';
+// const BASE_URL_VALUE = 'https://admin-jet.tinopage.com';
+const BASE_URL_VALUE = 'http://192.168.1.92:8000';
 const GOOGLE_CLIENT_ID_VALUE =
   '764570307183-17o4dsc046ga93sojamt9p640irkgsc8.apps.googleusercontent.com';
 
@@ -8,6 +8,7 @@ export const environment = {
   BASE_URL: BASE_URL_VALUE,
 
   GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID_VALUE,
+  NDAMAPS_API_KEY: 'EEIC7Jm9qNPD0L5HpyasquCJ7bnHjhdv',
   VIETMAP_API_KEY: 'EEIC7Jm9qNPD0L5HpyasquCJ7bnHjhdv',
   firebase: {
     apiKey: 'AIzaSyD0_UAJLa0bqSkdspVCiRDX25CiI-UuA3A',

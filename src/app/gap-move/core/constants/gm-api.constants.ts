@@ -6,13 +6,14 @@ export const GM_STORAGE_KEYS = {
 
 export const GM_API_ENDPOINTS = {
   auth: {
-    login: 'gapmove/auth/login',
-    register: 'gapmove/auth/register',
-    logout: 'gapmove/auth/logout',
-    me: 'gapmove/auth/me',
+    login: 'auth/login',
+    register: 'auth/register',
+    logout: 'auth/logout',
+    me: 'auth/me',
   },
   bookings: 'gapmove/bookings',
   deliveries: 'gapmove/deliveries',
+  customerAddresses: 'customer-addresses',
   drivers: 'gapmove/drivers',
   notifications: 'gapmove/notifications',
   payments: 'gapmove/payments',

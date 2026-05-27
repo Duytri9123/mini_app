@@ -15,6 +15,50 @@
   scroll-snap-align: start;
 }
 
+.gm-vehicle-sprite {
+  display: inline-block;
+  flex: 0 0 auto;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: drop-shadow(0 8px 10px rgba(15, 23, 42, 0.14));
+}
+
+.gm-vehicle-sprite-card {
+  width: 58px;
+  height: 44px;
+}
+
+.gm-vehicle-sprite-menu {
+  width: 30px;
+  height: 26px;
+}
+
+.gm-vehicle-sprite-bike {
+  background-image: url('/assets/icon/xemay.png');
+}
+
+.gm-vehicle-sprite-car {
+  background-image: url('/assets/icon/car4.png');
+}
+
+.gm-vehicle-sprite-van {
+  background-image: url('/assets/icon/Van.png');
+}
+
+.gm-vehicle-sprite-truck,
+.gm-vehicle-sprite-moving {
+  background-image: url('/assets/icon/truck.png');
+}
+
+.gm-vehicle-sprite-multistop {
+  background-image: url('/assets/icon/xebaga.png');
+}
+
+.gm-vehicle-sprite-porter {
+  background-image: url('/assets/icon/pickup_truck.png');
+}
+
 @media (min-width: 1024px) {
   .gm-booking-shell {
     height: 100dvh;

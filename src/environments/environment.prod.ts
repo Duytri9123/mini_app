@@ -6,6 +6,7 @@ export const environment = {
   production: true,
   BASE_URL: BASE_URL_VALUE,
   GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID_VALUE,
+  NDAMAPS_API_KEY: '',
   VIETMAP_API_KEY: '',
   firebase: {
     apiKey: 'AIzaSyD0_UAJLa0bqSkdspVCiRDX25CiI-UuA3A',

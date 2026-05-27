@@ -69,95 +69,29 @@
       </button>
     </div>
 
-    <section class="mb-5 rounded-[22px] border border-slate-100 bg-white p-4 shadow-sm">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-sm font-black uppercase text-slate-400">Tuyến đường</h2>
-        <button type="button" class="text-sm font-bold text-[#ff5a00]" (click)="addStop()">+ Thêm điểm</button>
-      </div>
-
-      <div class="space-y-3">
-        <div>
-          <label class="text-xs font-bold uppercase text-slate-400" for="pickupAddress">
-            {{ type === 'porter' ? 'Địa điểm bê hàng' : 'Điểm lấy / đón' }}
-          </label>
-          <div class="mt-2 flex gap-2">
-            <input
-              id="pickupAddress"
-              name="pickupAddress"
-              [(ngModel)]="pickupAddress"
-              (ngModelChange)="onAddressInput('pickup')"
-              class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-            />
-            <button
-              type="button"
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#008c95]/20 text-[#008c95]"
-              aria-label="Chọn điểm lấy trên bản đồ"
-              title="Chọn điểm lấy trên bản đồ"
-              (click)="openMapPicker('pickup')"
-            >
-              <ion-icon name="map-outline" class="text-lg"></ion-icon>
-            </button>
-          </div>
-          <div *ngIf="pickupSuggestions.length" class="mt-2 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-            <button
-              *ngFor="let result of pickupSuggestions"
-              type="button"
-              class="block w-full border-b border-slate-100 px-3 py-2 text-left text-xs text-slate-600 last:border-b-0"
-              (click)="usePickupSuggestion(result)"
-            >
-              {{ result.address }}
-            </button>
-          </div>
-        </div>
-
-        <div *ngFor="let stop of stopAddresses; let i = index">
-          <label class="text-xs font-bold uppercase text-slate-400" [for]="'stop-' + i">Điểm dừng {{ i + 1 }}</label>
-          <div class="mt-2 flex gap-2">
-            <input
-              [id]="'stop-' + i"
-              [name]="'stopAddress' + i"
-              [(ngModel)]="stopAddresses[i]"
-              class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-            />
-            <button type="button" class="rounded-2xl border border-red-100 px-3 text-sm font-bold text-red-600" (click)="removeStop(i)">Xóa</button>
-          </div>
-        </div>
-
-        <div>
-          <label class="text-xs font-bold uppercase text-slate-400" for="dropoffAddress">
-            {{ type === 'porter' ? 'Điểm hoàn tất' : 'Điểm giao / đến' }}
-          </label>
-          <div class="mt-2 flex gap-2">
-            <input
-              id="dropoffAddress"
-              name="dropoffAddress"
-              [(ngModel)]="dropoffAddress"
-              (ngModelChange)="onAddressInput('dropoff')"
-              class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-            />
-            <button
-              type="button"
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#008c95]/20 text-[#008c95]"
-              aria-label="Chọn điểm giao trên bản đồ"
-              title="Chọn điểm giao trên bản đồ"
-              (click)="openMapPicker('dropoff')"
-            >
-              <ion-icon name="map-outline" class="text-lg"></ion-icon>
-            </button>
-          </div>
-          <div *ngIf="dropoffSuggestions.length" class="mt-2 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-            <button
-              *ngFor="let result of dropoffSuggestions"
-              type="button"
-              class="block w-full border-b border-slate-100 px-3 py-2 text-left text-xs text-slate-600 last:border-b-0"
-              (click)="useDropoffSuggestion(result)"
-            >
-              {{ result.address }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
+    <app-gm-booking-route-form
+      [type]="type"
+      [(pickupAddress)]="pickupAddress"
+      [(dropoffAddress)]="dropoffAddress"
+      [stopAddresses]="stopAddresses"
+      [pickupSuggestions]="pickupSuggestions"
+      [dropoffSuggestions]="dropoffSuggestions"
+      [stopSuggestions]="stopSuggestions"
+      [savedAddresses]="savedAddresses"
+      [savedAddressesLoading]="savedAddressesLoading"
+      [isRouteReorderMode]="isRouteReorderMode"
+      (pickupInput)="onAddressInput('pickup')"
+      (dropoffInput)="onAddressInput('dropoff')"
+      (stopAddressChange)="updateStopAddress($event)"
+      (stopInput)="onStopAddressInput($event)"
+      (addStop)="addStop()"
+      (removeStop)="removeStop($event)"
+      (toggleRouteReorder)="toggleRouteReorder()"
+      (moveDestinationPoint)="moveDestinationPoint($event)"
+      (openMap)="openMapPickerTarget($event)"
+      (useSuggestion)="useAddressSuggestion($event)"
+      (useSavedAddress)="handleSavedAddressSelection($event)"
+    ></app-gm-booking-route-form>
 
     <section class="mb-5">
       <div class="mb-3 flex items-center justify-between">
@@ -270,31 +204,25 @@
       </div>
     </section>
 
-    <section class="mb-6 rounded-2xl border border-slate-100 bg-white p-4">
-      <h2 class="mb-4 text-sm font-black uppercase text-slate-400">Thông tin đơn</h2>
-      <label class="block text-sm font-semibold text-slate-700" for="packageInfo">Mô tả hàng hóa / nhu cầu</label>
-      <input id="packageInfo" name="packageInfo" [(ngModel)]="packageInfo" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
-
-      <div class="mt-4 grid grid-cols-2 gap-3">
-        <label class="text-sm font-semibold text-slate-700">
-          Thu hộ COD
-          <input type="number" min="0" name="codAmount" [(ngModel)]="codAmount" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
-        </label>
-        <label class="text-sm font-semibold text-slate-700">
-          Giá trị hàng
-          <input type="number" min="0" name="declaredValue" [(ngModel)]="declaredValue" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
-        </label>
-      </div>
-
-      <div class="mt-4 grid grid-cols-2 gap-2">
-        <button type="button" class="rounded-xl border px-3 py-3 text-sm font-bold" [ngClass]="scheduleMode === 'now' ? 'border-[#008c95] bg-[#008c95]/5' : 'border-slate-200'" (click)="scheduleMode = 'now'">Đặt ngay</button>
-        <button type="button" class="rounded-xl border px-3 py-3 text-sm font-bold" [ngClass]="scheduleMode === 'scheduled' ? 'border-[#008c95] bg-[#008c95]/5' : 'border-slate-200'" (click)="scheduleMode = 'scheduled'">Đặt lịch</button>
-      </div>
-      <input *ngIf="scheduleMode === 'scheduled'" type="datetime-local" name="scheduledAt" [(ngModel)]="scheduledAt" class="mt-3 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
-
-      <label class="mt-4 block text-sm font-semibold text-slate-700" for="note">Ghi chú cho tài xế / đội bê hàng</label>
-      <textarea id="note" name="note" [(ngModel)]="note" rows="3" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"></textarea>
-    </section>
+    <app-gm-booking-order-details
+      [type]="type"
+      [(packageInfo)]="packageInfo"
+      [(senderName)]="senderName"
+      [(senderPhone)]="senderPhone"
+      [(receiverName)]="receiverName"
+      [(receiverPhone)]="receiverPhone"
+      [(codAmount)]="codAmount"
+      [(declaredValue)]="declaredValue"
+      [(itemCount)]="itemCount"
+      [(weightKg)]="weightKg"
+      [(lengthCm)]="lengthCm"
+      [(widthCm)]="widthCm"
+      [(heightCm)]="heightCm"
+      [(trackingCode)]="trackingCode"
+      [(scheduleMode)]="scheduleMode"
+      [(scheduledAt)]="scheduledAt"
+      [(note)]="note"
+    ></app-gm-booking-order-details>
 
     <section class="mb-6 rounded-2xl border border-slate-100 bg-white p-4">
       <h2 class="mb-4 text-sm font-black uppercase text-slate-400">Thanh toán & giá</h2>
@@ -323,76 +251,33 @@
     <app-gm-map
       [pickup]="pickupCoordinate"
       [dropoff]="dropoffCoordinate"
+      [stops]="routeStopCoordinates"
+      [stopIndexes]="routeStopIndexes"
       [drivers]="nearbyDrivers"
+      [draggable]="true"
+      (markerDragEnd)="handleMapMarkerDrag($event)"
     ></app-gm-map>
   </section>
 
-  <div *ngIf="isMapPickerOpen" class="fixed inset-0 z-[80] bg-slate-950/55 p-3 backdrop-blur-sm lg:p-5">
-    <div class="mx-auto flex h-full max-w-7xl flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-100 px-4 py-2">
-        <div>
-          <p class="text-xs font-black uppercase text-[#ff5a00]">Chọn trên bản đồ</p>
-          <h3 class="text-sm font-extrabold text-slate-950">{{ activeAddressField === 'pickup' ? 'Chọn điểm lấy / đón' : 'Chọn điểm giao / đến' }}</h3>
-        </div>
-        <div class="flex items-center gap-2">
-          <button type="button" class="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700" (click)="closeMapPicker()">Đóng</button>
-          <button type="button" class="rounded-full bg-[#008c95] px-4 py-2 text-xs font-bold text-white" (click)="confirmMapSelection()">Xác nhận</button>
-        </div>
-      </div>
-
-      <div class="border-b border-slate-100 px-4 py-2">
-        <div class="grid items-center gap-2 lg:grid-cols-[auto_minmax(0,1fr)_auto]">
-          <div class="flex flex-wrap items-center gap-2">
-          <button type="button" class="rounded-xl px-3 py-2 text-xs font-bold" [ngClass]="activeAddressField === 'pickup' ? 'bg-[#008c95] text-white' : 'bg-slate-100 text-slate-600'" (click)="openMapPicker('pickup')">
-            Điểm lấy
-          </button>
-          <button type="button" class="rounded-xl px-3 py-2 text-xs font-bold" [ngClass]="activeAddressField === 'dropoff' ? 'bg-[#008c95] text-white' : 'bg-slate-100 text-slate-600'" (click)="openMapPicker('dropoff')">
-            Điểm đến
-          </button>
-          </div>
-
-          <div class="relative min-w-0">
-          <label class="flex h-10 w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4">
-            <ion-icon name="search-outline" class="text-lg text-slate-400"></ion-icon>
-            <input
-              name="mapSearchQuery"
-              [(ngModel)]="mapSearchQuery"
-              (ngModelChange)="onMapSearchInput()"
-              placeholder="Tìm kiếm địa chỉ..."
-              class="min-w-0 flex-1 border-0 bg-transparent text-sm font-semibold outline-none"
-            />
-          </label>
-          <div *ngIf="mapSearchResults.length" class="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
-            <button
-              *ngFor="let result of mapSearchResults"
-              type="button"
-              class="block w-full border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-600 last:border-b-0 hover:bg-slate-50"
-              (click)="useMapSearchResult(result)"
-            >
-              {{ result.address }}
-            </button>
-          </div>
-          </div>
-
-          <button type="button" class="rounded-xl border border-[#008c95]/20 px-3 py-2 text-xs font-bold text-[#008c95]" (click)="locateMapPicker()">
-            Vị trí của tôi
-          </button>
-        </div>
-
-        <div class="mt-2 flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-          <span class="shrink-0 text-[10px] font-black uppercase text-slate-400">Vị trí đang chọn</span>
-          <p class="min-w-0 truncate text-xs font-bold text-slate-900">{{ pendingMapAddress }}</p>
-        </div>
-      </div>
-
-      <div class="min-h-0 flex-1">
-        <app-gm-map
-          [pickup]="mapPickerPickup"
-          [dropoff]="mapPickerDropoff"
-          [selectable]="true"
-          (selectCoordinate)="useMapCoordinate($event)"
-        ></app-gm-map>
-      </div>
-    </div>
-  </div>
+  <app-gm-booking-map-picker
+    *ngIf="isMapPickerOpen"
+    [activeAddressField]="activeAddressField"
+    [activeStopIndex]="activeStopIndex"
+    [pickup]="mapPickerPickup"
+    [dropoff]="mapPickerDropoff"
+    [stops]="mapPickerStops"
+    [stopIndexes]="mapPickerStopIndexes"
+    [pendingAddress]="pendingMapAddress"
+    [(searchQuery)]="mapSearchQuery"
+    [searchResults]="mapSearchResults"
+    [isLocating]="isLocating"
+    (closePicker)="closeMapPicker()"
+    (confirmSelection)="confirmMapSelection()"
+    (locate)="locateMapPicker()"
+    (searchInput)="onMapSearchInput()"
+    (useSearchResult)="useMapSearchResult($event)"
+    (selectCoordinate)="useMapCoordinate($event)"
+    (markerDragEnd)="handleMapMarkerDrag($event)"
+    (switchField)="openMapPickerTarget($event)"
+  ></app-gm-booking-map-picker>
 </form>

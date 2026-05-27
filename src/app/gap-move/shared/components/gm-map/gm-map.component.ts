@@ -17,6 +17,14 @@ import { GM_DEFAULT_CENTER, GM_MAP_DEFAULT_ZOOM } from '../../../core/constants/
 import { GmDriver } from '../../../core/interfaces/driver.interface';
 import { GmCoordinate } from '../../../core/interfaces/location.interface';
 
+export interface GmMapMarkerDragEvent {
+  kind: 'pickup' | 'dropoff' | 'stop';
+  index?: number;
+  coordinate: GmCoordinate;
+}
+
+type GmMapMarkerKind = 'pickup' | 'dropoff' | 'stop' | 'driver';
+
 @Component({
   selector: 'app-gm-map',
   standalone: true,
@@ -27,10 +35,14 @@ import { GmCoordinate } from '../../../core/interfaces/location.interface';
 export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() pickup?: GmCoordinate | null;
   @Input() dropoff?: GmCoordinate | null;
+  @Input() stops: GmCoordinate[] | null = [];
+  @Input() stopIndexes: number[] | null = [];
   @Input() drivers: GmDriver[] | null = [];
   @Input() compact = false;
   @Input() selectable = false;
+  @Input() draggable = false;
   @Output() selectCoordinate = new EventEmitter<GmCoordinate>();
+  @Output() markerDragEnd = new EventEmitter<GmMapMarkerDragEvent>();
 
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLDivElement>;
 
@@ -51,13 +63,30 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   fitRoute(): void {
-    if (!this.map || !this.pickup || !this.dropoff) {
+    if (!this.map) {
       return;
     }
 
     const bounds = new maplibregl.LngLatBounds();
-    bounds.extend([this.pickup.lng, this.pickup.lat]);
-    bounds.extend([this.dropoff.lng, this.dropoff.lat]);
+    let pointCount = 0;
+
+    if (this.pickup) {
+      bounds.extend([this.pickup.lng, this.pickup.lat]);
+      pointCount += 1;
+    }
+    for (const stop of this.stops ?? []) {
+      bounds.extend([stop.lng, stop.lat]);
+      pointCount += 1;
+    }
+    if (this.dropoff) {
+      bounds.extend([this.dropoff.lng, this.dropoff.lat]);
+      pointCount += 1;
+    }
+
+    if (pointCount < 2) {
+      return;
+    }
+
     this.map.fitBounds(bounds, { padding: 90, maxZoom: 14, duration: 600 });
   }
 
@@ -71,7 +100,7 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       attributionControl: false,
     });
 
-    this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+    this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     this.map.on('click', this.handleMapClick);
     this.map.once('load', () => {
       this.renderMarkers();
@@ -92,6 +121,10 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     if (this.pickup) {
       this.addMarker(this.pickup, 'pickup', 'Đón');
+    }
+    for (const [index, stop] of (this.stops ?? []).entries()) {
+      const originalIndex = this.stopIndexes?.[index] ?? index;
+      this.addMarker(stop, 'stop', `${originalIndex + 1}`, originalIndex);
     }
     if (this.dropoff) {
       this.addMarker(this.dropoff, 'dropoff', 'Giao');
@@ -122,12 +155,13 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       return;
     }
 
-    if (this.pickup && this.dropoff) {
+    const routePoints = [this.pickup, ...(this.stops ?? []), this.dropoff].filter((point): point is GmCoordinate => Boolean(point));
+    if (routePoints.length > 1) {
       this.fitRoute();
       return;
     }
 
-    const singlePoint = this.pickup ?? this.dropoff;
+    const singlePoint = routePoints[0];
     if (singlePoint) {
       this.map.easeTo({
         center: [singlePoint.lng, singlePoint.lat],
@@ -137,7 +171,7 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     }
   }
 
-  private addMarker(coordinate: GmCoordinate, kind: 'pickup' | 'dropoff' | 'driver', label: string): void {
+  private addMarker(coordinate: GmCoordinate, kind: GmMapMarkerKind, label: string, index?: number): void {
     if (!this.map) {
       return;
     }
@@ -146,9 +180,28 @@ export class GmMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     element.className = `gm-map-marker gm-map-marker-${kind}`;
     element.innerHTML = `<span>${label}</span>`;
 
-    const marker = new maplibregl.Marker({ element, anchor: 'bottom' })
+    const marker = new maplibregl.Marker({
+      element,
+      anchor: 'bottom',
+      draggable: this.draggable && kind !== 'driver',
+    })
       .setLngLat([coordinate.lng, coordinate.lat])
       .addTo(this.map);
+
+    if (this.draggable && kind !== 'driver') {
+      marker.on('dragend', () => {
+        const lngLat = marker.getLngLat();
+        this.markerDragEnd.emit({
+          kind,
+          index,
+          coordinate: {
+            lat: lngLat.lat,
+            lng: lngLat.lng,
+            address: coordinate.address || 'Vị trí đã chọn trên bản đồ',
+          },
+        });
+      });
+    }
 
     this.markers.push(marker);
   }

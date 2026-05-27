@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -7,14 +7,19 @@ import { GmCoordinate } from '../interfaces/location.interface';
 
 export interface GmAddressSearchResult {
   address: string;
-  coordinate: GmCoordinate;
+  coordinate?: GmCoordinate;
+  placeId?: string;
+  sessionToken?: string;
 }
 
 type UnknownRecord = Record<string, unknown>;
 
 @Injectable({ providedIn: 'root' })
 export class GmGeocodingService {
-  private readonly vietmapApiKey = environment.VIETMAP_API_KEY;
+  private readonly ndamapsBaseUrl = 'https://mapapis.ndamaps.vn/v1';
+  private readonly ndamapsApiKey = environment.NDAMAPS_API_KEY || environment.VIETMAP_API_KEY;
+  private autocompleteSessionToken = '';
+  private autocompleteSessionCreatedAt = 0;
 
   constructor(private http: HttpClient) {}
 
@@ -24,48 +29,59 @@ export class GmGeocodingService {
       return of([]);
     }
 
-    if (!this.vietmapApiKey) {
+    if (!this.ndamapsApiKey) {
       return this.searchOpenStreetMap(text);
     }
 
-    const url = `https://maps.vietmap.vn/api/search/v3?apikey=${this.vietmapApiKey}&text=${encodeURIComponent(text)}`;
-    return this.http.get<unknown>(url).pipe(
-      map((response) =>
-        this.getResultItems(response)
-          .map((item) => this.toSearchResult(item))
-          .filter((item): item is GmAddressSearchResult => Boolean(item)),
-      ),
+    return this.searchNdaMapsAutocomplete(text).pipe(
       switchMap((results) => (results.length ? of(results) : this.searchOpenStreetMap(text))),
       catchError(() => this.searchOpenStreetMap(text)),
     );
   }
 
   reverseGeocode(lat: number, lng: number): Observable<GmAddressSearchResult | null> {
-    if (!this.vietmapApiKey) {
+    if (!this.ndamapsApiKey) {
       return this.reverseOpenStreetMap(lat, lng);
     }
 
-    const url = `https://maps.vietmap.vn/api/reverse/v3?apikey=${this.vietmapApiKey}&lat=${lat}&lng=${lng}`;
-    return this.http.get<unknown>(url).pipe(
+    const params = new HttpParams()
+      .set('apikey', this.ndamapsApiKey)
+      .set('latlng', `${lat},${lng}`)
+      .set('format', 'google')
+      .set('admin_v2', 'true');
+    const url = `${this.ndamapsBaseUrl}/geocode/reverse`;
+
+    return this.http.get<unknown>(url, { params }).pipe(
       map((response) => {
         const item = this.pickFirstResult(response);
-        const address = item ? this.extractAddress(item) : '';
-        if (!address) {
-          return null;
-        }
-
-        return {
-          address,
-          coordinate: {
-            lat,
-            lng,
-            address,
-          },
-        };
+        const result = item ? this.toSearchResult(item) : null;
+        return result?.address
+          ? {
+              ...result,
+              coordinate: result.coordinate ?? { lat, lng, address: result.address },
+            }
+          : null;
       }),
       switchMap((result) => (result ? of(result) : this.reverseOpenStreetMap(lat, lng))),
       catchError(() => this.reverseOpenStreetMap(lat, lng)),
+      map((result) => (result?.coordinate ? result : result ? { ...result, coordinate: { lat, lng, address: result.address } } : null)),
     );
+  }
+
+  resolveAddress(result: GmAddressSearchResult): Observable<GmAddressSearchResult> {
+    if (result.coordinate) {
+      return of(result);
+    }
+
+    if (result.placeId && this.ndamapsApiKey) {
+      return this.getNdaMapsPlaceDetail(result.placeId, result.sessionToken).pipe(
+        switchMap((detail) => (detail?.coordinate ? of(detail) : this.forwardGeocode(result.address))),
+        map((detail) => detail ?? result),
+        catchError(() => this.forwardGeocode(result.address).pipe(map((detail) => detail ?? result))),
+      );
+    }
+
+    return this.forwardGeocode(result.address).pipe(map((detail) => detail ?? result));
   }
 
   private reverseOpenStreetMap(lat: number, lng: number): Observable<GmAddressSearchResult | null> {
@@ -99,19 +115,83 @@ export class GmGeocodingService {
     );
   }
 
-  private toSearchResult(item: UnknownRecord): GmAddressSearchResult | null {
+  private searchNdaMapsAutocomplete(query: string): Observable<GmAddressSearchResult[]> {
+    const sessionToken = this.getAutocompleteSessionToken();
+    const params = new HttpParams()
+      .set('apikey', this.ndamapsApiKey)
+      .set('input', query)
+      .set('format', 'google')
+      .set('sessiontoken', sessionToken)
+      .set('admin_v2', 'true');
+    const url = `${this.ndamapsBaseUrl}/autocomplete`;
+
+    return this.http.get<unknown>(url, { params }).pipe(
+      map((response) =>
+        this.getResultItems(response)
+          .map((item) => this.toSearchResult(item, sessionToken))
+          .filter((item): item is GmAddressSearchResult => Boolean(item)),
+      ),
+    );
+  }
+
+  private getNdaMapsPlaceDetail(placeId: string, sessionToken?: string): Observable<GmAddressSearchResult | null> {
+    const params = new HttpParams()
+      .set('apikey', this.ndamapsApiKey)
+      .set('ids', placeId)
+      .set('format', 'google')
+      .set('sessiontoken', sessionToken || this.getAutocompleteSessionToken())
+      .set('admin_v2', 'true');
+    const url = `${this.ndamapsBaseUrl}/place`;
+
+    return this.http.get<unknown>(url, { params }).pipe(
+      map((response) => {
+        const item = this.pickFirstResult(response);
+        return item ? this.toSearchResult(item, sessionToken) : null;
+      }),
+      catchError(() => of(null)),
+    );
+  }
+
+  private forwardGeocode(address: string): Observable<GmAddressSearchResult | null> {
+    if (!this.ndamapsApiKey) {
+      return this.searchOpenStreetMap(address).pipe(map((results) => results[0] ?? null));
+    }
+
+    const params = new HttpParams()
+      .set('apikey', this.ndamapsApiKey)
+      .set('address', address)
+      .set('format', 'google')
+      .set('admin_v2', 'true');
+    const url = `${this.ndamapsBaseUrl}/geocode/forward`;
+
+    return this.http.get<unknown>(url, { params }).pipe(
+      map((response) => {
+        const item = this.pickFirstResult(response);
+        return item ? this.toSearchResult(item) : null;
+      }),
+      switchMap((result) => (result?.coordinate ? of(result) : this.searchOpenStreetMap(address).pipe(map((results) => results[0] ?? null)))),
+      catchError(() => this.searchOpenStreetMap(address).pipe(map((results) => results[0] ?? null))),
+    );
+  }
+
+  private toSearchResult(item: UnknownRecord, sessionToken?: string): GmAddressSearchResult | null {
     const address = this.extractAddress(item);
     const coordinate = this.extractCoordinate(item);
-    if (!address || !coordinate) {
+    const placeId = this.extractPlaceId(item);
+    if (!address) {
       return null;
     }
 
     return {
       address,
-      coordinate: {
-        ...coordinate,
-        address,
-      },
+      coordinate: coordinate
+        ? {
+            ...coordinate,
+            address,
+          }
+        : undefined,
+      placeId,
+      sessionToken,
     };
   }
 
@@ -128,7 +208,7 @@ export class GmGeocodingService {
       return [];
     }
 
-    const collectionKeys = ['data', 'items', 'results', 'result', 'features', 'rows'];
+    const collectionKeys = ['data', 'items', 'predictions', 'results', 'result', 'features', 'rows'];
     for (const key of collectionKeys) {
       const value = response[key];
       if (Array.isArray(value)) {
@@ -146,16 +226,26 @@ export class GmGeocodingService {
   private extractAddress(item: UnknownRecord): string {
     const properties = this.asRecord(item['properties']);
     const compound = this.asRecord(item['compound']);
+    const structuredFormatting = this.asRecord(item['structured_formatting']);
 
     const detailedAddress =
       this.pickString(item, ['address', 'formatted_address', 'display_name', 'display', 'full_address', 'description']) ||
-      this.pickString(properties, ['address', 'formatted_address', 'display_name', 'display', 'full_address', 'description']) ||
+      this.pickString(properties, ['address', 'formatted_address', 'display_name', 'display', 'full_address', 'description', 'label']) ||
       this.buildAddressFromParts(item) ||
       this.buildAddressFromParts(properties) ||
+      this.buildAddressFromStructuredFormatting(structuredFormatting) ||
       this.pickString(compound, ['name', 'address', 'full_address']) ||
       this.buildAddressFromParts(this.asRecord(item['address']));
 
     return detailedAddress || this.pickString(item, ['name', 'label']) || this.pickString(properties, ['name', 'label']);
+  }
+
+  private buildAddressFromStructuredFormatting(item: UnknownRecord | null): string {
+    if (!item) {
+      return '';
+    }
+
+    return [this.pickString(item, ['main_text']), this.pickString(item, ['secondary_text'])].filter(Boolean).join(', ');
   }
 
   private buildAddressFromParts(item: UnknownRecord | null): string {
@@ -186,12 +276,17 @@ export class GmGeocodingService {
     }
 
     const geometry = this.asRecord(item['geometry']);
-    const geometryCoordinate = this.extractCoordinateFromGeometry(geometry);
+    const geometryCoordinate = this.extractCoordinateFromRecord(this.asRecord(geometry?.['location'])) || this.extractCoordinateFromGeometry(geometry);
     if (geometryCoordinate) {
       return geometryCoordinate;
     }
 
     return this.extractCoordinateFromArray(item['coordinates']);
+  }
+
+  private extractPlaceId(item: UnknownRecord): string | undefined {
+    const properties = this.asRecord(item['properties']);
+    return this.pickString(item, ['place_id', 'id']) || this.pickString(properties, ['place_id', 'id']) || undefined;
   }
 
   private extractCoordinateFromRecord(item: UnknownRecord | null): Pick<GmCoordinate, 'lat' | 'lng'> | null {
@@ -254,5 +349,27 @@ export class GmGeocodingService {
 
   private isRecord(value: unknown): value is UnknownRecord {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  private getAutocompleteSessionToken(): string {
+    const now = Date.now();
+    if (!this.autocompleteSessionToken || now - this.autocompleteSessionCreatedAt > 4.5 * 60 * 1000) {
+      this.autocompleteSessionToken = this.createUuidV4();
+      this.autocompleteSessionCreatedAt = now;
+    }
+
+    return this.autocompleteSessionToken;
+  }
+
+  private createUuidV4(): string {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return crypto.randomUUID();
+    }
+
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+      const random = Math.floor(Math.random() * 16);
+      const value = char === 'x' ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    });
   }
 }
