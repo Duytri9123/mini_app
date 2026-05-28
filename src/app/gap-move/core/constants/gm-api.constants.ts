@@ -2,6 +2,8 @@ export const GM_STORAGE_KEYS = {
   accessToken: 'gm_access_token',
   refreshToken: 'gm_refresh_token',
   user: 'gm_user',
+  customerAddressDetails: 'gm_customer_address_details',
+  confirmedAddressHistory: 'gm_confirmed_address_history',
 } as const;
 
 export const GM_API_ENDPOINTS = {

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { map, Observable, of, timer } from 'rxjs';
+import { map, Observable, of, shareReplay, timer } from 'rxjs';
 import { GmDriver } from '../interfaces/driver.interface';
 
 const DEMO_DRIVERS: GmDriver[] = [
@@ -73,8 +73,15 @@ const DEMO_DRIVERS: GmDriver[] = [
 
 @Injectable({ providedIn: 'root' })
 export class GmDriverService {
+  private nearbyDrivers$?: Observable<GmDriver[]>;
+
   getNearbyDrivers(): Observable<GmDriver[]> {
-    return timer(0, 1800).pipe(map((tick) => this.moveDrivers(tick)));
+    this.nearbyDrivers$ ??= timer(0, 1800).pipe(
+      map((tick) => this.moveDrivers(tick)),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    );
+
+    return this.nearbyDrivers$;
   }
 
   findAvailableDriver(vehicleType = 'motorbike'): Observable<GmDriver | null> {

@@ -23,6 +23,10 @@ export class GmSavedAddressesPage implements OnInit, OnDestroy {
   isLocating = false;
   editingAddress?: GmCustomerAddress;
   addressLabel = '';
+  addressUnit = '';
+  addressPhone = '';
+  addressContactName = '';
+  addressNote = '';
   addressIsDefault = false;
   searchQuery = '';
   searchResults: GmAddressSearchResult[] = [];
@@ -81,6 +85,10 @@ export class GmSavedAddressesPage implements OnInit, OnDestroy {
   openCreate(): void {
     this.editingAddress = undefined;
     this.addressLabel = '';
+    this.addressUnit = '';
+    this.addressPhone = '';
+    this.addressContactName = '';
+    this.addressNote = '';
     this.addressIsDefault = !this.addresses.length;
     this.searchQuery = '';
     this.searchResults = [];
@@ -90,7 +98,12 @@ export class GmSavedAddressesPage implements OnInit, OnDestroy {
 
   openEdit(address: GmCustomerAddress): void {
     this.editingAddress = address;
+    const details = this.customerAddressService.getAddressDetails(address);
     this.addressLabel = address.label ?? '';
+    this.addressUnit = details.unit;
+    this.addressPhone = details.phone;
+    this.addressContactName = details.contactName;
+    this.addressNote = details.note;
     this.addressIsDefault = address.is_default;
     this.searchQuery = address.address;
     this.searchResults = [];
@@ -110,6 +123,10 @@ export class GmSavedAddressesPage implements OnInit, OnDestroy {
     this.searchResults = [];
     this.pendingSelection = undefined;
     this.editingAddress = undefined;
+    this.addressUnit = '';
+    this.addressPhone = '';
+    this.addressContactName = '';
+    this.addressNote = '';
   }
 
   onSearchInput(): void {
@@ -191,6 +208,11 @@ export class GmSavedAddressesPage implements OnInit, OnDestroy {
       address,
       lat: coordinate.lat,
       lng: coordinate.lng,
+      unit: '',
+      phone: this.addressPhone.trim(),
+      contactName: this.addressContactName.trim(),
+      contact_name: this.addressContactName.trim(),
+      note: this.addressNote.trim(),
       is_default: this.addressIsDefault,
     };
 

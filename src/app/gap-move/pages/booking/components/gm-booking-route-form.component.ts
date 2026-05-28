@@ -18,6 +18,7 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule],
   templateUrl: './gm-booking-route-form.component.html',
+  styleUrls: ['./gm-booking-route-form.component.scss'],
 })
 export class GmBookingRouteFormComponent {
   @Input() type: GmBookingType = 'delivery';
@@ -47,7 +48,7 @@ export class GmBookingRouteFormComponent {
 
   isSavedAddressOpen = false;
   activeTarget: GmBookingAddressTarget = { field: 'dropoff' };
-  private routeDragIndex: number | null = null;
+  routeDragIndex: number | null = null;
 
   get activeTargetLabel(): string {
     if (this.activeTarget.field === 'pickup') {
@@ -79,24 +80,24 @@ export class GmBookingRouteFormComponent {
     this.moveDestinationPoint.emit({ fromIndex, toIndex });
   }
 
-  startRouteDrag(index: number): void {
-    if (!this.isRouteReorderMode) {
-      return;
-    }
+  swapPickupDropoff(): void {
+    const tempAddress = this.pickupAddress;
+    this.pickupAddressChange.emit(this.dropoffAddress);
+    this.dropoffAddressChange.emit(tempAddress);
+    this.pickupInput.emit();
+    this.dropoffInput.emit();
+  }
 
+  startRouteDrag(index: number): void {
     this.routeDragIndex = index;
   }
 
   allowRouteDrop(event: DragEvent): void {
-    if (!this.isRouteReorderMode) {
-      return;
-    }
-
     event.preventDefault();
   }
 
   dropRoutePoint(index: number, event: DragEvent): void {
-    if (!this.isRouteReorderMode || this.routeDragIndex === null) {
+    if (this.routeDragIndex === null) {
       return;
     }
 

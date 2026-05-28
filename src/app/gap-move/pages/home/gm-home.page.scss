@@ -126,203 +126,43 @@
   transform: scale(1.32);
 }
 
-.gm-mobile-order-section {
+.gm-mobile-primary-action-section {
+  margin-top: 8px;
   position: relative;
-  z-index: 20;
-  padding-top: 56px;
-  margin-top: 0;
-}
-
-.gm-mobile-address-card {
-  position: relative;
-  z-index: 20;
-}
-
-.gm-mobile-route-list {
-  position: relative;
+  z-index: 10;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
+  justify-content: center;
 }
 
-.gm-mobile-route-list::before {
-  position: absolute;
-  top: 25px;
-  bottom: 25px;
-  left: 22px;
-  width: 0;
-  content: '';
-  border-left: 2px dashed #cbd5e1;
-}
-
-.gm-mobile-route-switch-button {
-  position: absolute;
-  top: 38px;
-  right: -7px;
-  z-index: 5;
+.gm-mobile-primary-action-button {
   display: flex;
-  width: 38px;
-  height: 38px;
+  width: min(100%, 332px);
+  min-height: 48px;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e2e8f0;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #475569;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
-  font-size: 22px;
-}
-
-.gm-mobile-route-switch-button:active {
-  transform: scale(0.96);
-}
-
-.gm-mobile-route-row {
-  position: relative;
-  display: block;
-  width: 100%;
-}
-
-.gm-mobile-route-field {
-  display: flex;
-  min-width: 0;
-  width: 100%;
-  height: 50px;
-  align-items: center;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #ffffff;
-  padding: 0;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
-}
-
-.gm-mobile-route-row-reordering {
-  cursor: grab;
-}
-
-.gm-mobile-route-row-reordering .gm-mobile-route-field {
-  border-color: #fed7aa;
-  background: #fff7ed;
-}
-
-.gm-mobile-route-drag-handle {
-  display: inline-flex;
-  width: 32px;
-  height: 100%;
-  flex: 0 0 32px;
-  align-items: center;
-  justify-content: center;
-  color: #94a3b8;
-  font-size: 20px;
-  border-right: 1px solid #ffedd5;
-}
-
-.gm-mobile-route-order-actions {
-  position: absolute;
-  top: 8px;
-  right: 44px;
-  z-index: 3;
-  display: flex;
-  gap: 4px;
-}
-
-.gm-mobile-route-order-actions button {
-  display: flex;
-  width: 30px;
-  height: 30px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #fed7aa;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #ea580c;
-  box-shadow: 0 8px 18px rgba(234, 88, 12, 0.1);
-}
-
-.gm-mobile-route-icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  margin-right: 12px;
-}
-
-.gm-mobile-route-marker-pickup-inside {
-  width: 12px;
-  height: 12px;
-  border: 2.5px solid #ff5a00;
-  border-radius: 999px;
-  background: #fff;
-  box-sizing: border-box;
-  box-shadow: 0 2px 5px rgba(255, 90, 0, 0.35); /* float pickup circle up beautifully */
-}
-
-.gm-mobile-route-marker-stop-inside {
-  width: 8px;
-  height: 8px;
-  border: 2px solid #64748b;
-  border-radius: 999px;
-  background: #fff;
-  box-sizing: border-box;
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2); /* float stop circle up beautifully */
-}
-
-.gm-mobile-route-marker-dropoff-inside {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #ff5a00;
-  filter: drop-shadow(0 2px 4px rgba(255, 90, 0, 0.25)); /* float dropoff pin icon up beautifully */
-}
-
-.gm-mobile-route-marker-dropoff-inside ion-icon {
-  font-size: 18px;
-}
-
-.gm-mobile-route-click-area {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  padding-left: 10px;
-  padding-right: 12px;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
-.gm-mobile-route-text {
-  display: block;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 14px;
+  gap: 8px;
+  border: 0;
+  border-radius: 16px;
+  background: #ff5a00;
+  color: #ffffff;
+  font-size: 15px;
   font-weight: 800;
-  line-height: 1.25;
+  letter-spacing: 0;
+  box-shadow: 0 12px 24px rgba(255, 90, 0, 0.22);
 }
 
-.gm-mobile-route-remove-inside {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 100%;
-  color: #cbd5e1;
-  font-size: 20px;
-  background: transparent;
-  flex-shrink: 0;
-  border-left: 1px solid #f1f5f9; /* clean dividing separator inside the input box */
+.gm-mobile-primary-action-button ion-icon {
+  font-size: 19px;
 }
 
-.gm-mobile-route-remove-inside:active {
-  color: #94a3b8;
+.gm-mobile-primary-action-button:active {
+  transform: scale(0.99);
+}
+
+@media (min-width: 1024px) {
+  .gm-mobile-primary-action-section {
+    display: none;
+  }
 }
 
 .gm-address-search-dot {
@@ -370,119 +210,6 @@
 
 .gm-mobile-address-field::-webkit-scrollbar {
   display: none;
-}
-
-.gm-mobile-vehicle-row {
-  min-height: 76px;
-}
-
-.gm-mobile-vehicle-art {
-  position: relative;
-  display: inline-flex;
-  width: 48px;
-  height: 42px;
-  flex: 0 0 48px;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #fff7ed;
-}
-
-.gm-mobile-vehicle-art::before {
-  position: absolute;
-  right: 5px;
-  bottom: 8px;
-  width: 27px;
-  height: 14px;
-  content: '';
-  border-radius: 10px 12px 7px 7px;
-  background: #ff5a00;
-  box-shadow: 0 8px 14px rgba(255, 90, 0, 0.18);
-}
-
-.gm-mobile-vehicle-art::after {
-  position: absolute;
-  right: 7px;
-  bottom: 5px;
-  width: 22px;
-  height: 7px;
-  content: '';
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 5px 4px, #1f2937 0 4px, transparent 4.5px),
-    radial-gradient(circle at 25px 4px, #1f2937 0 4px, transparent 4.5px);
-}
-
-.gm-mobile-vehicle-art ion-icon {
-  position: relative;
-  z-index: 1;
-  margin-top: -7px;
-  margin-left: -10px;
-  color: #0f766e;
-  font-size: 26px;
-}
-
-.gm-mobile-vehicle-art-image {
-  overflow: visible;
-  background: transparent;
-}
-
-.gm-mobile-vehicle-art-image::before,
-.gm-mobile-vehicle-art-image::after {
-  display: none;
-}
-
-.gm-mobile-vehicle-art-image img {
-  position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 8px 10px rgba(15, 23, 42, 0.14));
-  transform: scale(1.15);
-}
-
-.gm-mobile-vehicle-art-bike::before {
-  width: 34px;
-  height: 18px;
-  border-radius: 999px 999px 7px 7px;
-}
-
-.gm-mobile-vehicle-art-bike ion-icon {
-  color: #ff5a00;
-}
-
-.gm-mobile-vehicle-art-car::before {
-  background: #008c95;
-}
-
-.gm-mobile-vehicle-art-car ion-icon {
-  color: #008c95;
-}
-
-.gm-mobile-vehicle-art-van::before {
-  width: 43px;
-  height: 24px;
-  border-radius: 9px 14px 7px 7px;
-}
-
-.gm-mobile-vehicle-art-truck::before {
-  width: 44px;
-  height: 24px;
-  border-radius: 5px 12px 7px 7px;
-}
-
-.gm-mobile-vehicle-art-box-truck {
-  background: #fff7ed;
-}
-
-.gm-mobile-vehicle-art-box-truck::before {
-  width: 42px;
-  height: 25px;
-  border-radius: 4px 10px 7px 7px;
-  background: linear-gradient(90deg, #f59e0b 0 55%, #ff5a00 55% 100%);
-}
-
-.gm-mobile-vehicle-art-box-truck ion-icon {
-  color: #f59e0b;
 }
 
 .gm-typing-title {

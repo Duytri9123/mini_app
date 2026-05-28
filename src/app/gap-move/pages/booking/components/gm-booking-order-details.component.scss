@@ -1,0 +1,23 @@
+:host {
+  display: block;
+}
+
+.gm-cargo-size-swiper,
+.gm-cargo-type-swiper {
+  display: block;
+  width: 100%;
+  padding-bottom: 4px;
+}
+
+.gm-cargo-size-swiper swiper-slide {
+  width: 48px;
+}
+
+.gm-cargo-type-swiper swiper-slide {
+  width: auto;
+}
+
+.gm-cargo-size-swiper button,
+.gm-cargo-type-swiper button {
+  white-space: nowrap;
+}

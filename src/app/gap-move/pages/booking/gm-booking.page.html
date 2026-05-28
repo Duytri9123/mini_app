@@ -60,8 +60,7 @@
           <ion-icon name="chevron-back-outline" class="text-xl"></ion-icon>
         </button>
         <div>
-        <p class="text-xs font-black uppercase tracking-wide text-[#ff5a00]">GapMove</p>
-        <h1 class="mt-1 text-2xl font-extrabold text-slate-950">Đặt dịch vụ</h1>
+        <h1 class="text-xl font-extrabold text-slate-950">Xem lại đơn hàng</h1>
         </div>
       </div>
       <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700" (click)="openServiceDrawer()" aria-label="Mở menu">
@@ -93,7 +92,19 @@
       (useSavedAddress)="handleSavedAddressSelection($event)"
     ></app-gm-booking-route-form>
 
-    <section class="mb-5">
+    <section *ngIf="hasRouteLocations" class="gm-selected-delivery-service mb-6 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+      <button type="button" class="flex w-full items-center gap-3 bg-cyan-50 px-3 py-3 text-left" (click)="openDeliveryServiceSheet()">
+        <span class="gm-vehicle-sprite gm-vehicle-sprite-card" [ngClass]="selectedDeliveryService.spriteClass"></span>
+        <span class="gm-selected-delivery-copy">
+          <span class="gm-selected-delivery-title">{{ selectedDeliveryService.title }}</span>
+          <span class="gm-selected-delivery-subtitle">{{ selectedDeliveryService.subtitle }}</span>
+        </span>
+        <span class="gm-selected-delivery-price">{{ formatAmount(selectedDeliveryService.price) }}</span>
+        <ion-icon name="chevron-forward-outline" class="text-xl text-slate-400"></ion-icon>
+      </button>
+    </section>
+
+    <section *ngIf="false" class="mb-5">
       <div class="mb-3 flex items-center justify-between">
         <h2 class="text-sm font-black uppercase text-slate-400">Dịch vụ</h2>
         <span class="text-xs font-semibold text-slate-400">Chọn 1</span>
@@ -113,7 +124,7 @@
       </div>
     </section>
 
-    <section class="mb-6">
+    <section *ngIf="false" class="mb-6">
       <div class="mb-3 flex items-center justify-between">
         <h2 class="text-sm font-black uppercase text-slate-400">Loại xe</h2>
         <span class="text-xs font-bold text-[#008c95]">Chi tiết tải trọng</span>
@@ -134,20 +145,35 @@
       </div>
     </section>
 
-    <section class="mb-6">
-      <h2 class="mb-3 text-sm font-black uppercase text-slate-400">Dịch vụ thêm</h2>
+    <section *ngIf="false" class="mb-6 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-black uppercase text-slate-400">Dịch vụ theo xe</h2>
+        <span class="text-xs font-bold text-[#008c95]">{{ selectedVehicleOption.title }}</span>
+      </div>
+
+      <button type="button" class="mb-3 flex w-full items-center gap-3 rounded-2xl bg-cyan-50 px-3 py-3 text-left">
+        <span class="gm-vehicle-sprite gm-vehicle-sprite-card" [ngClass]="vehicleSpriteClass(vehicleType)"></span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-base font-extrabold text-slate-950">{{ vehicleServiceTitle }}</span>
+          <span class="mt-0.5 block text-sm font-medium text-slate-500">{{ vehicleServiceSubtitle }}</span>
+        </span>
+        <span class="text-sm font-extrabold text-slate-900">{{ vehicleServicePrice }}</span>
+        <ion-icon name="chevron-forward-outline" class="text-xl text-slate-400"></ion-icon>
+      </button>
+
       <div class="space-y-2">
         <button
-          *ngFor="let service of additionalServiceOptions"
+          *ngFor="let service of visibleAdditionalServiceOptions"
           type="button"
           class="flex w-full items-start gap-3 rounded-2xl border bg-white p-4 text-left"
           [ngClass]="isAdditionalSelected(service.id) ? 'border-[#008c95] bg-[#008c95]/5' : 'border-slate-100'"
           (click)="toggleAdditionalService(service)"
         >
-          <span class="mt-1 flex h-5 w-5 items-center justify-center rounded border text-xs font-black"
+          <span class="mt-1 flex h-6 w-6 items-center justify-center rounded-full border text-xs font-black"
             [ngClass]="isAdditionalSelected(service.id) ? 'border-[#008c95] bg-[#008c95] text-white' : 'border-slate-300'"
           >
             <span *ngIf="isAdditionalSelected(service.id)">✓</span>
+            <ion-icon *ngIf="!isAdditionalSelected(service.id)" name="add-outline"></ion-icon>
           </span>
           <span class="flex-1">
             <span class="block text-sm font-extrabold text-slate-950">{{ service.title }}</span>
@@ -158,7 +184,7 @@
       </div>
     </section>
 
-    <section *ngIf="isPorterVisible" class="mb-6 rounded-2xl border border-[#ff5a00]/30 bg-[#ff5a00]/5 p-4">
+    <section *ngIf="false && isPorterVisible" class="mb-6 rounded-2xl border border-[#ff5a00]/30 bg-[#ff5a00]/5 p-4">
       <div class="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 class="text-base font-extrabold text-slate-950">Bê hộ hàng</h2>
@@ -206,7 +232,8 @@
 
     <app-gm-booking-order-details
       [type]="type"
-      [(packageInfo)]="packageInfo"
+      [packageInfo]="packageInfo"
+      (packageInfoChange)="updatePackageInfo($event)"
       [(senderName)]="senderName"
       [(senderPhone)]="senderPhone"
       [(receiverName)]="receiverName"
@@ -214,17 +241,21 @@
       [(codAmount)]="codAmount"
       [(declaredValue)]="declaredValue"
       [(itemCount)]="itemCount"
-      [(weightKg)]="weightKg"
-      [(lengthCm)]="lengthCm"
-      [(widthCm)]="widthCm"
-      [(heightCm)]="heightCm"
+      [weightKg]="weightKg"
+      (weightKgChange)="updateWeightKg($event)"
+      [lengthCm]="lengthCm"
+      (lengthCmChange)="updateLengthCm($event)"
+      [widthCm]="widthCm"
+      (widthCmChange)="updateWidthCm($event)"
+      [heightCm]="heightCm"
+      (heightCmChange)="updateHeightCm($event)"
       [(trackingCode)]="trackingCode"
       [(scheduleMode)]="scheduleMode"
       [(scheduledAt)]="scheduledAt"
       [(note)]="note"
     ></app-gm-booking-order-details>
 
-    <section class="mb-6 rounded-2xl border border-slate-100 bg-white p-4">
+    <section *ngIf="false" class="mb-6 rounded-2xl border border-slate-100 bg-white p-4">
       <h2 class="mb-4 text-sm font-black uppercase text-slate-400">Thanh toán & giá</h2>
       <select name="paymentMethod" [(ngModel)]="paymentMethod" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm">
         <option *ngFor="let method of paymentMethods" [value]="method.id">{{ method.label }} - {{ method.description }}</option>
@@ -242,10 +273,87 @@
       </div>
     </section>
 
-    <button type="submit" class="sticky bottom-4 z-10 w-full rounded-2xl bg-[#008c95] px-4 py-4 font-extrabold text-white shadow-lg shadow-teal-900/20">
-      Tạo đơn {{ selectedService.title }}
-    </button>
+    <footer class="gm-booking-footer sticky bottom-0 z-20 -mx-4 mt-6 rounded-t-[22px] border border-slate-100 bg-white px-4 pb-4 pt-3 shadow-[0_-10px_28px_rgba(15,23,42,0.10)] lg:-mx-6">
+      <div class="mb-3 grid grid-cols-2 gap-3 text-sm font-semibold text-slate-700">
+        <button type="button" class="flex items-center justify-center gap-2 rounded-xl bg-white py-2 text-left">
+          <ion-icon name="wallet-outline" class="text-xl text-violet-500"></ion-icon>
+          <span>Người gửi trả tiền</span>
+        </button>
+        <button type="button" class="flex items-center justify-center gap-2 rounded-xl bg-white py-2 text-left">
+          <ion-icon name="ticket-outline" class="text-xl text-slate-700"></ion-icon>
+          <span>Ưu đãi</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-[82px_minmax(0,1fr)] items-center gap-3">
+        <button type="button" class="flex flex-col items-center justify-center gap-1 text-sm font-semibold text-slate-700" (click)="scheduleMode = scheduleMode === 'scheduled' ? 'now' : 'scheduled'">
+          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-100 text-[#008c95]">
+            <ion-icon name="time-outline" class="text-xl"></ion-icon>
+          </span>
+          <span>{{ scheduleMode === 'scheduled' ? 'Đã hẹn' : 'Hẹn giờ' }}</span>
+        </button>
+        <button type="submit" class="h-14 rounded-2xl bg-[#25c5c8] text-lg font-extrabold text-white shadow-lg shadow-cyan-900/15">
+          Đặt
+        </button>
+      </div>
+    </footer>
   </section>
+
+  <div *ngIf="isDeliveryServiceSheetOpen" class="fixed inset-0 z-[85] flex items-end bg-slate-950/55 lg:hidden">
+    <button type="button" class="absolute inset-0" aria-label="Đóng chọn dịch vụ giao" (click)="closeDeliveryServiceSheet()"></button>
+    <section class="relative w-full rounded-t-[24px] bg-white px-4 pb-4 pt-5 shadow-2xl">
+      <span class="mx-auto mb-8 block h-1.5 w-16 rounded-full bg-slate-200"></span>
+      <h2 class="mb-6 text-2xl font-semibold text-slate-900">Bạn muốn chọn dịch vụ giao nào?</h2>
+
+      <swiper-container class="gm-delivery-service-swiper" slides-per-view="auto" space-between="12" free-mode="true">
+        <swiper-slide *ngFor="let service of deliveryServiceOptions">
+          <button
+            type="button"
+            class="gm-delivery-service-slide"
+            [ngClass]="pendingDeliveryServiceId === service.id ? 'gm-delivery-service-slide-active' : ''"
+            (click)="selectPendingDeliveryService(service)"
+          >
+            <span class="gm-vehicle-sprite gm-vehicle-sprite-card" [ngClass]="service.spriteClass"></span>
+            <span class="gm-delivery-service-copy">
+              <span class="gm-delivery-service-title">{{ service.title }}</span>
+              <span class="gm-delivery-service-subtitle">{{ service.subtitle }}</span>
+            </span>
+            <span class="gm-delivery-service-price">{{ formatAmount(service.price) }}</span>
+          </button>
+        </swiper-slide>
+      </swiper-container>
+
+      <button type="button" class="mt-6 h-14 w-full rounded-2xl bg-[#25c5c8] text-lg font-semibold text-white shadow-lg shadow-cyan-900/15" (click)="confirmDeliveryServiceSelection()">
+        Xác nhận
+      </button>
+    </section>
+  </div>
+
+  <div *ngIf="isDeliveryServiceSheetOpen" class="fixed inset-0 z-[85] hidden items-center justify-center bg-slate-950/45 p-6 lg:flex">
+    <section class="w-full max-w-lg rounded-3xl bg-white p-5 shadow-2xl">
+      <h2 class="mb-5 text-2xl font-semibold text-slate-900">Bạn muốn chọn dịch vụ giao nào?</h2>
+      <div class="space-y-3">
+        <button
+          *ngFor="let service of deliveryServiceOptions"
+          type="button"
+          class="flex w-full items-center gap-4 rounded-2xl border bg-white px-4 py-4 text-left"
+          [ngClass]="pendingDeliveryServiceId === service.id ? 'border-[#25c5c8] bg-cyan-50/70' : 'border-slate-100'"
+          (click)="selectPendingDeliveryService(service)"
+        >
+          <span class="gm-vehicle-sprite gm-vehicle-sprite-card" [ngClass]="service.spriteClass"></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-lg font-medium text-slate-900">{{ service.title }}</span>
+            <span class="mt-1 block truncate text-sm font-medium text-slate-500">{{ service.subtitle }}</span>
+          </span>
+          <span class="shrink-0 text-lg font-medium text-slate-900">{{ formatAmount(service.price) }}</span>
+        </button>
+      </div>
+      <div class="mt-5 grid grid-cols-2 gap-3">
+        <button type="button" class="h-12 rounded-2xl bg-slate-100 font-semibold text-slate-700" (click)="closeDeliveryServiceSheet()">Đóng</button>
+        <button type="button" class="h-12 rounded-2xl bg-[#25c5c8] font-semibold text-white" (click)="confirmDeliveryServiceSelection()">Xác nhận</button>
+      </div>
+    </section>
+  </div>
 
   <section class="hidden min-h-0 lg:block">
     <app-gm-map

@@ -56,4 +56,9 @@ export class GmLocationService {
       );
     });
   }
+
+  updateLocation(coordinate: GmCoordinate): void {
+    this.current$.next(coordinate);
+    this.address$.next(coordinate.address ?? 'Vị trí hiện tại');
+  }
 }

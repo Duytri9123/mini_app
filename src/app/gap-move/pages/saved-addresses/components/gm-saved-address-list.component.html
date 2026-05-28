@@ -32,6 +32,9 @@
             </span>
           </span>
           <span class="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-slate-500">{{ item.address }}</span>
+          <span *ngIf="getAddressDetailsText(item) as detailsText" class="mt-1 block truncate text-xs font-bold text-slate-400">
+            {{ detailsText }}
+          </span>
         </span>
       </button>
 

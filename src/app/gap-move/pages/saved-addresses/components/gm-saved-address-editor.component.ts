@@ -15,6 +15,9 @@ import { GmMapComponent } from '../../../shared/components/gm-map/gm-map.compone
 export class GmSavedAddressEditorComponent {
   @Input() title = 'Thêm địa chỉ đã lưu';
   @Input() label = '';
+  @Input() phone = '';
+  @Input() contactName = '';
+  @Input() note = '';
   @Input() isDefault = false;
   @Input() searchQuery = '';
   @Input() searchResults: GmAddressSearchResult[] = [];
@@ -24,6 +27,9 @@ export class GmSavedAddressEditorComponent {
   @Input() isSaving = false;
 
   @Output() labelChange = new EventEmitter<string>();
+  @Output() phoneChange = new EventEmitter<string>();
+  @Output() contactNameChange = new EventEmitter<string>();
+  @Output() noteChange = new EventEmitter<string>();
   @Output() isDefaultChange = new EventEmitter<boolean>();
   @Output() searchQueryChange = new EventEmitter<string>();
   @Output() searchInput = new EventEmitter<void>();

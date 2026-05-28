@@ -17,4 +17,11 @@ export class GmSavedAddressListComponent {
   @Output() editAddress = new EventEmitter<GmCustomerAddress>();
   @Output() setDefaultAddress = new EventEmitter<GmCustomerAddress>();
   @Output() deleteAddress = new EventEmitter<GmCustomerAddress>();
+
+  getAddressDetailsText(address: GmCustomerAddress): string {
+    const contactName = address.contactName?.trim() || address.contact_name?.trim() || '';
+    const phone = address.phone?.trim() || '';
+    const contact = [contactName, phone].filter(Boolean).join(' · ');
+    return [contact, address.note?.trim() || ''].filter(Boolean).join(' · ');
+  }
 }

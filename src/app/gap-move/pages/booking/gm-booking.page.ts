@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -24,6 +24,7 @@ import { GmBookingService } from '../../core/services/gm-booking.service';
 import { GmDriverService } from '../../core/services/gm-driver.service';
 import { GmGeocodingService, GmAddressSearchResult } from '../../core/services/gm-geocoding.service';
 import { GmCustomerAddressService } from '../../core/services/gm-customer-address.service';
+import { GmLocationService } from '../../core/services/gm-location.service';
 import { GmPaymentMethodOption, GmPaymentService } from '../../core/services/gm-payment.service';
 import { GmToastService } from '../../core/services/gm-toast.service';
 import { GmDriver } from '../../core/interfaces/driver.interface';
@@ -64,6 +65,14 @@ interface GmBookingRoutePointState {
   suggestions: GmAddressSearchResult[];
 }
 
+interface GmDeliveryServiceOption {
+  id: GmBookingType;
+  title: string;
+  subtitle: string;
+  spriteClass: string;
+  price: number;
+}
+
 @Component({
   selector: 'app-gm-booking',
   standalone: true,
@@ -79,6 +88,7 @@ interface GmBookingRoutePointState {
   ],
   templateUrl: './gm-booking.page.html',
   styleUrls: ['./gm-booking.page.scss'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class GmBookingPage implements OnInit, OnDestroy {
   readonly services = GM_SERVICE_OPTIONS;
@@ -88,8 +98,8 @@ export class GmBookingPage implements OnInit, OnDestroy {
   type: GmBookingType = 'delivery';
   vehicleType: GmVehicleType = 'motorbike';
   paymentMethod: GmPaymentMethod = 'cash';
-  pickupAddress = 'Ben Thanh, Quận 1, TP.HCM';
-  dropoffAddress = 'Thảo Điền, TP. Thủ Đức';
+  pickupAddress = '';
+  dropoffAddress = '';
   packageInfo = '';
   senderName = '';
   senderPhone = '';
@@ -123,6 +133,8 @@ export class GmBookingPage implements OnInit, OnDestroy {
   isMapPickerOpen = false;
   isLocating = false;
   isServiceDrawerOpen = false;
+  isDeliveryServiceSheetOpen = false;
+  pendingDeliveryServiceId: GmBookingType = this.type;
   mapSearchQuery = '';
   mapSearchResults: GmAddressSearchResult[] = [];
   pendingMapSelection?: GmAddressSearchResult;
@@ -206,6 +218,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
     private paymentService: GmPaymentService,
     private toastService: GmToastService,
     private authService: GmAuthService,
+    private locationService: GmLocationService,
   ) {}
 
   ngOnInit(): void {
@@ -292,6 +305,24 @@ export class GmBookingPage implements OnInit, OnDestroy {
     return this.services.find((service) => service.id === this.type) ?? this.services[0];
   }
 
+  get deliveryServiceOptions(): GmDeliveryServiceOption[] {
+    return this.services.map((service) => ({
+      id: service.id,
+      title: service.title,
+      subtitle: service.subtitle,
+      spriteClass: this.serviceSpriteClass(service),
+      price: this.getServiceEstimate(service),
+    }));
+  }
+
+  get selectedDeliveryService(): GmDeliveryServiceOption {
+    return this.deliveryServiceOptions.find((service) => service.id === this.type) ?? this.deliveryServiceOptions[0];
+  }
+
+  get hasRouteLocations(): boolean {
+    return Boolean(this.pickupAddress.trim() && this.dropoffAddress.trim());
+  }
+
   get availableVehicleOptions(): GmVehicleOption[] {
     if (this.type === 'ride') {
       return this.vehicleOptions.filter((vehicle) => vehicle.id === 'motorbike' || vehicle.id === 'car');
@@ -306,6 +337,38 @@ export class GmBookingPage implements OnInit, OnDestroy {
       return this.vehicleOptions.filter((vehicle) => vehicle.id === 'motorbike');
     }
     return this.vehicleOptions.filter((vehicle) => vehicle.id === 'van' || vehicle.id === 'truck');
+  }
+
+  get selectedVehicleOption(): GmVehicleOption {
+    return this.vehicleOptions.find((vehicle) => vehicle.id === this.vehicleType) ?? this.vehicleOptions[0];
+  }
+
+  get vehicleServiceTitle(): string {
+    return this.selectedVehicleOption.title;
+  }
+
+  get vehicleServiceSubtitle(): string {
+    return this.selectedVehicleOption.subtitle;
+  }
+
+  get vehicleServicePrice(): string {
+    return this.formatAmount(this.priceEstimate.finalAmount);
+  }
+
+  get visibleAdditionalServiceOptions(): GmAdditionalServiceOption[] {
+    if (this.type === 'ride') {
+      return this.additionalServiceOptions.filter((service) => service.id === 'extended_duration' || service.id === 'insurance');
+    }
+
+    if (this.type === 'porter') {
+      return this.additionalServiceOptions.filter((service) => service.id === 'extended_duration');
+    }
+
+    if (this.type === 'truck' || this.type === 'moving') {
+      return this.additionalServiceOptions.filter((service) => service.id !== 'cod' && service.id !== 'cold_chain');
+    }
+
+    return this.additionalServiceOptions;
   }
 
   get isPorterVisible(): boolean {
@@ -360,23 +423,11 @@ export class GmBookingPage implements OnInit, OnDestroy {
   }
 
   get estimateDistanceKm(): number {
-    if (this.type === 'porter') {
-      return 0;
-    }
-    if (this.vehicleType === 'truck') {
-      return 12.8;
-    }
-    if (this.vehicleType === 'van') {
-      return 8.6;
-    }
-    return 6.4;
+    return this.estimateDistanceFor(this.type, this.vehicleType);
   }
 
   get estimateDurationMin(): number {
-    if (this.type === 'porter') {
-      return Math.max(30, this.porterOptions.helperCount * 20 + this.porterOptions.floorCount * 8);
-    }
-    return Math.ceil(this.estimateDistanceKm * 3.6);
+    return this.estimateDurationFor(this.type, this.vehicleType);
   }
 
   get priceEstimate(): GmPriceBreakdown {
@@ -401,6 +452,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.selectedDrawerItem = this.drawerGroups[0].items.find((item) => item.type === type) ?? this.selectedDrawerItem;
     const option = this.services.find((item) => item.id === type);
     this.vehicleType = option?.vehicleType ?? 'motorbike';
+    this.pendingDeliveryServiceId = type;
 
     if (type === 'porter') {
       this.porterOptions.enabled = true;
@@ -481,6 +533,28 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   closeServiceDrawer(): void {
     this.isServiceDrawerOpen = false;
+  }
+
+  openDeliveryServiceSheet(): void {
+    this.pendingDeliveryServiceId = this.type;
+    this.isDeliveryServiceSheetOpen = true;
+  }
+
+  closeDeliveryServiceSheet(): void {
+    this.isDeliveryServiceSheetOpen = false;
+  }
+
+  selectPendingDeliveryService(service: GmDeliveryServiceOption): void {
+    this.pendingDeliveryServiceId = service.id;
+  }
+
+  confirmDeliveryServiceSelection(): void {
+    const selectedService = this.deliveryServiceOptions.find((service) => service.id === this.pendingDeliveryServiceId);
+    this.closeDeliveryServiceSheet();
+
+    if (selectedService) {
+      this.selectService(selectedService.id);
+    }
   }
 
   selectDrawerItem(item: GmBookingDrawerItem): void {
@@ -566,6 +640,26 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   updateStopAddress(change: GmBookingStopAddressChange): void {
     this.stopAddresses[change.index] = change.address;
+  }
+
+  updatePackageInfo(value: string): void {
+    this.packageInfo = value;
+  }
+
+  updateWeightKg(value: unknown): void {
+    this.weightKg = this.toNonNegativeNumber(value);
+  }
+
+  updateLengthCm(value: unknown): void {
+    this.lengthCm = this.toNonNegativeNumber(value);
+  }
+
+  updateWidthCm(value: unknown): void {
+    this.widthCm = this.toNonNegativeNumber(value);
+  }
+
+  updateHeightCm(value: unknown): void {
+    this.heightCm = this.toNonNegativeNumber(value);
   }
 
   onStopAddressInput(index: number): void {
@@ -861,6 +955,46 @@ export class GmBookingPage implements OnInit, OnDestroy {
     }
   }
 
+  private getServiceEstimate(service: GmServiceOption): number {
+    const price = calculateGapMovePrice({
+      type: service.id,
+      vehicleType: service.vehicleType,
+      distanceKm: this.estimateDistanceFor(service.id, service.vehicleType),
+      durationMin: this.estimateDurationFor(service.id, service.vehicleType),
+      voucherDiscount: this.promoCode.trim() ? 10000 : 0,
+      porterOptions: service.id === 'porter' || service.id === 'moving' ? this.porterOptions : undefined,
+      additionalServiceCount: this.selectedAdditionalServices.filter((item) => item !== 'porter').length,
+    });
+
+    return price.finalAmount;
+  }
+
+  private estimateDistanceFor(type: GmBookingType, vehicleType: GmVehicleType): number {
+    if (type === 'porter') {
+      return 0;
+    }
+    if (vehicleType === 'truck') {
+      return 12.8;
+    }
+    if (vehicleType === 'van') {
+      return 8.6;
+    }
+    return 6.4;
+  }
+
+  private estimateDurationFor(type: GmBookingType, vehicleType: GmVehicleType): number {
+    if (type === 'porter') {
+      return Math.max(30, this.porterOptions.helperCount * 20 + this.porterOptions.floorCount * 8);
+    }
+
+    return Math.ceil(this.estimateDistanceFor(type, vehicleType) * 3.6);
+  }
+
+  private toNonNegativeNumber(value: unknown): number {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? Math.max(0, numericValue) : 0;
+  }
+
   private buildNote(): string {
     const noteParts = [
       this.note.trim(),
@@ -883,6 +1017,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.pickupAddress = result.address;
     if (result.coordinate) {
       this.pickupCoordinate = result.coordinate;
+      this.locationService.updateLocation(result.coordinate);
     }
   }
 

@@ -1,0 +1,150 @@
+<section class="gm-mobile-order-section relative z-20 bg-white px-4 pb-5 lg:hidden">
+  <div class="gm-mobile-address-card rounded-[22px] border border-slate-200/60 bg-[#fffdf5] px-2 py-3 shadow-[0_18px_48px_rgba(15,23,42,0.24)]">
+    <div class="gm-mobile-route-list">
+      <button *ngIf="!canReorderRoute" type="button" class="gm-mobile-route-switch-button" aria-label="Đổi điểm lấy và điểm đến"
+        title="Đổi điểm lấy và điểm đến" (click)="swapRoutePoints.emit(); $event.stopPropagation()">
+        <ion-icon name="swap-vertical-outline"></ion-icon>
+      </button>
+
+      <div class="gm-mobile-route-row" data-route-index="0"
+        [class.gm-mobile-route-row-drag-placeholder]="isRouteDragPlaceholder(0)"
+        [class.gm-mobile-route-row-drag-armed]="isRouteDragArmed(0)">
+        <div class="gm-mobile-route-field flex min-h-[44px] min-w-0 w-full items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-[0_6px_18px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.04)]"
+          [class.gm-mobile-route-field-has-content]="pickupAddress"
+          [class.gm-mobile-route-field-has-details]="pickupAddress && hasRouteDetails(pickupDetails)">
+          <div class="gm-mobile-route-click-area flex min-h-[44px] min-w-0 flex-1 items-center bg-transparent py-1.5 pl-2.5 pr-2.5 text-left select-none touch-none"
+            (pointerdown)="onArmRouteDrag(0, $event)" (click)="onRouteAddressSearch('pickup', null, $event)">
+            <span class="gm-mobile-route-icon-container mr-3 flex h-6 w-6 flex-[0_0_24px] items-center justify-center">
+              <span class="gm-mobile-route-marker-pickup-inside block h-3 w-3 rounded-full border-[2.5px] border-[#ff5a00] bg-white shadow-[0_2px_5px_rgba(255,90,0,0.35)]"></span>
+            </span>
+            <span class="gm-mobile-route-copy flex min-w-0 flex-1 flex-col justify-center">
+              <span *ngIf="pickupAddress && getContactText(pickupDetails) as contactText" class="gm-mobile-route-contact">
+                {{ contactText }}
+              </span>
+              <span class="gm-mobile-route-text block min-w-0 overflow-hidden leading-tight" [ngClass]="pickupAddress ? 'text-slate-700' : 'text-slate-400'">
+                {{ pickupAddress || 'Từ' }}
+              </span>
+            </span>
+          </div>
+          <button *ngIf="canReorderRoute" type="button" class="gm-mobile-route-drag-handle" aria-label="Kéo điểm lấy hàng"
+            (pointerdown)="onStartRouteDrag(0, $event)">
+            <ion-icon name="reorder-three-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <div *ngFor="let stop of stopAddresses; let i = index" class="gm-mobile-route-row gm-mobile-route-row-removable"
+        [attr.data-route-index]="i + 1"
+        [class.gm-mobile-route-row-drag-placeholder]="isRouteDragPlaceholder(i + 1)"
+        [class.gm-mobile-route-row-drag-armed]="isRouteDragArmed(i + 1)">
+        <div class="gm-mobile-route-field flex min-h-[44px] min-w-0 w-full items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-[0_6px_18px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.04)]"
+          [class.gm-mobile-route-field-has-content]="stop"
+          [class.gm-mobile-route-field-has-details]="stop && hasRouteDetails(stopDetails[i])">
+          <div class="gm-mobile-route-click-area flex min-h-[44px] min-w-0 flex-1 items-center bg-transparent py-1.5 pl-2.5 pr-2.5 text-left select-none touch-none"
+            (pointerdown)="onArmRouteDrag(i + 1, $event)" (click)="onRouteAddressSearch('stop', i, $event)">
+            <span class="gm-mobile-route-icon-container mr-3 flex h-6 w-6 flex-[0_0_24px] items-center justify-center">
+              <span class="gm-mobile-route-marker-stop-inside block h-2 w-2 rounded-full border-2 border-slate-500 bg-white shadow-[0_2px_4px_rgba(15,23,42,0.2)]"></span>
+            </span>
+            <span class="gm-mobile-route-copy flex min-w-0 flex-1 flex-col justify-center">
+              <span *ngIf="stop && getContactText(stopDetails[i]) as contactText" class="gm-mobile-route-contact">
+                {{ contactText }}
+              </span>
+              <span class="gm-mobile-route-text block min-w-0 overflow-hidden leading-tight" [ngClass]="stop ? 'text-slate-700' : 'text-slate-400'">
+                {{ stop || 'Điểm dừng' }}
+              </span>
+            </span>
+          </div>
+          <button type="button" class="gm-mobile-route-remove-inside inline-flex min-h-[44px] w-[34px] shrink-0 items-center justify-center border-l border-slate-100 bg-transparent text-xl text-slate-300" [attr.aria-label]="'Xóa điểm dừng ' + (i + 1)"
+            (click)="removeStop.emit(i); $event.stopPropagation()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+          <button *ngIf="canReorderRoute" type="button" class="gm-mobile-route-drag-handle" [attr.aria-label]="'Kéo điểm dừng ' + (i + 1)"
+            (pointerdown)="onStartRouteDrag(i + 1, $event)">
+            <ion-icon name="reorder-three-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="gm-mobile-route-row" [class.gm-mobile-route-row-removable]="dropoffAddress || stopAddresses.length"
+        [attr.data-route-index]="stopAddresses.length + 1"
+        [class.gm-mobile-route-row-drag-placeholder]="isRouteDragPlaceholder(stopAddresses.length + 1)"
+        [class.gm-mobile-route-row-drag-armed]="isRouteDragArmed(stopAddresses.length + 1)">
+        <div class="gm-mobile-route-field flex min-h-[44px] min-w-0 w-full items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-[0_6px_18px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.04)]"
+          [class.gm-mobile-route-field-has-content]="dropoffAddress"
+          [class.gm-mobile-route-field-has-details]="dropoffAddress && hasRouteDetails(dropoffDetails)">
+          <div class="gm-mobile-route-click-area flex min-h-[44px] min-w-0 flex-1 items-center bg-transparent py-1.5 pl-2.5 pr-2.5 text-left select-none touch-none"
+            (pointerdown)="onArmRouteDrag(stopAddresses.length + 1, $event)" (click)="onRouteAddressSearch('dropoff', null, $event)">
+            <span class="gm-mobile-route-icon-container mr-3 flex h-6 w-6 flex-[0_0_24px] items-center justify-center">
+              <span class="gm-mobile-route-marker-dropoff-inside inline-flex items-center justify-center text-[#ff5a00]">
+                <ion-icon name="location"></ion-icon>
+              </span>
+            </span>
+            <span class="gm-mobile-route-copy flex min-w-0 flex-1 flex-col justify-center">
+              <span *ngIf="dropoffAddress && getContactText(dropoffDetails) as contactText" class="gm-mobile-route-contact">
+                {{ contactText }}
+              </span>
+              <span class="gm-mobile-route-text block min-w-0 overflow-hidden leading-tight" [ngClass]="dropoffAddress ? 'text-slate-700' : 'text-slate-400'">
+                {{ dropoffAddress || (stopAddresses.length ? 'Điểm cuối' : 'Đến') }}
+              </span>
+            </span>
+          </div>
+          <button *ngIf="dropoffAddress || stopAddresses.length" type="button" class="gm-mobile-route-remove-inside inline-flex min-h-[44px] w-[34px] shrink-0 items-center justify-center border-l border-slate-100 bg-transparent text-xl text-slate-300" aria-label="Xóa điểm cuối"
+            (click)="clearDropoff.emit(); $event.stopPropagation()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+          <button *ngIf="canReorderRoute" type="button" class="gm-mobile-route-drag-handle" aria-label="Kéo điểm cuối"
+            (pointerdown)="onStartRouteDrag(stopAddresses.length + 1, $event)">
+            <ion-icon name="reorder-three-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="routeDragGhost as ghost" class="gm-mobile-route-drag-ghost" aria-hidden="true"
+      [style.left.px]="ghost.left" [style.top.px]="ghost.top" [style.width.px]="ghost.width" [style.height.px]="ghost.height">
+      <div class="gm-mobile-route-field flex min-h-full min-w-0 w-full items-stretch overflow-hidden rounded-xl border border-orange-200 bg-white p-0 shadow-[0_18px_38px_rgba(15,23,42,0.22),0_8px_18px_rgba(255,90,0,0.12)]"
+        [class.gm-mobile-route-field-has-content]="ghost.address"
+        [class.gm-mobile-route-field-has-details]="ghost.address && hasRouteDetails(ghost.details)">
+        <div class="gm-mobile-route-click-area flex min-h-[44px] min-w-0 flex-1 items-center bg-transparent py-1.5 pl-2.5 pr-2.5 text-left select-none touch-none">
+          <span class="gm-mobile-route-icon-container mr-3 flex h-6 w-6 flex-[0_0_24px] items-center justify-center">
+            <span *ngIf="ghost.marker === 'pickup'" class="gm-mobile-route-marker-pickup-inside block h-3 w-3 rounded-full border-[2.5px] border-[#ff5a00] bg-white shadow-[0_2px_5px_rgba(255,90,0,0.35)]"></span>
+            <span *ngIf="ghost.marker === 'stop'" class="gm-mobile-route-marker-stop-inside block h-2 w-2 rounded-full border-2 border-slate-500 bg-white shadow-[0_2px_4px_rgba(15,23,42,0.2)]"></span>
+            <span *ngIf="ghost.marker === 'dropoff'" class="gm-mobile-route-marker-dropoff-inside inline-flex items-center justify-center text-[#ff5a00]">
+              <ion-icon name="location"></ion-icon>
+            </span>
+          </span>
+          <span class="gm-mobile-route-copy flex min-w-0 flex-1 flex-col justify-center">
+            <span *ngIf="ghost.address && getContactText(ghost.details) as contactText" class="gm-mobile-route-contact">
+              {{ contactText }}
+            </span>
+            <span class="gm-mobile-route-text block min-w-0 overflow-hidden leading-tight" [ngClass]="ghost.address ? 'text-slate-700' : 'text-slate-400'">
+              {{ ghost.address || ghost.placeholder }}
+            </span>
+          </span>
+        </div>
+        <span *ngIf="ghost.removable" class="gm-mobile-route-remove-inside inline-flex min-h-[44px] w-[34px] shrink-0 items-center justify-center border-l border-slate-100 bg-transparent text-xl text-slate-300">
+          <ion-icon name="close-outline"></ion-icon>
+        </span>
+        <span *ngIf="canReorderRoute" class="gm-mobile-route-drag-handle gm-mobile-route-drag-handle-ghost">
+          <ion-icon name="reorder-three-outline"></ion-icon>
+        </span>
+      </div>
+    </div>
+
+    <div class="mt-4 flex items-center justify-between gap-3">
+      <button type="button"
+        class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-3xl text-slate-700 shadow-sm"
+        aria-label="Thêm điểm dừng" title="Thêm điểm dừng" (click)="addStop.emit()">
+        <ion-icon name="add-outline"></ion-icon>
+      </button>
+
+      <button type="button"
+        class="flex h-11 min-w-[150px] max-w-[178px] items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-extrabold text-slate-900 shadow-sm"
+        (click)="openScheduleSheet.emit()">
+        <ion-icon name="alarm-outline" class="text-lg text-slate-600"></ion-icon>
+        <span class="min-w-0 truncate">{{ scheduleButtonLabel }}</span>
+        <ion-icon name="chevron-down-outline" class="text-lg text-slate-500"></ion-icon>
+      </button>
+    </div>
+  </div>
+</section>

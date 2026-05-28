@@ -1,0 +1,212 @@
+:host {
+  display: block;
+}
+
+.gm-booking-route-card {
+  position: relative;
+}
+
+.gm-mobile-route-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.gm-mobile-route-list::before {
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: 22px;
+  width: 0;
+  content: '';
+  border-left: 2px dashed #cbd5e1;
+}
+
+.gm-mobile-route-row {
+  position: relative;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+}
+
+.gm-mobile-route-row:active {
+  transform: scale(0.995);
+  transition: transform 100ms ease;
+}
+
+.gm-mobile-route-switch-button {
+  position: absolute;
+  top: 44px;
+  right: 42px;
+  z-index: 5;
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 19px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+.gm-mobile-route-switch-button:active {
+  transform: scale(0.96);
+  color: #ff5a00;
+}
+
+.gm-mobile-route-field {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  height: auto;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 0;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.gm-mobile-route-field:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+}
+
+.gm-mobile-route-field-has-content {
+  min-height: 52px;
+}
+
+.gm-mobile-route-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  margin-right: 12px;
+}
+
+.gm-mobile-route-marker-pickup-inside {
+  width: 12px;
+  height: 12px;
+  border: 2.5px solid #ff5a00;
+  border-radius: 999px;
+  background: #fff;
+  box-sizing: border-box;
+  box-shadow: 0 2px 5px rgba(255, 90, 0, 0.35);
+}
+
+.gm-mobile-route-marker-stop-inside {
+  width: 8px;
+  height: 8px;
+  border: 2px solid #64748b;
+  border-radius: 999px;
+  background: #fff;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2);
+}
+
+.gm-mobile-route-marker-dropoff-inside {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff5a00;
+  filter: drop-shadow(0 2px 4px rgba(255, 90, 0, 0.25));
+}
+
+.gm-mobile-route-marker-dropoff-inside ion-icon {
+  font-size: 18px;
+}
+
+.gm-mobile-route-click-area {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  height: auto;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: transparent;
+  text-align: left;
+  user-select: none;
+}
+
+.gm-mobile-route-field-has-content .gm-mobile-route-click-area {
+  min-height: 52px;
+}
+
+.gm-mobile-route-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+
+.gm-mobile-route-text {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 12.8px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.gm-mobile-route-remove-inside {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  min-height: 44px;
+  height: auto;
+  color: #cbd5e1;
+  font-size: 20px;
+  background: transparent;
+  flex-shrink: 0;
+  align-self: stretch;
+  border-left: 1px solid #f1f5f9;
+}
+
+.gm-mobile-route-remove-inside:active {
+  color: #94a3b8;
+}
+
+.gm-mobile-route-drag-handle {
+  display: inline-flex;
+  width: 32px;
+  min-height: 44px;
+  height: auto;
+  flex: 0 0 34px;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-left: 1px solid #f1f5f9;
+  background: transparent;
+  color: #94a3b8;
+  cursor: grab;
+  font-size: 20px;
+}
+
+.gm-mobile-route-drag-handle:active {
+  background: #fff7ed;
+  color: #ff5a00;
+  cursor: grabbing;
+}

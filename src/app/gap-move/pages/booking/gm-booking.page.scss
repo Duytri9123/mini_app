@@ -29,6 +29,124 @@
   height: 44px;
 }
 
+.gm-selected-delivery-service .gm-vehicle-sprite-card {
+  width: 54px;
+  height: 42px;
+}
+
+.gm-selected-delivery-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gm-selected-delivery-title,
+.gm-selected-delivery-subtitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+.gm-selected-delivery-title {
+  -webkit-line-clamp: 1;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.gm-selected-delivery-subtitle {
+  -webkit-line-clamp: 2;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.gm-selected-delivery-price {
+  flex: 0 0 auto;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.gm-delivery-service-swiper {
+  display: block;
+  width: 100%;
+  padding-bottom: 4px;
+}
+
+.gm-delivery-service-swiper swiper-slide {
+  width: min(86vw, 352px);
+}
+
+.gm-delivery-service-slide {
+  display: grid;
+  width: 100%;
+  min-height: 94px;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 14px 12px;
+  text-align: left;
+}
+
+.gm-delivery-service-slide-active {
+  border-color: #25c5c8;
+  background: rgba(236, 254, 255, 0.82);
+}
+
+.gm-delivery-service-slide .gm-vehicle-sprite-card {
+  width: 52px;
+  height: 42px;
+}
+
+.gm-delivery-service-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gm-delivery-service-title,
+.gm-delivery-service-subtitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+.gm-delivery-service-title {
+  -webkit-line-clamp: 2;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.gm-delivery-service-subtitle {
+  -webkit-line-clamp: 2;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.gm-delivery-service-price {
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
 .gm-vehicle-sprite-menu {
   width: 30px;
   height: 26px;

@@ -1,204 +1,103 @@
-<section class="mb-5 rounded-[22px] border border-slate-100 bg-white p-4 shadow-sm">
+<section class="gm-booking-route-card mb-5 rounded-[22px] border border-slate-100 bg-white p-4 shadow-sm">
+  <!-- Route Details Header -->
   <div class="mb-4 flex items-center justify-between">
-    <h2 class="text-sm font-black uppercase text-slate-400">Tuyến đường</h2>
-    <div class="flex items-center gap-3">
-      <button
-        type="button"
-        class="text-sm font-bold"
-        [ngClass]="isRouteReorderMode ? 'text-[#008c95]' : 'text-slate-500'"
-        [disabled]="!stopAddresses.length"
-        (click)="toggleRouteReorder.emit()"
-      >
-        {{ isRouteReorderMode ? 'Xong sắp xếp' : 'Sắp xếp điểm' }}
-      </button>
-      <button type="button" class="text-sm font-bold text-[#ff5a00]" (click)="addStop.emit()">+ Thêm điểm</button>
-    </div>
+    <h2 class="text-base font-bold text-slate-950">Chi tiết lộ trình</h2>
+    <button type="button" class="rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-900 border border-slate-200 shadow-sm active:scale-95 transition" (click)="addStop.emit()">
+      + Thêm điểm
+    </button>
   </div>
 
-  <div class="mb-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-    <button
-      type="button"
-      class="flex w-full items-center justify-between gap-3 bg-white px-3 py-3 text-left"
-      (click)="isSavedAddressOpen = !isSavedAddressOpen"
-    >
-      <span class="flex min-w-0 items-center gap-3">
-        <ion-icon name="bookmark" class="text-xl text-[#ff5a00]"></ion-icon>
-        <span>
-          <span class="block text-sm font-extrabold text-slate-900">Địa chỉ đã lưu</span>
-          <span class="block text-xs font-semibold text-slate-400">Dùng cho {{ activeTargetLabel }}</span>
-        </span>
-      </span>
-      <ion-icon [name]="isSavedAddressOpen ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-xl text-slate-400"></ion-icon>
+  <div class="gm-mobile-route-list">
+    <!-- Swap button (only visible when there are no stops, identical to home screen) -->
+    <button *ngIf="stopAddresses.length === 0" type="button" class="gm-mobile-route-switch-button" aria-label="Đổi điểm lấy và điểm đến"
+      title="Đổi điểm lấy và điểm đến" (click)="swapPickupDropoff(); $event.stopPropagation()">
+      <ion-icon name="swap-vertical-outline"></ion-icon>
     </button>
 
-    <div *ngIf="isSavedAddressOpen" class="max-h-64 overflow-y-auto border-t border-slate-100">
-      <div *ngIf="savedAddressesLoading" class="px-3 py-4 text-sm font-semibold text-slate-400">Đang tải địa chỉ...</div>
-      <div *ngIf="!savedAddressesLoading && !savedAddresses.length" class="px-3 py-4 text-sm font-semibold text-slate-400">Chưa có địa chỉ đã lưu.</div>
-      <button
-        *ngFor="let item of savedAddresses"
-        type="button"
-        class="flex w-full items-start gap-3 border-b border-slate-100 bg-white px-3 py-3 text-left last:border-b-0 hover:bg-slate-50"
-        (click)="selectSavedAddress(item)"
-      >
-        <ion-icon name="bookmark" class="mt-0.5 text-lg text-[#ff5a00]"></ion-icon>
-        <span class="min-w-0 flex-1">
-          <span class="flex items-center gap-2">
-            <span class="truncate text-sm font-extrabold text-slate-900">{{ item.label || 'Địa chỉ' }}</span>
-            <span *ngIf="item.is_default" class="rounded-full bg-[#008c95]/10 px-2 py-0.5 text-[10px] font-black uppercase text-[#008c95]">Mặc định</span>
+    <!-- Pickup Point -->
+    <div class="gm-mobile-route-row">
+      <div class="gm-mobile-route-field flex min-h-[44px] min-w-0 w-full items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-[0_6px_18px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.04)]"
+        [class.gm-mobile-route-field-has-content]="pickupAddress">
+        <div class="gm-mobile-route-click-area flex min-h-[44px] min-w-0 flex-1 items-center bg-transparent py-1.5 pl-2.5 pr-2.5 text-left select-none cursor-pointer"
+          (click)="openMapFor({ field: 'pickup' })">
+          <span class="gm-mobile-route-icon-container mr-3 flex h-6 w-6 flex-[0_0_24px] items-center justify-center">
+            <span class="gm-mobile-route-marker-pickup-inside block h-3 w-3 rounded-full border-[2.5px] border-[#ff5a00] bg-white shadow-[0_2px_5px_rgba(255,90,0,0.35)]"></span>
           </span>
-          <span class="mt-0.5 line-clamp-2 text-xs font-semibold leading-5 text-slate-500">{{ item.address }}</span>
-        </span>
-      </button>
-    </div>
-  </div>
-
-  <div class="space-y-3">
-    <div>
-      <label class="text-xs font-bold uppercase text-slate-400" for="pickupAddress">
-        {{ type === 'porter' ? 'Địa điểm bê hàng' : 'Điểm lấy / đón' }}
-      </label>
-      <div class="mt-2 flex gap-2">
-        <input
-          id="pickupAddress"
-          name="pickupAddress"
-          [ngModel]="pickupAddress"
-          (ngModelChange)="pickupAddressChange.emit($event); pickupInput.emit()"
-          (focus)="setActiveTarget({ field: 'pickup' })"
-          class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-        />
-        <button
-          type="button"
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#008c95]/20 text-[#008c95]"
-          aria-label="Chọn điểm lấy trên bản đồ"
-          title="Chọn điểm lấy trên bản đồ"
-          (click)="openMapFor({ field: 'pickup' })"
-        >
-          <ion-icon name="map-outline" class="text-lg"></ion-icon>
-        </button>
-      </div>
-      <div *ngIf="pickupSuggestions.length" class="mt-2 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-        <button
-          *ngFor="let result of pickupSuggestions"
-          type="button"
-          class="block w-full border-b border-slate-100 px-3 py-2 text-left text-xs text-slate-600 last:border-b-0"
-          (click)="useSuggestion.emit({ field: 'pickup', result })"
-        >
-          {{ result.address }}
-        </button>
+          <span class="gm-mobile-route-copy flex min-w-0 flex-1 flex-col justify-center">
+            <span class="gm-mobile-route-text block min-w-0 overflow-hidden leading-tight" [ngClass]="pickupAddress ? 'text-slate-700 font-semibold' : 'text-slate-400'">
+              {{ pickupAddress || 'Từ' }}
+            </span>
+          </span>
+        </div>
       </div>
     </div>
 
-    <p *ngIf="isRouteReorderMode && stopAddresses.length" class="rounded-2xl bg-orange-50 px-3 py-2 text-xs font-bold leading-5 text-[#ff5a00]">
-      Kéo điểm dừng hoặc điểm đến để đổi thứ tự. Điểm cuối cùng sẽ là điểm đến.
-    </p>
-
+    <!-- Stop Points -->
     <div
       *ngFor="let stop of stopAddresses; let i = index"
-      class="rounded-2xl"
-      [class.bg-slate-50]="isRouteReorderMode"
-      [class.p-2]="isRouteReorderMode"
-      [draggable]="isRouteReorderMode"
+      class="gm-mobile-route-row transition-opacity duration-150"
+      [class.opacity-40]="routeDragIndex === i"
+      [draggable]="true"
       (dragstart)="startRouteDrag(i)"
       (dragover)="allowRouteDrop($event)"
       (drop)="dropRoutePoint(i, $event)"
       (dragend)="endRouteDrag()"
     >
-      <label class="text-xs font-bold uppercase text-slate-400" [for]="'stop-' + i">Điểm dừng {{ i + 1 }}</label>
-      <div class="mt-2 flex gap-2">
-        <span *ngIf="isRouteReorderMode" class="flex h-11 w-9 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400">
-          <ion-icon name="reorder-three-outline" class="text-xl"></ion-icon>
-        </span>
-        <input
-          [id]="'stop-' + i"
-          [name]="'stopAddress' + i"
-          [ngModel]="stopAddresses[i]"
-          (ngModelChange)="stopAddressChange.emit({ index: i, address: $event }); stopInput.emit(i)"
-          (focus)="setActiveTarget({ field: 'stop', stopIndex: i })"
-          class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-        />
-        <button
-          type="button"
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#008c95]/20 text-[#008c95]"
-          aria-label="Chọn điểm dừng trên bản đồ"
-          title="Chọn điểm dừng trên bản đồ"
-          (click)="openMapFor({ field: 'stop', stopIndex: i })"
-        >
-          <ion-icon name="map-outline" class="text-lg"></ion-icon>
-        </button>
-        <div *ngIf="isRouteReorderMode" class="flex shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <button type="button" class="flex h-11 w-9 items-center justify-center text-slate-500" aria-label="Đưa điểm lên" (click)="movePoint(i, i - 1)">
-            <ion-icon name="chevron-up-outline"></ion-icon>
-          </button>
-          <button type="button" class="flex h-11 w-9 items-center justify-center border-l border-slate-100 text-slate-500" aria-label="Đưa điểm xuống" (click)="movePoint(i, i + 1)">
-            <ion-icon name="chevron-down-outline"></ion-icon>
-          </button>
+      <div class="gm-mobile-route-field flex min-h-[44px] min-w-0 w-full items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-[0_6px_18px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.04)]"
+        [class.gm-mobile-route-field-has-content]="stop">
+        <div class="gm-mobile-route-click-area flex min-h-[44px] min-w-0 flex-1 items-center bg-transparent py-1.5 pl-2.5 pr-2.5 text-left select-none cursor-pointer"
+          (click)="openMapFor({ field: 'stop', stopIndex: i })">
+          <span class="gm-mobile-route-icon-container mr-3 flex h-6 w-6 flex-[0_0_24px] items-center justify-center">
+            <span class="gm-mobile-route-marker-stop-inside block h-2 w-2 rounded-full border-2 border-slate-500 bg-white shadow-[0_2px_4px_rgba(15,23,42,0.2)]"></span>
+          </span>
+          <span class="gm-mobile-route-copy flex min-w-0 flex-1 flex-col justify-center">
+            <span class="gm-mobile-route-text block min-w-0 overflow-hidden leading-tight" [ngClass]="stop ? 'text-slate-700 font-semibold' : 'text-slate-400'">
+              {{ stop || 'Điểm dừng ' + (i + 1) }}
+            </span>
+          </span>
         </div>
-        <button type="button" class="rounded-2xl border border-red-100 px-3 text-sm font-bold text-red-600" (click)="removeStop.emit(i)">Xóa</button>
-      </div>
-      <div *ngIf="stopSuggestions[i]?.length" class="mt-2 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-        <button
-          *ngFor="let result of stopSuggestions[i]"
-          type="button"
-          class="block w-full border-b border-slate-100 px-3 py-2 text-left text-xs text-slate-600 last:border-b-0"
-          (click)="useSuggestion.emit({ field: 'stop', stopIndex: i, result })"
-        >
-          {{ result.address }}
+        <button type="button" class="gm-mobile-route-remove-inside inline-flex min-h-[44px] w-[34px] shrink-0 items-center justify-center border-l border-slate-100 bg-transparent text-xl text-slate-300"
+          (click)="removeStop.emit(i); $event.stopPropagation()">
+          <ion-icon name="close-outline"></ion-icon>
         </button>
+        <span class="gm-mobile-route-drag-handle cursor-grab">
+          <ion-icon name="reorder-three-outline"></ion-icon>
+        </span>
       </div>
     </div>
 
+    <!-- Dropoff Point -->
     <div
-      class="rounded-2xl"
-      [class.bg-orange-50]="isRouteReorderMode && stopAddresses.length"
-      [class.p-2]="isRouteReorderMode && stopAddresses.length"
-      [draggable]="isRouteReorderMode && stopAddresses.length > 0"
+      class="gm-mobile-route-row transition-opacity duration-150"
+      [class.opacity-40]="routeDragIndex === stopAddresses.length"
+      [draggable]="stopAddresses.length > 0"
       (dragstart)="startRouteDrag(stopAddresses.length)"
       (dragover)="allowRouteDrop($event)"
       (drop)="dropRoutePoint(stopAddresses.length, $event)"
       (dragend)="endRouteDrag()"
     >
-      <label class="text-xs font-bold uppercase text-slate-400" for="dropoffAddress">
-        {{ type === 'porter' ? 'Điểm hoàn tất' : 'Điểm giao / đến' }}
-      </label>
-      <div class="mt-2 flex gap-2">
-        <span *ngIf="isRouteReorderMode && stopAddresses.length" class="flex h-11 w-9 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-white text-[#ff5a00]">
-          <ion-icon name="reorder-three-outline" class="text-xl"></ion-icon>
-        </span>
-        <input
-          id="dropoffAddress"
-          name="dropoffAddress"
-          [ngModel]="dropoffAddress"
-          (ngModelChange)="dropoffAddressChange.emit($event); dropoffInput.emit()"
-          (focus)="setActiveTarget({ field: 'dropoff' })"
-          class="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-        />
-        <button
-          type="button"
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#008c95]/20 text-[#008c95]"
-          aria-label="Chọn điểm giao trên bản đồ"
-          title="Chọn điểm giao trên bản đồ"
-          (click)="openMapFor({ field: 'dropoff' })"
-        >
-          <ion-icon name="map-outline" class="text-lg"></ion-icon>
-        </button>
-        <div *ngIf="isRouteReorderMode && stopAddresses.length" class="flex shrink-0 overflow-hidden rounded-2xl border border-orange-100 bg-white">
-          <button type="button" class="flex h-11 w-9 items-center justify-center text-slate-500" aria-label="Đưa điểm đến lên" (click)="movePoint(stopAddresses.length, stopAddresses.length - 1)">
-            <ion-icon name="chevron-up-outline"></ion-icon>
-          </button>
-          <button type="button" class="flex h-11 w-9 items-center justify-center border-l border-slate-100 text-slate-500" aria-label="Đưa điểm đến xuống" (click)="movePoint(stopAddresses.length, stopAddresses.length + 1)">
-            <ion-icon name="chevron-down-outline"></ion-icon>
-          </button>
+      <div class="gm-mobile-route-field flex min-h-[44px] min-w-0 w-full items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-[0_6px_18px_rgba(15,23,42,0.08),0_1px_3px_rgba(15,23,42,0.04)]"
+        [class.gm-mobile-route-field-has-content]="dropoffAddress">
+        <div class="gm-mobile-route-click-area flex min-h-[44px] min-w-0 flex-1 items-center bg-transparent py-1.5 pl-2.5 pr-2.5 text-left select-none cursor-pointer"
+          (click)="openMapFor({ field: 'dropoff' })">
+          <span class="gm-mobile-route-icon-container mr-3 flex h-6 w-6 flex-[0_0_24px] items-center justify-center">
+            <span class="gm-mobile-route-marker-dropoff-inside inline-flex items-center justify-center text-[#ff5a00]">
+              <ion-icon name="location"></ion-icon>
+            </span>
+          </span>
+          <span class="gm-mobile-route-copy flex min-w-0 flex-1 flex-col justify-center">
+            <span class="gm-mobile-route-text block min-w-0 overflow-hidden leading-tight" [ngClass]="dropoffAddress ? 'text-slate-700 font-semibold' : 'text-slate-400'">
+              {{ dropoffAddress || 'Đến' }}
+            </span>
+          </span>
         </div>
-      </div>
-      <div *ngIf="dropoffSuggestions.length" class="mt-2 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-        <button
-          *ngFor="let result of dropoffSuggestions"
-          type="button"
-          class="block w-full border-b border-slate-100 px-3 py-2 text-left text-xs text-slate-600 last:border-b-0"
-          (click)="useSuggestion.emit({ field: 'dropoff', result })"
-        >
-          {{ result.address }}
+        <button *ngIf="dropoffAddress" type="button" class="gm-mobile-route-remove-inside inline-flex min-h-[44px] w-[34px] shrink-0 items-center justify-center border-l border-slate-100 bg-transparent text-xl text-slate-300" aria-label="Xóa điểm đến"
+          (click)="dropoffAddressChange.emit(''); dropoffInput.emit(); $event.stopPropagation()">
+          <ion-icon name="close-outline"></ion-icon>
         </button>
+        <span *ngIf="stopAddresses.length > 0" class="gm-mobile-route-drag-handle cursor-grab">
+          <ion-icon name="reorder-three-outline"></ion-icon>
+        </span>
       </div>
     </div>
   </div>

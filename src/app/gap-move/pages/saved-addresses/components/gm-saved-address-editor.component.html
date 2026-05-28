@@ -81,6 +81,36 @@
         </label>
       </div>
 
+      <div class="mt-3 grid gap-2 sm:grid-cols-2">
+        <input
+          name="savedAddressContactName"
+          [ngModel]="contactName"
+          (ngModelChange)="contactNameChange.emit($event)"
+          class="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none placeholder:text-slate-400"
+          placeholder="Tên liên lạc"
+        />
+        <input
+          name="savedAddressPhone"
+          [ngModel]="phone"
+          (ngModelChange)="phoneChange.emit($event)"
+          inputmode="tel"
+          class="h-11 rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none placeholder:text-slate-400"
+          placeholder="Số điện thoại"
+        />
+      </div>
+
+      <label class="mt-3 grid gap-2 text-sm font-bold text-slate-700">
+        Ghi chú cho tài xế
+        <textarea
+          name="savedAddressNote"
+          [ngModel]="note"
+          (ngModelChange)="noteChange.emit($event)"
+          maxlength="250"
+          class="h-20 resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold outline-none placeholder:text-slate-400"
+          placeholder="Thêm ghi chú, ví dụ: cổng đỏ, lầu 2."
+        ></textarea>
+      </label>
+
       <div class="mt-4 flex gap-2">
         <button type="button" class="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-extrabold text-slate-600" (click)="closeEditor.emit()">Đóng</button>
         <button

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -7,68 +7,54 @@ import { map, Observable, Subscription } from 'rxjs';
 import { GmBanner } from '../../core/interfaces/banner.interface';
 import { GmBooking, GmBookingType } from '../../core/interfaces/booking.interface';
 import { GmCoordinate, GmCustomerAddress } from '../../core/interfaces/location.interface';
-import { GmVehicleType } from '../../core/interfaces/vehicle.interface';
 import { GmBannerService } from '../../core/services/gm-banner.service';
 import { GmBookingService } from '../../core/services/gm-booking.service';
 import { GmArticle, GmArticleService } from '../../core/services/gm-article.service';
 import { GmAddressSearchResult, GmGeocodingService } from '../../core/services/gm-geocoding.service';
 import { GmCustomerAddressService } from '../../core/services/gm-customer-address.service';
+import { GmLocationService } from '../../core/services/gm-location.service';
+import { GM_STORAGE_KEYS } from '../../core/constants/gm-api.constants';
 import { GM_SERVICE_OPTIONS, GmServiceOption } from '../../core/constants/gm-services.constants';
-import { formatVnd } from '../../core/utils/helpers';
 import { GmBannerCarouselComponent } from '../../shared/components/gm-banner-carousel/gm-banner-carousel.component';
 import { GmBookingCardComponent } from '../../shared/components/gm-booking-card/gm-booking-card.component';
 import { GmMapComponent, GmMapMarkerDragEvent } from '../../shared/components/gm-map/gm-map.component';
+import { GmHomeMobileRouteCardComponent } from './components/gm-home-mobile-route-card/gm-home-mobile-route-card.component';
+import {
+  GmHomeAddressDetails,
+  GmHomeAddressField,
+  GmHomeConfirmedAddressHistoryItem,
+  GmHomeDeliveryPackage,
+  GmHomeMode,
+  GmHomeModeOption,
+  GmHomeRouteDragGhost,
+  GmHomeRoutePointState,
+  GmHomeVehicleOption,
+} from './gm-home.types';
 
-type GmHomeMode = 'delivery' | 'ride';
-type GmHomeAddressField = 'pickup' | 'dropoff' | 'stop';
-
-interface GmHomeModeOption {
-  id: GmHomeMode;
-  label: string;
-  badge?: string;
+interface GmBrowserContact {
+  name?: string[];
+  tel?: string[];
 }
 
-interface GmHomeVehicleOption {
-  id: string;
-  title: string;
-  subtitle?: string;
-  description?: string;
-  icon: string;
-  artClass: string;
-  imageUrl?: string;
-  bookingType: GmBookingType;
-  vehicleType: GmVehicleType;
-  dimensions?: string;
-  maxWeightKg?: number;
-  priceBase?: number;
-  showMore?: boolean;
-}
-
-interface GmHomeAddressDetails {
-  unit: string;
-  phone: string;
-  contactName: string;
-  saveAddress: boolean;
-}
-
-interface GmHomeDeliveryPackage {
-  id: 'express' | 'standard' | 'saving';
-  title: string;
-  subtitle: string;
-  priceMultiplier: number;
-}
-
-interface GmHomeRoutePointState {
-  address: string;
-  coordinate?: GmCoordinate;
-  details: GmHomeAddressDetails;
-  suggestions: GmAddressSearchResult[];
+interface GmNavigatorWithContacts extends Navigator {
+  contacts?: {
+    select(properties: string[], options?: { multiple?: boolean }): Promise<GmBrowserContact[]>;
+  };
 }
 
 @Component({
   selector: 'app-gm-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, IonicModule, GmBannerCarouselComponent, GmBookingCardComponent, GmMapComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    IonicModule,
+    GmBannerCarouselComponent,
+    GmBookingCardComponent,
+    GmMapComponent,
+    GmHomeMobileRouteCardComponent,
+  ],
   templateUrl: './gm-home.page.html',
   styleUrls: ['./gm-home.page.scss'],
 })
@@ -84,9 +70,7 @@ export class GmHomePage implements OnInit, OnDestroy {
   ];
   activeMobileMode: GmHomeMode = 'delivery';
   selectedMobileVehicleId = 'delivery-bike-rack';
-  expandedVehicleInfoId = 'delivery-bike-rack';
   selectedDeliveryPackageId: GmHomeDeliveryPackage['id'] = 'standard';
-  isRouteReorderMode = false;
   deliveryPackages: GmHomeDeliveryPackage[] = [
     {
       id: 'express',
@@ -354,6 +338,7 @@ export class GmHomePage implements OnInit, OnDestroy {
   addressSearchStopIndex: number | null = null;
   addressSearchQuery = '';
   addressSearchResults: GmAddressSearchResult[] = [];
+  confirmedAddressHistory: GmHomeConfirmedAddressHistoryItem[] = [];
   savedAddresses: GmCustomerAddress[] = [];
   savedAddressesLoading = false;
   typedQuickTitle = '';
@@ -361,6 +346,7 @@ export class GmHomePage implements OnInit, OnDestroy {
   mapSearchResults: GmAddressSearchResult[] = [];
   pendingMapSelection?: GmAddressSearchResult;
   mapAddressDetails: GmHomeAddressDetails = this.createEmptyAddressDetails();
+  routeDragGhost: GmHomeRouteDragGhost | null = null;
 
   private pickupSearchTimer?: ReturnType<typeof setTimeout>;
   private dropoffSearchTimer?: ReturnType<typeof setTimeout>;
@@ -368,11 +354,21 @@ export class GmHomePage implements OnInit, OnDestroy {
   private addressSearchTimer?: ReturnType<typeof setTimeout>;
   private mapSearchTimer?: ReturnType<typeof setTimeout>;
   private routeDragIndex: number | null = null;
+  private routeDragArmedIndex: number | null = null;
+  private routeDragPointerId: number | null = null;
+  private routeDragStartX = 0;
+  private routeDragStartY = 0;
+  private routeDragStartTarget: HTMLElement | null = null;
+  private routeDragPressTimer?: ReturnType<typeof setTimeout>;
+  private routeDragMoved = false;
+  private routeDragSuppressClick = false;
   private savedAddressSub?: Subscription;
   private titleTypingTimer?: ReturnType<typeof setTimeout>;
   private titlePhraseIndex = 0;
   private titleCharIndex = 0;
   private isTitleDeleting = false;
+  private readonly routeDragLongPressMs = 220;
+  private readonly routeDragMoveThresholdPx = 8;
   private readonly quickTitlePhrases = ['Bạn muốn giao hàng đến đâu?', 'Bạn muốn tới đâu?'];
 
   constructor(
@@ -382,7 +378,23 @@ export class GmHomePage implements OnInit, OnDestroy {
     private geocodingService: GmGeocodingService,
     private customerAddressService: GmCustomerAddressService,
     private router: Router,
+    private locationService: GmLocationService,
   ) {}
+
+  @HostListener('window:pointermove', ['$event'])
+  onWindowPointerMove(event: PointerEvent): void {
+    this.moveRouteDrag(event);
+  }
+
+  @HostListener('window:pointerup', ['$event'])
+  onWindowPointerUp(event: PointerEvent): void {
+    this.endRouteDrag(event);
+  }
+
+  @HostListener('window:pointercancel', ['$event'])
+  onWindowPointerCancel(event: PointerEvent): void {
+    this.endRouteDrag(event);
+  }
 
   get activeMobileVehicles(): GmHomeVehicleOption[] {
     return this.mobileVehicles[this.activeMobileMode];
@@ -396,18 +408,18 @@ export class GmHomePage implements OnInit, OnDestroy {
     );
   }
 
-  get selectedDeliveryPackage(): GmHomeDeliveryPackage {
-    return this.deliveryPackages.find((item) => item.id === this.selectedDeliveryPackageId) ?? this.deliveryPackages[1]!;
-  }
-
   get isRouteReadyForServices(): boolean {
     const hasDropoff = Boolean(this.dropoffAddress.trim() && this.dropoffCoordinate);
     const stopsReady = this.stopAddresses.every((address, index) => Boolean(address.trim() && this.stopCoordinates[index]));
     return hasDropoff && stopsReady;
   }
 
-  get routeSwitchButtonLabel(): string {
-    return this.stopAddresses.length ? 'Sắp xếp điểm dừng' : 'Đổi chiều điểm lấy và điểm giao';
+  get routeDragPlaceholderIndex(): number | null {
+    return this.routeDragGhost ? this.routeDragIndex : null;
+  }
+
+  get activeRouteDragArmedIndex(): number | null {
+    return this.routeDragGhost ? null : this.routeDragArmedIndex;
   }
 
   get mapPickerStops(): GmCoordinate[] {
@@ -445,6 +457,7 @@ export class GmHomePage implements OnInit, OnDestroy {
       map((items) => items.filter((item) => item.status !== 'completed' && item.status !== 'cancelled').slice(0, 2)),
     );
     this.articles$ = this.articleService.getArticles().pipe(map((items) => items.slice(0, 3)));
+    this.loadConfirmedAddressHistory();
     this.useCurrentLocation();
     this.loadSavedAddresses();
     this.startTitleTyping();
@@ -457,6 +470,7 @@ export class GmHomePage implements OnInit, OnDestroy {
     this.stopSearchTimers.forEach((timer) => clearTimeout(timer));
     clearTimeout(this.addressSearchTimer);
     clearTimeout(this.mapSearchTimer);
+    this.clearRouteDragPressTimer();
     this.savedAddressSub?.unsubscribe();
   }
 
@@ -489,13 +503,11 @@ export class GmHomePage implements OnInit, OnDestroy {
     this.activeMobileMode = mode;
     if (!this.activeMobileVehicles.some((vehicle) => vehicle.id === this.selectedMobileVehicleId)) {
       this.selectedMobileVehicleId = this.activeMobileVehicles[0]?.id ?? '';
-      this.expandedVehicleInfoId = this.selectedMobileVehicleId;
     }
   }
 
   selectMobileVehicle(vehicle: GmHomeVehicleOption): void {
     this.selectedMobileVehicleId = vehicle.id;
-    this.expandedVehicleInfoId = this.expandedVehicleInfoId === vehicle.id ? '' : vehicle.id;
   }
 
   continueWithMobileSelection(): void {
@@ -514,14 +526,12 @@ export class GmHomePage implements OnInit, OnDestroy {
     this.selectedDeliveryPackageId = packageOption.id;
   }
 
-  formatDeliveryPackagePrice(packageOption: GmHomeDeliveryPackage): string {
-    const stopSurcharge = this.stopAddresses.length * 12000;
-    const base = this.selectedMobileVehicle.priceBase ?? 78000;
-    return formatVnd(Math.round((base + stopSurcharge) * packageOption.priceMultiplier));
-  }
-
   startQuickBooking(): void {
     this.router.navigate(['/gap-move/booking/new'], { queryParams: this.buildAddressQuery('delivery') });
+  }
+
+  get mobilePrimaryActionLabel(): string {
+    return this.activeMobileMode === 'delivery' ? 'Đặt giao hàng ngay' : 'Đặt xe ngay';
   }
 
   openBooking(booking: GmBooking): void {
@@ -559,11 +569,7 @@ export class GmHomePage implements OnInit, OnDestroy {
       return true;
     }
 
-    return Boolean(
-      this.mapAddressDetails.unit.trim() &&
-        this.mapAddressDetails.phone.trim() &&
-        this.mapAddressDetails.contactName.trim(),
-    );
+    return Boolean(this.mapAddressDetails.phone.trim() && this.mapAddressDetails.contactName.trim());
   }
 
   get addressSearchPlaceholder(): string {
@@ -582,7 +588,7 @@ export class GmHomePage implements OnInit, OnDestroy {
 
   useCurrentLocation(): void {
     if (!navigator.geolocation) {
-      this.pickupAddress = 'Nhập điểm lấy hoặc chọn trên bản đồ';
+      this.pickupAddress = 'Từ';
       return;
     }
 
@@ -607,7 +613,7 @@ export class GmHomePage implements OnInit, OnDestroy {
       },
       () => {
         this.isLocating = false;
-        this.pickupAddress = 'Nhập điểm lấy hoặc chọn trên bản đồ';
+        this.pickupAddress = 'Từ';
       },
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
     );
@@ -633,18 +639,30 @@ export class GmHomePage implements OnInit, OnDestroy {
     });
   }
 
-  confirmAddressSelectionWithMap(field: GmHomeAddressField, resolved: GmAddressSearchResult, stopIndex: number | null = null): void {
+  confirmAddressSelectionWithMap(
+    field: GmHomeAddressField,
+    resolved: GmAddressSearchResult,
+    stopIndex: number | null = null,
+    details?: GmHomeAddressDetails,
+  ): void {
     this.closeAddressSearch();
-    this.openMapPickerWithSelection(field, resolved, stopIndex);
+    this.openMapPickerWithSelection(field, resolved, stopIndex, details);
   }
 
-  openMapPickerWithSelection(field: GmHomeAddressField, selection: GmAddressSearchResult, stopIndex: number | null = null): void {
+  openMapPickerWithSelection(
+    field: GmHomeAddressField,
+    selection: GmAddressSearchResult,
+    stopIndex: number | null = null,
+    details?: GmHomeAddressDetails,
+  ): void {
     this.activeAddressField = field;
     this.activeStopIndex = field === 'stop' ? stopIndex ?? this.activeStopIndex ?? 0 : null;
     this.pendingMapSelection = selection;
     this.mapSearchQuery = selection.address;
     this.mapSearchResults = [];
-    this.mapAddressDetails = this.cloneAddressDetails(this.getAddressDetails(field, this.activeStopIndex));
+    this.mapAddressDetails = details
+      ? this.cloneAddressDetails(details)
+      : this.cloneAddressDetails(this.getAddressDetails(field, this.activeStopIndex));
     this.isMapPickerOpen = true;
   }
 
@@ -732,8 +750,34 @@ export class GmHomePage implements OnInit, OnDestroy {
       address: address.address,
       coordinate: this.customerAddressService.toCoordinate(address),
     };
+    const savedDetails = this.createAddressDetailsFromSavedAddress(address);
     const field = this.addressSearchField;
-    this.confirmAddressSelectionWithMap(field, resolved, field === 'stop' ? this.addressSearchStopIndex : null);
+    this.confirmAddressSelectionWithMap(field, resolved, field === 'stop' ? this.addressSearchStopIndex : null, savedDetails);
+  }
+
+  getSavedAddressDetailsText(address: GmCustomerAddress): string {
+    const details = this.customerAddressService.getAddressDetails(address);
+    const contact = [details.contactName, details.phone].filter(Boolean).join(' · ');
+    return [contact, details.note].filter(Boolean).join(' · ');
+  }
+
+  useConfirmedAddressHistory(item: GmHomeConfirmedAddressHistoryItem): void {
+    const resolved: GmAddressSearchResult = {
+      address: item.address,
+      coordinate: item.coordinate,
+    };
+    const field = this.addressSearchField;
+    this.confirmAddressSelectionWithMap(
+      field,
+      resolved,
+      field === 'stop' ? this.addressSearchStopIndex : null,
+      this.cloneAddressDetails(item.details),
+    );
+  }
+
+  getConfirmedAddressHistoryDetailsText(item: GmHomeConfirmedAddressHistoryItem): string {
+    const contact = [item.details.contactName, item.details.phone].filter(Boolean).join(' · ');
+    return [contact, item.details.note].filter(Boolean).join(' · ');
   }
 
   addStop(): void {
@@ -750,67 +794,176 @@ export class GmHomePage implements OnInit, OnDestroy {
     this.stopDetails = this.stopDetails.filter((_, itemIndex) => itemIndex !== index);
     this.stopSuggestions = this.stopSuggestions.filter((_, itemIndex) => itemIndex !== index);
     this.stopSearchTimers = this.stopSearchTimers.filter((_, itemIndex) => itemIndex !== index);
-    if (!this.stopAddresses.length) {
-      this.isRouteReorderMode = false;
-    }
   }
 
-  toggleRouteSwitchMode(): void {
-    if (!this.stopAddresses.length) {
-      this.swapPickupDropoff();
+  clearDropoff(): void {
+    this.dropoffAddress = '';
+    this.dropoffCoordinate = undefined;
+    this.dropoffDetails = this.createEmptyAddressDetails();
+    this.dropoffSuggestions = [];
+  }
+
+  swapPickupDropoff(): void {
+    if (this.stopAddresses.length) {
       return;
     }
 
-    this.isRouteReorderMode = !this.isRouteReorderMode;
+    const nextPickupAddress = this.dropoffAddress;
+    const nextPickupCoordinate = this.dropoffCoordinate;
+    const nextPickupDetails = this.cloneAddressDetails(this.dropoffDetails);
+    const nextPickupSuggestions = this.dropoffSuggestions;
+
+    this.dropoffAddress = this.pickupAddress;
+    this.dropoffCoordinate = this.pickupCoordinate;
+    this.dropoffDetails = this.cloneAddressDetails(this.pickupDetails);
+    this.dropoffSuggestions = this.pickupSuggestions;
+
+    this.pickupAddress = nextPickupAddress;
+    this.pickupCoordinate = nextPickupCoordinate;
+    this.pickupDetails = nextPickupDetails;
+    this.pickupSuggestions = nextPickupSuggestions;
   }
 
-  moveDestinationPoint(fromIndex: number, toIndex: number): void {
-    const points = this.getDestinationPointStates();
+  moveRoutePoint(fromIndex: number, toIndex: number): void {
+    const points = this.getRoutePointStates();
     if (!points.length || fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= points.length || toIndex >= points.length) {
       return;
     }
 
     const [movedPoint] = points.splice(fromIndex, 1);
     points.splice(toIndex, 0, movedPoint);
-    this.applyDestinationPointStates(points);
+    this.applyRoutePointStates(points);
   }
 
-  moveStopUp(index: number): void {
-    this.moveDestinationPoint(index, Math.max(0, index - 1));
-  }
-
-  moveStopDown(index: number): void {
-    this.moveDestinationPoint(index, Math.min(this.stopAddresses.length, index + 1));
-  }
-
-  startRouteDrag(index: number): void {
-    if (!this.isRouteReorderMode) {
+  armRouteDrag(index: number, event: PointerEvent): void {
+    if (!this.canUsePointerForRouteDrag(event)) {
       return;
     }
 
-    this.routeDragIndex = index;
+    this.clearRouteDragPressTimer();
+    this.routeDragArmedIndex = index;
+    this.routeDragPointerId = event.pointerId;
+    this.routeDragStartX = event.clientX;
+    this.routeDragStartY = event.clientY;
+    this.routeDragStartTarget = event.currentTarget as HTMLElement | null;
+    this.routeDragMoved = false;
+    this.routeDragStartTarget?.setPointerCapture?.(event.pointerId);
+
+    this.routeDragPressTimer = setTimeout(() => {
+      if (this.routeDragArmedIndex !== index || this.routeDragPointerId !== event.pointerId) {
+        return;
+      }
+      this.beginRouteDrag(index, event.pointerId, this.routeDragStartTarget, this.routeDragStartX, this.routeDragStartY);
+    }, this.routeDragLongPressMs);
   }
 
-  allowRouteDrop(event: DragEvent): void {
-    if (!this.isRouteReorderMode) {
+  startRouteDrag(index: number, event: PointerEvent): void {
+    if (!this.canUsePointerForRouteDrag(event)) {
       return;
     }
 
+    this.clearRouteDragPressTimer();
+    this.routeDragPointerId = event.pointerId;
+    this.routeDragStartX = event.clientX;
+    this.routeDragStartY = event.clientY;
+    this.routeDragStartTarget = event.currentTarget as HTMLElement | null;
+    this.routeDragStartTarget?.setPointerCapture?.(event.pointerId);
+    this.beginRouteDrag(index, event.pointerId, this.routeDragStartTarget, event.clientX, event.clientY);
     event.preventDefault();
+    event.stopPropagation();
   }
 
-  dropRoutePoint(index: number, event: DragEvent): void {
-    if (!this.isRouteReorderMode || this.routeDragIndex === null) {
+  moveRouteDrag(event: PointerEvent): void {
+    if (this.routeDragPointerId === null || event.pointerId !== this.routeDragPointerId) {
       return;
     }
 
+    if (this.routeDragArmedIndex !== null && !this.routeDragGhost) {
+      const movedBeforeHold =
+        Math.abs(event.clientX - this.routeDragStartX) > this.routeDragMoveThresholdPx ||
+        Math.abs(event.clientY - this.routeDragStartY) > this.routeDragMoveThresholdPx;
+      if (movedBeforeHold) {
+        this.cancelRouteDragArm(event.pointerId);
+      }
+      return;
+    }
+
+    if (this.routeDragIndex === null || !this.routeDragGhost) {
+      return;
+    }
+
+    this.routeDragMoved = true;
     event.preventDefault();
-    this.moveDestinationPoint(this.routeDragIndex, index);
-    this.routeDragIndex = null;
+    event.stopPropagation();
+
+    this.routeDragGhost = {
+      ...this.routeDragGhost,
+      left: event.clientX - this.routeDragGhost.pointerOffsetX,
+      top: event.clientY - this.routeDragGhost.pointerOffsetY,
+    };
+
+    const nextIndex = this.getRoutePointIndexFromClientY(event.clientY);
+    if (nextIndex === null || nextIndex === this.routeDragIndex) {
+      return;
+    }
+
+    this.moveRoutePoint(this.routeDragIndex, nextIndex);
+    this.routeDragIndex = nextIndex;
+    this.routeDragGhost = {
+      ...this.routeDragGhost,
+      marker: this.getRoutePointMarker(nextIndex),
+      placeholder: this.getRoutePointPlaceholder(nextIndex),
+      removable: this.isRoutePointRemovable(nextIndex),
+    };
   }
 
-  endRouteDrag(): void {
+  endRouteDrag(event?: PointerEvent): void {
+    if (this.routeDragPointerId === null && this.routeDragArmedIndex === null && !this.routeDragGhost) {
+      return;
+    }
+
+    if (event && this.routeDragPointerId !== null && event.pointerId !== this.routeDragPointerId) {
+      return;
+    }
+
+    const shouldSuppressClick = Boolean(this.routeDragGhost || this.routeDragMoved);
+    const pointerId = event?.pointerId ?? this.routeDragPointerId;
+
+    this.clearRouteDragPressTimer();
+    if (pointerId !== null) {
+      this.releaseRouteDragPointer(pointerId);
+    }
+
+    if (event) {
+      event.stopPropagation();
+      if (shouldSuppressClick) {
+        event.preventDefault();
+      }
+    }
+
     this.routeDragIndex = null;
+    this.routeDragArmedIndex = null;
+    this.routeDragPointerId = null;
+    this.routeDragStartTarget = null;
+    this.routeDragGhost = null;
+    this.routeDragMoved = false;
+
+    if (shouldSuppressClick) {
+      this.routeDragSuppressClick = true;
+      window.setTimeout(() => {
+        this.routeDragSuppressClick = false;
+      }, 120);
+    }
+  }
+
+  openRouteAddressSearch(field: GmHomeAddressField, stopIndex: number | null, event: MouseEvent): void {
+    if (this.routeDragSuppressClick) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    this.openAddressSearch(field, stopIndex);
   }
 
   onStopAddressInput(index: number): void {
@@ -951,6 +1104,55 @@ export class GmHomePage implements OnInit, OnDestroy {
     }
   }
 
+  async useContactBookForMapDetails(): Promise<void> {
+    if (typeof navigator === 'undefined') {
+      return;
+    }
+
+    const contacts = (navigator as GmNavigatorWithContacts).contacts;
+    if (!contacts?.select) {
+      return;
+    }
+
+    try {
+      const selected = await contacts.select(['name', 'tel'], { multiple: false });
+      const contact = selected[0];
+      if (!contact) {
+        return;
+      }
+
+      this.mapAddressDetails = {
+        ...this.mapAddressDetails,
+        contactName: contact.name?.[0]?.trim() || this.mapAddressDetails.contactName,
+        phone: contact.tel?.[0]?.trim() || this.mapAddressDetails.phone,
+      };
+    } catch {
+      return;
+    }
+  }
+
+  useMyInfoForMapDetails(): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(GM_STORAGE_KEYS.user);
+      const user = raw ? (JSON.parse(raw) as { fullName?: string | null; name?: string | null; phone?: string | null }) : null;
+      if (!user) {
+        return;
+      }
+
+      this.mapAddressDetails = {
+        ...this.mapAddressDetails,
+        contactName: (user.fullName ?? user.name ?? '').trim() || this.mapAddressDetails.contactName,
+        phone: user.phone?.trim() || this.mapAddressDetails.phone,
+      };
+    } catch {
+      return;
+    }
+  }
+
   locateMapPicker(): void {
     if (!navigator.geolocation) {
       return;
@@ -998,6 +1200,7 @@ export class GmHomePage implements OnInit, OnDestroy {
         this.stopDetails[this.activeStopIndex] = this.cloneAddressDetails(this.mapAddressDetails);
       }
 
+      this.rememberConfirmedAddressHistory(resolved, this.mapAddressDetails);
       this.saveConfirmedAddress(resolved, this.mapAddressDetails);
       this.closeMapPicker();
     });
@@ -1105,6 +1308,7 @@ export class GmHomePage implements OnInit, OnDestroy {
     this.pickupAddress = result.address;
     if (result.coordinate) {
       this.pickupCoordinate = result.coordinate;
+      this.locationService.updateLocation(result.coordinate);
     }
   }
 
@@ -1126,21 +1330,7 @@ export class GmHomePage implements OnInit, OnDestroy {
     }
   }
 
-  private swapPickupDropoff(): void {
-    const nextPickupAddress = this.dropoffAddress;
-    const nextPickupCoordinate = this.dropoffCoordinate;
-    const nextPickupDetails = this.cloneAddressDetails(this.dropoffDetails);
-
-    this.dropoffAddress = this.pickupAddress;
-    this.dropoffCoordinate = this.pickupCoordinate;
-    this.dropoffDetails = this.cloneAddressDetails(this.pickupDetails);
-
-    this.pickupAddress = nextPickupAddress;
-    this.pickupCoordinate = nextPickupCoordinate;
-    this.pickupDetails = nextPickupDetails;
-  }
-
-  private getDestinationPointStates(): GmHomeRoutePointState[] {
+  private getRoutePointStates(): GmHomeRoutePointState[] {
     const stops = this.stopAddresses.map((address, index) => ({
       address,
       coordinate: this.stopCoordinates[index],
@@ -1149,6 +1339,12 @@ export class GmHomePage implements OnInit, OnDestroy {
     }));
 
     return [
+      {
+        address: this.pickupAddress,
+        coordinate: this.pickupCoordinate,
+        details: this.cloneAddressDetails(this.pickupDetails),
+        suggestions: this.pickupSuggestions,
+      },
       ...stops,
       {
         address: this.dropoffAddress,
@@ -1159,19 +1355,141 @@ export class GmHomePage implements OnInit, OnDestroy {
     ];
   }
 
-  private applyDestinationPointStates(points: GmHomeRoutePointState[]): void {
-    const nextDropoff = points[points.length - 1];
-    const nextStops = points.slice(0, -1);
+  private applyRoutePointStates(points: GmHomeRoutePointState[]): void {
+    const nextPickup = points[0];
+    const destinationPoints = points.slice(1);
+    const nextDropoff = destinationPoints[destinationPoints.length - 1];
+    const nextStops = destinationPoints.slice(0, -1);
+
+    this.pickupAddress = nextPickup?.address ?? '';
+    this.pickupCoordinate = nextPickup?.coordinate;
+    this.pickupDetails = nextPickup ? this.cloneAddressDetails(nextPickup.details) : this.createEmptyAddressDetails();
+    this.pickupSuggestions = nextPickup?.suggestions ?? [];
 
     this.stopAddresses = nextStops.map((point) => point.address);
     this.stopCoordinates = nextStops.map((point) => point.coordinate);
     this.stopDetails = nextStops.map((point) => this.cloneAddressDetails(point.details));
     this.stopSuggestions = nextStops.map((point) => point.suggestions);
+    this.stopSearchTimers.forEach((timer) => clearTimeout(timer));
+    this.stopSearchTimers = this.stopAddresses.map(() => undefined);
 
     this.dropoffAddress = nextDropoff?.address ?? '';
     this.dropoffCoordinate = nextDropoff?.coordinate;
     this.dropoffDetails = nextDropoff ? this.cloneAddressDetails(nextDropoff.details) : this.createEmptyAddressDetails();
     this.dropoffSuggestions = nextDropoff?.suggestions ?? [];
+  }
+
+  private beginRouteDrag(index: number, pointerId: number, target: HTMLElement | null, clientX: number, clientY: number): void {
+    const point = this.getRoutePointStates()[index];
+    const row = this.getRouteRowElement(index);
+    if (!point || !row) {
+      this.cancelRouteDragArm(pointerId);
+      return;
+    }
+
+    const rect = row.getBoundingClientRect();
+    this.clearRouteDragPressTimer();
+    this.routeDragIndex = index;
+    this.routeDragArmedIndex = null;
+    this.routeDragPointerId = pointerId;
+    this.routeDragStartTarget = target;
+    this.routeDragMoved = true;
+    target?.setPointerCapture?.(pointerId);
+    this.routeDragGhost = {
+      address: point.address,
+      placeholder: this.getRoutePointPlaceholder(index),
+      details: this.cloneAddressDetails(point.details),
+      marker: this.getRoutePointMarker(index),
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+      pointerOffsetX: clientX - rect.left,
+      pointerOffsetY: clientY - rect.top,
+      removable: this.isRoutePointRemovable(index),
+    };
+  }
+
+  private canUsePointerForRouteDrag(event: PointerEvent): boolean {
+    return event.isPrimary && event.button === 0;
+  }
+
+  private clearRouteDragPressTimer(): void {
+    if (this.routeDragPressTimer) {
+      clearTimeout(this.routeDragPressTimer);
+      this.routeDragPressTimer = undefined;
+    }
+  }
+
+  private cancelRouteDragArm(pointerId: number): void {
+    this.clearRouteDragPressTimer();
+    this.releaseRouteDragPointer(pointerId);
+    this.routeDragArmedIndex = null;
+    this.routeDragPointerId = null;
+    this.routeDragStartTarget = null;
+    this.routeDragMoved = false;
+  }
+
+  private releaseRouteDragPointer(pointerId: number): void {
+    if (this.routeDragStartTarget?.hasPointerCapture?.(pointerId)) {
+      this.routeDragStartTarget.releasePointerCapture(pointerId);
+    }
+  }
+
+  private getRouteRowElement(index: number): HTMLElement | null {
+    return document.querySelector<HTMLElement>(`.gm-mobile-route-row[data-route-index="${index}"]`);
+  }
+
+  private getRoutePointMarker(index: number): GmHomeRouteDragGhost['marker'] {
+    if (index === 0) {
+      return 'pickup';
+    }
+    if (index === this.stopAddresses.length + 1) {
+      return 'dropoff';
+    }
+    return 'stop';
+  }
+
+  private getRoutePointPlaceholder(index: number): string {
+    if (index === 0) {
+      return 'Từ';
+    }
+    if (index === this.stopAddresses.length + 1) {
+      return this.stopAddresses.length ? 'Điểm cuối' : 'Đến';
+    }
+    return 'Điểm dừng';
+  }
+
+  private isRoutePointRemovable(index: number): boolean {
+    if (index > 0 && index <= this.stopAddresses.length) {
+      return true;
+    }
+    return index === this.stopAddresses.length + 1 && Boolean(this.dropoffAddress.trim());
+  }
+
+  private getRoutePointIndexFromClientY(clientY: number): number | null {
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.gm-mobile-route-row[data-route-index]'));
+    if (!rows.length) {
+      return null;
+    }
+
+    let closestIndex: number | null = null;
+    let closestDistance = Number.POSITIVE_INFINITY;
+    rows.forEach((row) => {
+      const index = Number(row.dataset['routeIndex']);
+      if (!Number.isFinite(index)) {
+        return;
+      }
+
+      const rect = row.getBoundingClientRect();
+      const distance = Math.abs(clientY - (rect.top + rect.height / 2));
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    return closestIndex;
   }
 
   private getCurrentAddress(field: GmHomeAddressField, stopIndex: number | null): string {
@@ -1204,28 +1522,46 @@ export class GmHomePage implements OnInit, OnDestroy {
     return stopIndex !== null ? this.stopDetails[stopIndex] ?? this.createEmptyAddressDetails() : this.createEmptyAddressDetails();
   }
 
+  private createAddressDetailsFromSavedAddress(address: GmCustomerAddress): GmHomeAddressDetails {
+    const details = this.customerAddressService.getAddressDetails(address);
+    return {
+      unit: '',
+      phone: details.phone,
+      contactName: details.contactName,
+      note: details.note,
+      saveAddress: false,
+    };
+  }
+
   private createEmptyAddressDetails(): GmHomeAddressDetails {
     return {
       unit: '',
       phone: '',
       contactName: '',
+      note: '',
       saveAddress: false,
     };
   }
 
   private cloneAddressDetails(details: GmHomeAddressDetails): GmHomeAddressDetails {
-    return { ...details };
+    return {
+      unit: details.unit ?? '',
+      phone: details.phone ?? '',
+      contactName: details.contactName ?? '',
+      note: details.note ?? '',
+      saveAddress: Boolean(details.saveAddress),
+    };
   }
 
   private appendDetailsQuery(queryParams: Record<string, string>, prefix: string, details: GmHomeAddressDetails): void {
-    if (details.unit.trim()) {
-      queryParams[`${prefix}Unit`] = details.unit.trim();
-    }
     if (details.phone.trim()) {
       queryParams[`${prefix}Phone`] = details.phone.trim();
     }
     if (details.contactName.trim()) {
       queryParams[`${prefix}Contact`] = details.contactName.trim();
+    }
+    if (details.note.trim()) {
+      queryParams[`${prefix}Note`] = details.note.trim();
     }
   }
 
@@ -1240,11 +1576,86 @@ export class GmHomePage implements OnInit, OnDestroy {
         address: result.address,
         lat: result.coordinate.lat,
         lng: result.coordinate.lng,
+        unit: '',
+        phone: details.phone.trim(),
+        contactName: details.contactName.trim(),
+        contact_name: details.contactName.trim(),
+        note: details.note.trim(),
       })
       .subscribe({
         next: () => this.loadSavedAddresses(),
         error: () => undefined,
       });
+  }
+
+  private rememberConfirmedAddressHistory(result: GmAddressSearchResult, details: GmHomeAddressDetails): void {
+    if (!result.coordinate) {
+      return;
+    }
+
+    const item: GmHomeConfirmedAddressHistoryItem = {
+      id: this.createConfirmedAddressHistoryId(result),
+      address: result.address,
+      coordinate: {
+        ...result.coordinate,
+        address: result.address,
+      },
+      details: {
+        unit: '',
+        phone: details.phone.trim(),
+        contactName: details.contactName.trim(),
+        note: details.note.trim(),
+        saveAddress: false,
+      },
+      confirmedAt: Date.now(),
+    };
+
+    this.confirmedAddressHistory = [
+      item,
+      ...this.confirmedAddressHistory.filter((historyItem) => historyItem.id !== item.id),
+    ].slice(0, 8);
+    this.writeConfirmedAddressHistory();
+  }
+
+  private loadConfirmedAddressHistory(): void {
+    if (typeof sessionStorage === 'undefined') {
+      this.confirmedAddressHistory = [];
+      return;
+    }
+
+    try {
+      const items = JSON.parse(
+        sessionStorage.getItem(GM_STORAGE_KEYS.confirmedAddressHistory) ?? '[]',
+      ) as GmHomeConfirmedAddressHistoryItem[];
+      this.confirmedAddressHistory = items
+        .filter((item) => Boolean(item.address && item.coordinate))
+        .map((item) => ({
+          ...item,
+          details: {
+            unit: '',
+            phone: item.details?.phone ?? '',
+            contactName: item.details?.contactName ?? '',
+            note: item.details?.note ?? '',
+            saveAddress: false,
+          },
+        }));
+    } catch {
+      this.confirmedAddressHistory = [];
+    }
+  }
+
+  private writeConfirmedAddressHistory(): void {
+    if (typeof sessionStorage === 'undefined') {
+      return;
+    }
+
+    sessionStorage.setItem(GM_STORAGE_KEYS.confirmedAddressHistory, JSON.stringify(this.confirmedAddressHistory));
+  }
+
+  private createConfirmedAddressHistoryId(result: GmAddressSearchResult): string {
+    const lat = result.coordinate?.lat ?? 0;
+    const lng = result.coordinate?.lng ?? 0;
+    return `${result.address.trim().toLowerCase()}|${Number(lat).toFixed(6)}|${Number(lng).toFixed(6)}`;
   }
 
   private loadSavedAddresses(): void {
