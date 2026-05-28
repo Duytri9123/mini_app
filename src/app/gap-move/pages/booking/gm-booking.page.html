@@ -273,30 +273,209 @@
       </div>
     </section>
 
-    <footer class="gm-booking-footer sticky bottom-0 z-20 -mx-4 mt-6 rounded-t-[22px] border border-slate-100 bg-white px-4 pb-4 pt-3 shadow-[0_-10px_28px_rgba(15,23,42,0.10)] lg:-mx-6">
+    <footer class="gm-booking-footer rounded-t-[22px] border border-slate-100 bg-white px-4 pb-4 pt-3 shadow-[0_-10px_28px_rgba(15,23,42,0.10)]">
       <div class="mb-3 grid grid-cols-2 gap-3 text-sm font-semibold text-slate-700">
-        <button type="button" class="flex items-center justify-center gap-2 rounded-xl bg-white py-2 text-left">
-          <ion-icon name="wallet-outline" class="text-xl text-violet-500"></ion-icon>
-          <span>Người gửi trả tiền</span>
+        <button type="button" class="flex min-w-0 items-center justify-center gap-2 rounded-xl bg-white py-2 text-left" (click)="openPaymentSheet()">
+          <ion-icon name="wallet-outline" class="shrink-0 text-xl text-primary"></ion-icon>
+          <span class="truncate">{{ paymentFooterLabel }}</span>
         </button>
-        <button type="button" class="flex items-center justify-center gap-2 rounded-xl bg-white py-2 text-left">
-          <ion-icon name="ticket-outline" class="text-xl text-slate-700"></ion-icon>
-          <span>Ưu đãi</span>
+        <button type="button" class="flex min-w-0 items-center justify-center gap-2 rounded-xl bg-white py-2 text-left" (click)="openPromoSheet()">
+          <ion-icon name="ticket-outline" class="shrink-0 text-xl text-slate-700"></ion-icon>
+          <span class="truncate">{{ promoFooterLabel }}</span>
         </button>
       </div>
 
       <div class="grid grid-cols-[82px_minmax(0,1fr)] items-center gap-3">
-        <button type="button" class="flex flex-col items-center justify-center gap-1 text-sm font-semibold text-slate-700" (click)="scheduleMode = scheduleMode === 'scheduled' ? 'now' : 'scheduled'">
-          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-100 text-[#008c95]">
+        <button type="button" class="flex flex-col items-center justify-center gap-1 text-sm font-semibold text-slate-700" (click)="openScheduleSheet()">
+          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-primary">
             <ion-icon name="time-outline" class="text-xl"></ion-icon>
           </span>
           <span>{{ scheduleMode === 'scheduled' ? 'Đã hẹn' : 'Hẹn giờ' }}</span>
         </button>
-        <button type="submit" class="h-14 rounded-2xl bg-[#25c5c8] text-lg font-extrabold text-white shadow-lg shadow-cyan-900/15">
+        <button type="submit" class="h-14 rounded-2xl bg-primary text-lg font-extrabold text-white shadow-lg">
           Đặt
         </button>
       </div>
     </footer>
+  </section>
+
+  <section *ngIf="isPaymentSheetOpen" class="gm-payment-sheet fixed inset-0 z-[90] overflow-y-auto bg-white px-5 pb-6 pt-6 lg:left-1/2 lg:top-1/2 lg:h-[86vh] lg:max-h-[820px] lg:w-[430px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-[28px] lg:shadow-2xl">
+    <header class="mb-8 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center">
+      <button type="button" class="flex h-11 w-11 items-center justify-center text-slate-950" aria-label="Đóng" (click)="closePaymentSheet()">
+        <ion-icon name="close-outline" class="text-4xl"></ion-icon>
+      </button>
+      <h2 class="text-center text-2xl font-extrabold text-slate-950">Hồ sơ & phương thức thanh toán</h2>
+      <span></span>
+    </header>
+
+    <h3 class="mb-6 text-2xl font-extrabold text-slate-950">Phương thức khác</h3>
+    <div class="space-y-7">
+      <button type="button" class="flex w-full items-center gap-5 text-left" (click)="selectCashPayer('sender')">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+          <ion-icon name="cash-outline" class="text-2xl"></ion-icon>
+        </span>
+        <span class="min-w-0 flex-1 text-2xl font-medium text-slate-700">Người gửi trả tiền mặt</span>
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2" [ngClass]="!receiverPays && paymentMethod === 'cash' ? 'border-primary bg-primary' : 'border-slate-200 bg-white'">
+          <span *ngIf="!receiverPays && paymentMethod === 'cash'" class="h-3 w-3 rounded-full bg-white"></span>
+        </span>
+      </button>
+
+      <button type="button" class="flex w-full items-center gap-5 text-left" (click)="selectCashPayer('receiver')">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+          <ion-icon name="cash-outline" class="text-2xl"></ion-icon>
+        </span>
+        <span class="min-w-0 flex-1 text-2xl font-medium text-slate-700">Người nhận trả tiền mặt</span>
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2" [ngClass]="receiverPays && paymentMethod === 'cash' ? 'border-primary bg-primary' : 'border-slate-200 bg-white'">
+          <span *ngIf="receiverPays && paymentMethod === 'cash'" class="h-3 w-3 rounded-full bg-white"></span>
+        </span>
+      </button>
+
+      <button type="button" class="flex w-full items-center gap-5 text-left" (click)="selectEgreenPayment()">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+          <ion-icon name="checkmark-done-outline" class="text-2xl"></ion-icon>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-2xl font-medium text-slate-700">Thẻ E-Green</span>
+          <span class="mt-1 block text-xl font-medium text-slate-400">5.000đ</span>
+        </span>
+        <span class="mr-2 text-base font-semibold text-primary">Nạp tiền</span>
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2" [ngClass]="paymentMethod === 'wallet' ? 'border-primary bg-primary' : 'border-slate-200 bg-white'">
+          <span *ngIf="paymentMethod === 'wallet'" class="h-3 w-3 rounded-full bg-white"></span>
+        </span>
+      </button>
+    </div>
+
+    <h3 class="mb-6 mt-10 text-2xl font-extrabold text-slate-950">Thẻ Tín dụng/Ghi nợ</h3>
+    <div class="mb-10 flex items-center gap-5 opacity-40">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+        <ion-icon name="card-outline" class="text-2xl"></ion-icon>
+      </span>
+      <span class="min-w-0 flex-1 text-2xl font-medium text-slate-600">Thẻ ATM</span>
+      <span class="h-8 w-8 rounded-full border-2 border-slate-200"></span>
+    </div>
+
+    <h3 class="mb-6 text-2xl font-extrabold text-slate-950">Thêm phương thức thanh toán</h3>
+    <div class="space-y-8">
+      <button *ngFor="let method of addPaymentMethods" type="button" class="flex w-full items-center gap-5 text-left">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-800">
+          <img *ngIf="method.image; else paymentMethodIcon" [src]="method.image" [alt]="method.label" class="h-8 w-8 object-contain" />
+          <ng-template #paymentMethodIcon>
+            <ion-icon [name]="method.icon" class="text-2xl"></ion-icon>
+          </ng-template>
+        </span>
+        <span class="min-w-0 flex-1 text-2xl font-medium text-slate-700">{{ method.label }}</span>
+        <ion-icon name="add-outline" class="text-4xl text-primary"></ion-icon>
+      </button>
+    </div>
+  </section>
+
+  <section *ngIf="isPromoSheetOpen" class="gm-promo-sheet fixed inset-0 z-[90] flex flex-col overflow-hidden bg-white px-5 pt-6 lg:left-1/2 lg:top-1/2 lg:h-[88vh] lg:max-h-[860px] lg:w-[430px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-[28px] lg:shadow-2xl">
+    <header class="mb-7 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center">
+      <button type="button" class="flex h-11 w-11 items-center justify-center text-slate-950" aria-label="Đóng" (click)="closePromoSheet()">
+        <ion-icon name="close-outline" class="text-4xl"></ion-icon>
+      </button>
+      <h2 class="text-center text-2xl font-medium text-slate-950">Ưu đãi</h2>
+      <span></span>
+    </header>
+
+    <div class="mb-5 flex gap-3">
+      <button type="button" class="rounded-full px-5 py-2.5 text-lg font-medium" [ngClass]="promoTab === 'code' ? 'bg-tertiary text-white shadow-sm' : 'border border-slate-100 bg-white text-slate-600 shadow-sm'" (click)="promoTab = 'code'">Mã ưu đãi</button>
+      <button type="button" class="rounded-full px-5 py-2.5 text-lg font-medium" [ngClass]="promoTab === 'vpoint' ? 'bg-tertiary text-white shadow-sm' : 'border border-slate-100 bg-white text-slate-600 shadow-sm'" (click)="promoTab = 'vpoint'">VPoint</button>
+    </div>
+
+    <label class="mb-5 flex h-14 items-center gap-3 rounded-2xl border border-slate-200 px-4">
+      <ion-icon name="ticket-outline" class="text-2xl text-slate-400"></ion-icon>
+      <input name="promoCodeSheet" [(ngModel)]="promoCode" placeholder="Bạn có mã ưu đãi? Nhập tại đây." class="min-w-0 flex-1 border-0 bg-transparent text-lg font-medium outline-none placeholder:text-slate-400" />
+    </label>
+
+    <button type="button" class="mb-7 grid min-h-[86px] grid-cols-[92px_minmax(0,1fr)_32px] overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-sm">
+      <span class="flex items-center justify-center bg-yellow-100 text-5xl">♛</span>
+      <span class="min-w-0 px-4 py-4">
+        <span class="block text-xl font-medium text-slate-800">Gói hội viên</span>
+        <span class="mt-1 block text-base leading-5 text-slate-500">Mua gói hội viên để nhận thêm nhiều ưu đãi hấp dẫn</span>
+      </span>
+      <span class="flex items-center justify-center text-slate-400">
+        <ion-icon name="chevron-forward-outline" class="text-3xl"></ion-icon>
+      </span>
+    </button>
+
+    <h3 class="mb-4 text-2xl font-medium text-slate-950">Tất cả ưu đãi</h3>
+    <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pb-28">
+      <button
+        *ngFor="let offer of promoOffers"
+        type="button"
+        class="grid min-h-[88px] w-full grid-cols-[92px_minmax(0,1fr)_34px] overflow-hidden rounded-2xl border border-slate-100 bg-white text-left shadow-sm"
+        [class.opacity-50]="offer.disabled"
+        (click)="selectPromoOffer(offer)"
+      >
+        <span class="flex items-center justify-center text-lg font-extrabold" [ngClass]="offer.accentClass">{{ offer.logo }}</span>
+        <span class="min-w-0 px-4 py-4">
+          <span class="block text-xl font-medium leading-7 text-slate-700">{{ offer.title }}</span>
+          <span *ngIf="offer.warning" class="mt-2 flex items-center gap-1 text-sm font-semibold text-red-400">
+            <ion-icon name="warning-outline"></ion-icon>
+            <span class="truncate">{{ offer.warning }}</span>
+          </span>
+        </span>
+        <span class="flex items-center justify-center">
+          <span class="h-7 w-7 rounded-lg border-2" [ngClass]="selectedPromoId === offer.id ? 'border-primary bg-primary' : 'border-slate-100 bg-white'"></span>
+        </span>
+      </button>
+    </div>
+
+    <div class="absolute inset-x-0 bottom-0 border-t border-slate-100 bg-white px-6 pb-5 pt-4">
+      <button type="button" class="h-14 w-full rounded-2xl bg-primary-soft text-xl font-medium text-primary shadow-sm" (click)="skipPromoAndContinue()">Bỏ qua ưu đãi và tiếp tục</button>
+    </div>
+  </section>
+
+  <section *ngIf="isScheduleSheetOpen" class="gm-schedule-sheet fixed inset-0 z-[90] flex flex-col overflow-hidden bg-white lg:left-1/2 lg:top-1/2 lg:h-[88vh] lg:max-h-[860px] lg:w-[430px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-[28px] lg:shadow-2xl">
+    <div class="relative min-h-[300px] bg-gradient-to-b from-primary-soft to-white px-8 pt-16">
+      <button type="button" class="absolute left-6 top-14 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-slate-950 shadow-sm" aria-label="Quay lại" (click)="closeScheduleSheet()">
+        <ion-icon name="arrow-back-outline" class="text-3xl"></ion-icon>
+      </button>
+      <div class="mx-auto flex h-40 w-40 items-center justify-center rounded-[36px] bg-white/70 text-primary shadow-xl">
+        <ion-icon name="calendar-outline" class="text-8xl"></ion-icon>
+      </div>
+    </div>
+
+    <div class="min-h-0 flex-1 overflow-y-auto px-8 pb-28">
+      <h2 class="mb-10 text-[34px] font-medium leading-tight text-slate-700">Giao hàng theo lịch của bạn</h2>
+
+      <div class="space-y-10">
+        <div class="flex gap-5">
+          <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+            <ion-icon name="sync-outline" class="text-4xl"></ion-icon>
+          </span>
+          <span>
+            <span class="block text-2xl font-medium text-slate-700">Luôn đúng giờ</span>
+            <span class="mt-1 block text-lg leading-6 text-slate-400">Đặt lịch giao, hàng đến đúng khung giờ bạn chọn, không cần chờ đợi.</span>
+          </span>
+        </div>
+
+        <div class="flex gap-5">
+          <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+            <ion-icon name="alarm-outline" class="text-4xl"></ion-icon>
+          </span>
+          <span>
+            <span class="block text-2xl font-medium text-slate-700">Đặt trước, nhận hàng mọi lúc</span>
+            <span class="mt-1 block text-lg leading-6 text-slate-400">Lên lịch trước đến 14 ngày, và dễ dàng thay đổi hoặc hủy bất cứ lúc nào.</span>
+          </span>
+        </div>
+
+        <div class="flex gap-5">
+          <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#ff5a00]">
+            <ion-icon name="cube-outline" class="text-4xl"></ion-icon>
+          </span>
+          <span>
+            <span class="block text-2xl font-medium text-slate-700">Tiết kiệm thời gian</span>
+            <span class="mt-1 block text-lg leading-6 text-slate-400">Không còn cảnh gấp gáp sát giờ. Đặt sớm, tiết kiệm và thoải mái.</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute inset-x-0 bottom-0 rounded-t-[28px] border-t border-slate-100 bg-white px-6 pb-6 pt-5 shadow-[0_-10px_28px_rgba(15,23,42,0.08)]">
+      <button type="button" class="h-14 w-full rounded-2xl bg-primary text-xl font-medium text-white shadow-lg" (click)="confirmScheduleBooking()">Đặt lịch giao hàng</button>
+    </div>
   </section>
 
   <div *ngIf="isDeliveryServiceSheetOpen" class="fixed inset-0 z-[85] flex items-end bg-slate-950/55 lg:hidden">
@@ -367,25 +546,50 @@
     ></app-gm-map>
   </section>
 
-  <app-gm-booking-map-picker
-    *ngIf="isMapPickerOpen"
+  <app-gm-location-search-picker
+    *ngIf="isMapPickerOpen && !isMapPickerMapOpen"
+    [(query)]="mapSearchQuery"
+    [placeholder]="mapSearchPlaceholder"
+    [currentAddress]="currentLocationPreview"
+    [searchResults]="mapSearchResults"
+    [confirmedHistory]="mapSearchHistoryItems"
+    [savedAddresses]="savedAddresses"
+    [savedAddressesLoading]="savedAddressesLoading"
+    [isSavedAddressesOpen]="isMapPickerSavedAddressesOpen"
+    [getSavedAddressDetailsText]="getSavedAddressDetailsTextForPicker"
+    (closePicker)="closeMapPicker()"
+    (queryInput)="onMapSearchInput()"
+    (useCurrentLocation)="selectCurrentMapLocation(); openMapPickerMapMode()"
+    (chooseMap)="openMapPickerMapMode()"
+    (selectSearchResult)="useLocationSearchResult($event)"
+    (toggleSavedAddresses)="toggleMapPickerSavedAddresses()"
+    (selectSavedAddress)="selectMapSavedAddress($event)"
+    (selectConfirmedHistory)="useMapSearchHistoryItem($event)"
+  ></app-gm-location-search-picker>
+
+  <app-gm-location-map-picker
+    *ngIf="isMapPickerOpen && isMapPickerMapOpen"
     [activeAddressField]="activeAddressField"
-    [activeStopIndex]="activeStopIndex"
+    [(searchQuery)]="mapSearchQuery"
+    [searchResults]="mapSearchResults"
+    [pendingAddress]="pendingMapAddress"
+    [hasPendingSelection]="!!pendingMapSelection"
     [pickup]="mapPickerPickup"
     [dropoff]="mapPickerDropoff"
     [stops]="mapPickerStops"
     [stopIndexes]="mapPickerStopIndexes"
-    [pendingAddress]="pendingMapAddress"
-    [(searchQuery)]="mapSearchQuery"
-    [searchResults]="mapSearchResults"
     [isLocating]="isLocating"
+    [detailsRequired]="mapDetailsRequired"
+    [detailsComplete]="mapDetailsComplete"
+    [details]="mapAddressDetails"
     (closePicker)="closeMapPicker()"
     (confirmSelection)="confirmMapSelection()"
     (locate)="locateMapPicker()"
     (searchInput)="onMapSearchInput()"
-    (useSearchResult)="useMapSearchResult($event)"
+    (selectSearchResult)="useMapSearchResult($event)"
     (selectCoordinate)="useMapCoordinate($event)"
     (markerDragEnd)="handleMapMarkerDrag($event)"
-    (switchField)="openMapPickerTarget($event)"
-  ></app-gm-booking-map-picker>
+    (useContactBook)="useContactBookForMapDetails()"
+    (useMyInfo)="useMyInfoForMapDetails()"
+  ></app-gm-location-map-picker>
 </form>

@@ -31,6 +31,27 @@
   cursor: pointer;
 }
 
+.gm-mobile-route-row-draggable {
+  cursor: grab;
+  touch-action: none;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.gm-mobile-route-row-draggable .gm-mobile-route-click-area {
+  cursor: grab;
+}
+
+.gm-mobile-route-row-dragging {
+  z-index: 10;
+  cursor: grabbing;
+  transition: none;
+}
+
+.gm-mobile-route-row-dragging .gm-mobile-route-field {
+  border-color: var(--color-primary);
+  box-shadow: 0 14px 34px rgba(0, 140, 149, 0.18), 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
 .gm-mobile-route-row:active {
   transform: scale(0.995);
   transition: transform 100ms ease;
@@ -57,7 +78,7 @@
 
 .gm-mobile-route-switch-button:active {
   transform: scale(0.96);
-  color: #ff5a00;
+  color: var(--color-inverse-primary);
 }
 
 .gm-mobile-route-field {
@@ -98,7 +119,7 @@
 .gm-mobile-route-marker-pickup-inside {
   width: 12px;
   height: 12px;
-  border: 2.5px solid #ff5a00;
+  border: 2.5px solid var(--color-inverse-primary);
   border-radius: 999px;
   background: #fff;
   box-sizing: border-box;
@@ -119,7 +140,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #ff5a00;
+  color: var(--color-inverse-primary);
   filter: drop-shadow(0 2px 4px rgba(255, 90, 0, 0.25));
 }
 
@@ -206,7 +227,7 @@
 }
 
 .gm-mobile-route-drag-handle:active {
-  background: #fff7ed;
-  color: #ff5a00;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   cursor: grabbing;
 }

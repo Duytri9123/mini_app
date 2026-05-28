@@ -369,7 +369,29 @@
     </div>
   </section>
 
-  <div *ngIf="isAddressSearchOpen" class="fixed inset-0 z-[90] bg-white px-4 pt-7 lg:hidden">
+  <app-gm-location-search-picker
+    *ngIf="isAddressSearchOpen"
+    [(query)]="addressSearchQuery"
+    [placeholder]="addressSearchPlaceholder"
+    [currentAddress]="addressSearchCurrentAddress"
+    [searchResults]="addressSearchResults"
+    [confirmedHistory]="addressSearchHistoryItems"
+    [savedAddresses]="savedAddresses"
+    [savedAddressesLoading]="savedAddressesLoading"
+    [isSavedAddressesOpen]="isSavedAddressesOpen"
+    [mobileOnly]="true"
+    [getSavedAddressDetailsText]="getSavedAddressDetailsTextForPicker"
+    (closePicker)="closeAddressSearch()"
+    (queryInput)="onAddressSearchInput()"
+    (useCurrentLocation)="useCurrentAddressForSearch()"
+    (chooseMap)="chooseLocationOnMapFromSearch()"
+    (selectSearchResult)="useAddressSearchResult($event)"
+    (toggleSavedAddresses)="toggleSavedAddresses()"
+    (selectSavedAddress)="useSavedAddress($event)"
+    (selectConfirmedHistory)="useAddressSearchHistoryItem($event)"
+  ></app-gm-location-search-picker>
+
+  <div *ngIf="false && isAddressSearchOpen" class="fixed inset-0 z-[90] bg-white px-4 pt-7 lg:hidden">
     <div class="gm-address-search-box flex h-13 items-center gap-3 rounded-2xl bg-white px-3 shadow-lg shadow-slate-900/8 ring-1 ring-slate-100/90">
       <button type="button" class="flex h-9 w-9 shrink-0 items-center justify-center text-slate-500" aria-label="Quay lại"
         (click)="closeAddressSearch()">
@@ -498,7 +520,33 @@
     </section>
   </div>
 
-  <div *ngIf="isMapPickerOpen" class="fixed inset-0 z-[80] bg-white lg:bg-slate-950/55 lg:p-5 lg:backdrop-blur-sm">
+  <app-gm-location-map-picker
+    *ngIf="isMapPickerOpen"
+    [activeAddressField]="activeAddressField"
+    [(searchQuery)]="mapSearchQuery"
+    [searchResults]="mapSearchResults"
+    [pendingAddress]="pendingMapAddress"
+    [hasPendingSelection]="!!pendingMapSelection"
+    [pickup]="mapPickerPickup"
+    [dropoff]="mapPickerDropoff"
+    [stops]="mapPickerStops"
+    [stopIndexes]="mapPickerStopIndexes"
+    [isLocating]="isLocating"
+    [detailsRequired]="mapDetailsRequired"
+    [detailsComplete]="mapDetailsComplete"
+    [details]="sharedMapAddressDetails"
+    (closePicker)="closeMapPicker()"
+    (confirmSelection)="confirmMapSelection()"
+    (locate)="locateMapPicker()"
+    (searchInput)="onMapSearchInput()"
+    (selectSearchResult)="useMapSearchResult($event)"
+    (selectCoordinate)="useMapCoordinate($event)"
+    (markerDragEnd)="handleMapMarkerDrag($event)"
+    (useContactBook)="useContactBookForMapDetails()"
+    (useMyInfo)="useMyInfoForMapDetails()"
+  ></app-gm-location-map-picker>
+
+  <div *ngIf="false && isMapPickerOpen" class="fixed inset-0 z-[80] bg-white lg:bg-slate-950/55 lg:p-5 lg:backdrop-blur-sm">
     <div class="mx-auto flex h-full max-w-7xl flex-col overflow-hidden rounded-none bg-white lg:rounded-[24px] lg:shadow-2xl relative">
 
       <!-- FLOATING HEADER BAR -->

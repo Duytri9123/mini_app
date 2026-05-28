@@ -20,6 +20,7 @@ import {
   GmServiceOption,
   GmVehicleOption,
 } from '../../core/constants/gm-services.constants';
+import { GM_STORAGE_KEYS } from '../../core/constants/gm-api.constants';
 import { GmBookingService } from '../../core/services/gm-booking.service';
 import { GmDriverService } from '../../core/services/gm-driver.service';
 import { GmGeocodingService, GmAddressSearchResult } from '../../core/services/gm-geocoding.service';
@@ -32,8 +33,15 @@ import { GmUser } from '../../core/interfaces/user.interface';
 import { GmAuthService } from '../../core/services/gm-auth.service';
 import { calculateGapMovePrice, GmPriceBreakdown } from '../../core/utils/booking-price.utils';
 import { formatVnd } from '../../core/utils/helpers';
+import {
+  GmLocationMapPickerComponent,
+  GmLocationMapAddressDetails,
+} from '../../shared/components/gm-location-picker/gm-location-map-picker.component';
+import {
+  GmLocationSearchHistoryItem,
+  GmLocationSearchPickerComponent,
+} from '../../shared/components/gm-location-picker/gm-location-search-picker.component';
 import { GmMapComponent, GmMapMarkerDragEvent } from '../../shared/components/gm-map/gm-map.component';
-import { GmBookingMapPickerComponent } from './components/gm-booking-map-picker.component';
 import { GmBookingOrderDetailsComponent } from './components/gm-booking-order-details.component';
 import { GmBookingRouteFormComponent } from './components/gm-booking-route-form.component';
 import {
@@ -73,6 +81,23 @@ interface GmDeliveryServiceOption {
   price: number;
 }
 
+type GmPromoOffer = {
+  id: string;
+  title: string;
+  logo: string;
+  accentClass: string;
+  warning?: string;
+  disabled?: boolean;
+};
+
+interface GmBookingConfirmedAddressHistoryItem {
+  id: string;
+  address: string;
+  coordinate: GmCoordinate;
+  details: GmLocationMapAddressDetails;
+  confirmedAt: number;
+}
+
 @Component({
   selector: 'app-gm-booking',
   standalone: true,
@@ -83,8 +108,9 @@ interface GmDeliveryServiceOption {
     IonicModule,
     GmMapComponent,
     GmBookingRouteFormComponent,
-    GmBookingMapPickerComponent,
     GmBookingOrderDetailsComponent,
+    GmLocationSearchPickerComponent,
+    GmLocationMapPickerComponent,
   ],
   templateUrl: './gm-booking.page.html',
   styleUrls: ['./gm-booking.page.scss'],
@@ -115,6 +141,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
   promoCode = '';
   codAmount = 0;
   declaredValue = 0;
+  receiverPays = false;
   scheduleMode: 'now' | 'scheduled' = 'now';
   scheduledAt = '';
   stopAddresses: string[] = [];
@@ -134,10 +161,25 @@ export class GmBookingPage implements OnInit, OnDestroy {
   isLocating = false;
   isServiceDrawerOpen = false;
   isDeliveryServiceSheetOpen = false;
+  isPaymentSheetOpen = false;
+  isPromoSheetOpen = false;
+  isScheduleSheetOpen = false;
   pendingDeliveryServiceId: GmBookingType = this.type;
+  selectedPromoId = '';
+  promoTab: 'code' | 'vpoint' = 'code';
   mapSearchQuery = '';
   mapSearchResults: GmAddressSearchResult[] = [];
   pendingMapSelection?: GmAddressSearchResult;
+  isMapPickerMapOpen = false;
+  isMapPickerSavedAddressesOpen = false;
+  confirmedAddressHistory: GmBookingConfirmedAddressHistoryItem[] = [];
+  mapAddressDetails: GmLocationMapAddressDetails = {
+    unit: '',
+    phone: '',
+    contactName: '',
+    note: '',
+    saveAddress: false,
+  };
   selectedDrawerItem?: GmBookingDrawerItem;
   user: GmUser | null = null;
   readonly drawerGroups: GmBookingDrawerGroup[] = [
@@ -176,6 +218,51 @@ export class GmBookingPage implements OnInit, OnDestroy {
         { label: 'GapMove Insights', icon: 'grid-outline', route: '/gap-move/news/business' },
       ],
     },
+  ];
+  readonly promoOffers: GmPromoOffer[] = [
+    {
+      id: 'GREEN25',
+      title: 'Green Express | Ưu đãi giảm 25% tối đa 100.000 VNĐ',
+      logo: 'G',
+      accentClass: 'bg-emerald-50 text-emerald-600',
+    },
+    {
+      id: 'GM5',
+      title: 'Giảm 5% tối đa 30.000 VNĐ',
+      logo: '5%',
+      accentClass: 'bg-cyan-50 text-[#008c95]',
+    },
+    {
+      id: 'SHOPEEPAY50',
+      title: 'SHOPEEPAY | Bạn mới: Giảm 50% tối đa 20.000 VNĐ',
+      logo: 'S Pay',
+      accentClass: 'bg-orange-50 text-orange-500',
+      warning: 'Phương thức thanh toán không đủ điều kiện',
+      disabled: true,
+    },
+    {
+      id: 'VIKKI50',
+      title: 'Vikki Mastercard | Giảm 50% tối đa 30K khi thanh toán qua thẻ',
+      logo: 'Vikki',
+      accentClass: 'bg-violet-50 text-violet-500',
+      warning: 'Phương thức thanh toán không đủ điều kiện',
+      disabled: true,
+    },
+    {
+      id: 'NCB20',
+      title: 'NCB | Giảm 20% tối đa 30.000 VNĐ khi thanh toán bằng thẻ',
+      logo: 'NCB',
+      accentClass: 'bg-slate-50 text-slate-400',
+      warning: 'Phương thức thanh toán không đủ điều kiện',
+      disabled: true,
+    },
+  ];
+  readonly addPaymentMethods = [
+    { label: 'Thẻ quốc tế', icon: 'card-outline' },
+    { label: 'MoMo', icon: 'phone-portrait-outline', image: 'assets/images/momo.png' },
+    { label: 'ShopeePay', icon: 'wallet-outline' },
+    { label: 'Zalopay', icon: 'wallet-outline' },
+    { label: 'Viettel Money', icon: 'phone-portrait-outline' },
   ];
 
   private pickupSearchTimer?: ReturnType<typeof setTimeout>;
@@ -287,6 +374,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.paymentService.getPaymentMethods().subscribe((methods) => (this.paymentMethods = methods));
     this.driverSub = this.driverService.getNearbyDrivers().subscribe((drivers) => (this.nearbyDrivers = drivers));
     this.authSub = this.authService.currentUser$.subscribe((user) => (this.user = user));
+    this.loadConfirmedAddressHistory();
     this.loadSavedAddresses();
     this.selectedDrawerItem = this.drawerGroups[0].items.find((item) => item.type === this.type) ?? this.drawerGroups[0].items[0];
   }
@@ -355,6 +443,17 @@ export class GmBookingPage implements OnInit, OnDestroy {
     return this.formatAmount(this.priceEstimate.finalAmount);
   }
 
+  get paymentFooterLabel(): string {
+    if (this.paymentMethod === 'wallet') {
+      return 'Thẻ E-Green';
+    }
+    return this.receiverPays ? 'Người nhận trả tiền' : 'Người gửi trả tiền';
+  }
+
+  get promoFooterLabel(): string {
+    return this.selectedPromoId ? 'Đã chọn ưu đãi' : 'Ưu đãi';
+  }
+
   get visibleAdditionalServiceOptions(): GmAdditionalServiceOption[] {
     if (this.type === 'ride') {
       return this.additionalServiceOptions.filter((service) => service.id === 'extended_duration' || service.id === 'insurance');
@@ -419,7 +518,77 @@ export class GmBookingPage implements OnInit, OnDestroy {
   }
 
   get pendingMapAddress(): string {
-    return this.pendingMapSelection?.address ?? 'Chạm bản đồ, tìm địa chỉ hoặc dùng vị trí hiện tại';
+    return this.pendingMapSelection?.address?.trim() || 'Chạm bản đồ, tìm địa chỉ hoặc dùng vị trí hiện tại';
+  }
+
+  get currentLocationPreview(): string {
+    const currentAddress = this.locationService.getCurrent().address?.trim() ?? '';
+    if (currentAddress && currentAddress !== 'Chưa xác định vị trí') {
+      return currentAddress;
+    }
+
+    return this.pickupAddress.trim();
+  }
+
+  get mapSearchPlaceholder(): string {
+    if (this.activeAddressField === 'pickup') {
+      return 'Từ';
+    }
+    if (this.activeAddressField === 'dropoff') {
+      return this.stopAddresses.length ? 'Điểm cuối' : 'Đến';
+    }
+    return 'Điểm dừng';
+  }
+
+  get mapSearchHistoryItems(): GmLocationSearchHistoryItem[] {
+    const historyItems = this.confirmedAddressHistory.map((item) => ({
+      id: item.id,
+      address: item.address,
+      coordinate: item.coordinate,
+      detailsText: [item.details.contactName, item.details.phone, item.details.note].filter(Boolean).join(' · '),
+      data: item,
+    }));
+
+    const routeItems = this.confirmedLocationResults.map((item) => ({
+      id: this.createConfirmedAddressHistoryId(item),
+      address: item.address,
+      coordinate: item.coordinate,
+    }));
+
+    return [
+      ...historyItems,
+      ...routeItems.filter(
+        (routeItem) =>
+          !historyItems.some(
+            (historyItem) => historyItem.id === routeItem.id || historyItem.address.trim() === routeItem.address.trim(),
+          ),
+      ),
+    ].slice(0, 8);
+  }
+
+  get mapDetailsRequired(): boolean {
+    return this.activeAddressField !== 'pickup';
+  }
+
+  get mapDetailsComplete(): boolean {
+    if (!this.mapDetailsRequired) {
+      return true;
+    }
+
+    return Boolean(this.mapAddressDetails.contactName.trim() && this.mapAddressDetails.phone.trim());
+  }
+
+  getSavedAddressDetailsTextForPicker = (address: GmCustomerAddress): string => {
+    const details = this.customerAddressService.getAddressDetails(address);
+    return [details.contactName, details.phone, details.note].filter(Boolean).join(' · ');
+  };
+
+  get confirmedLocationResults(): GmAddressSearchResult[] {
+    const locations: GmAddressSearchResult[] = [];
+    this.addConfirmedLocation(locations, this.pickupAddress, this.pickupCoordinate);
+    this.stopAddresses.forEach((address, index) => this.addConfirmedLocation(locations, address, this.stopCoordinates[index]));
+    this.addConfirmedLocation(locations, this.dropoffAddress, this.dropoffCoordinate);
+    return locations;
   }
 
   get estimateDistanceKm(): number {
@@ -533,6 +702,63 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   closeServiceDrawer(): void {
     this.isServiceDrawerOpen = false;
+  }
+
+  openPaymentSheet(): void {
+    this.isPaymentSheetOpen = true;
+  }
+
+  closePaymentSheet(): void {
+    this.isPaymentSheetOpen = false;
+  }
+
+  selectCashPayer(payer: 'sender' | 'receiver'): void {
+    this.paymentMethod = 'cash';
+    this.receiverPays = payer === 'receiver';
+  }
+
+  selectEgreenPayment(): void {
+    this.paymentMethod = 'wallet';
+    this.receiverPays = false;
+  }
+
+  openPromoSheet(): void {
+    this.isPromoSheetOpen = true;
+  }
+
+  closePromoSheet(): void {
+    this.isPromoSheetOpen = false;
+  }
+
+  selectPromoOffer(offer: GmPromoOffer): void {
+    if (offer.disabled) {
+      return;
+    }
+
+    this.selectedPromoId = offer.id;
+    this.promoCode = offer.id;
+  }
+
+  skipPromoAndContinue(): void {
+    this.selectedPromoId = '';
+    this.promoCode = '';
+    this.closePromoSheet();
+  }
+
+  openScheduleSheet(): void {
+    this.isScheduleSheetOpen = true;
+  }
+
+  closeScheduleSheet(): void {
+    this.isScheduleSheetOpen = false;
+  }
+
+  confirmScheduleBooking(): void {
+    this.scheduleMode = 'scheduled';
+    if (!this.scheduledAt) {
+      this.scheduledAt = this.getDefaultScheduledAt();
+    }
+    this.closeScheduleSheet();
   }
 
   openDeliveryServiceSheet(): void {
@@ -711,6 +937,15 @@ export class GmBookingPage implements OnInit, OnDestroy {
     };
     this.mapSearchQuery = currentAddress;
     this.mapSearchResults = [];
+    this.isMapPickerMapOpen = false;
+    this.isMapPickerSavedAddressesOpen = false;
+    this.mapAddressDetails = {
+      unit: '',
+      phone: field === 'pickup' ? this.senderPhone : this.receiverPhone,
+      contactName: field === 'pickup' ? this.senderName : this.receiverName,
+      note: this.note,
+      saveAddress: false,
+    };
     this.isMapPickerOpen = true;
   }
 
@@ -724,14 +959,23 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.pendingMapSelection = selection;
     this.mapSearchQuery = selection.address;
     this.mapSearchResults = [];
+    this.isMapPickerMapOpen = true;
+    this.isMapPickerSavedAddressesOpen = false;
     this.isMapPickerOpen = true;
   }
 
   closeMapPicker(): void {
     this.isMapPickerOpen = false;
+    this.isMapPickerMapOpen = false;
+    this.isMapPickerSavedAddressesOpen = false;
     this.mapSearchResults = [];
     this.pendingMapSelection = undefined;
     this.activeStopIndex = null;
+  }
+
+  openMapPickerMapMode(): void {
+    this.isMapPickerMapOpen = true;
+    this.isMapPickerSavedAddressesOpen = false;
   }
 
   useMapCoordinate(coordinate: GmCoordinate): void {
@@ -776,6 +1020,132 @@ export class GmBookingPage implements OnInit, OnDestroy {
         this.mapSearchQuery = resolved.address;
       });
     }
+  }
+
+  useLocationSearchResult(result: GmAddressSearchResult): void {
+    this.useMapSearchResult(result);
+    this.openMapPickerMapMode();
+  }
+
+  useMapSearchHistoryItem(item: GmLocationSearchHistoryItem): void {
+    const historyItem = item.data as GmBookingConfirmedAddressHistoryItem | undefined;
+
+    if (historyItem?.details) {
+      this.mapAddressDetails = {
+        ...historyItem.details,
+        saveAddress: false,
+      };
+    }
+
+    this.useLocationSearchResult({
+      address: historyItem?.address ?? item.address,
+      coordinate: historyItem?.coordinate ?? item.coordinate,
+    });
+  }
+
+  toggleMapPickerSavedAddresses(): void {
+    this.isMapPickerSavedAddressesOpen = !this.isMapPickerSavedAddressesOpen;
+  }
+
+  selectMapSearchResult(result: GmAddressSearchResult): void {
+    this.geocodingService.resolveAddress(result).subscribe((resolved) => {
+      this.pendingMapSelection = resolved;
+      this.mapSearchQuery = resolved.address;
+      this.mapSearchResults = [];
+    });
+  }
+
+  selectMapSavedAddress(address: GmCustomerAddress): void {
+    const selection = {
+      address: address.address,
+      coordinate: this.customerAddressService.toCoordinate(address),
+    };
+    this.pendingMapSelection = selection;
+    this.mapSearchQuery = selection.address;
+    this.mapSearchResults = [];
+    this.mapAddressDetails = {
+      unit: '',
+      phone: address.phone || this.mapAddressDetails.phone,
+      contactName: address.contactName || address.contact_name || this.mapAddressDetails.contactName,
+      note: address.note || this.mapAddressDetails.note,
+      saveAddress: false,
+    };
+    this.openMapPickerMapMode();
+  }
+
+  selectCurrentMapLocation(): void {
+    if (!navigator.geolocation) {
+      this.toastService.error('Trình duyệt chưa hỗ trợ lấy vị trí hiện tại');
+      return;
+    }
+
+    this.isLocating = true;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coordinate: GmCoordinate = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          address: 'Vị trí hiện tại',
+        };
+
+        this.geocodingService.reverseGeocode(coordinate.lat, coordinate.lng).subscribe({
+          next: (result) => {
+            this.isLocating = false;
+            const selection = result ?? { address: 'Vị trí hiện tại', coordinate };
+            this.pendingMapSelection = selection;
+            this.mapSearchQuery = selection.address;
+            this.mapSearchResults = [];
+          },
+          error: () => {
+            this.isLocating = false;
+            const selection = { address: 'Vị trí hiện tại', coordinate };
+            this.pendingMapSelection = selection;
+            this.mapSearchQuery = selection.address;
+            this.mapSearchResults = [];
+          },
+        });
+      },
+      () => {
+        this.isLocating = false;
+        this.toastService.error('Không lấy được vị trí hiện tại');
+      },
+      { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
+    );
+  }
+
+  async useContactBookForMapDetails(): Promise<void> {
+    const contacts = (navigator as Navigator & {
+      contacts?: {
+        select(properties: string[], options?: { multiple?: boolean }): Promise<Array<{ name?: string[]; tel?: string[] }>>;
+      };
+    }).contacts;
+    if (!contacts?.select) {
+      return;
+    }
+
+    try {
+      const selected = await contacts.select(['name', 'tel'], { multiple: false });
+      const contact = selected[0];
+      if (!contact) {
+        return;
+      }
+
+      this.mapAddressDetails = {
+        ...this.mapAddressDetails,
+        contactName: contact.name?.[0]?.trim() || this.mapAddressDetails.contactName,
+        phone: contact.tel?.[0]?.trim() || this.mapAddressDetails.phone,
+      };
+    } catch {
+      return;
+    }
+  }
+
+  useMyInfoForMapDetails(): void {
+    this.mapAddressDetails = {
+      ...this.mapAddressDetails,
+      contactName: this.user?.fullName?.trim() || this.mapAddressDetails.contactName,
+      phone: this.user?.phone?.trim() || this.mapAddressDetails.phone,
+    };
   }
 
   handleMapMarkerDrag(event: GmMapMarkerDragEvent): void {
@@ -825,14 +1195,9 @@ export class GmBookingPage implements OnInit, OnDestroy {
     }
 
     this.geocodingService.resolveAddress(this.pendingMapSelection).subscribe((resolved) => {
-      if (this.activeAddressField === 'pickup') {
-        this.applyPickup(resolved);
-      } else if (this.activeAddressField === 'dropoff') {
-        this.applyDropoff(resolved);
-      } else if (this.activeStopIndex !== null) {
-        this.applyStop(this.activeStopIndex, resolved);
-      }
-
+      this.applyActiveAddressSelection(resolved);
+      this.applyMapAddressDetails(resolved);
+      this.rememberConfirmedAddressHistory(resolved);
       this.closeMapPicker();
     });
   }
@@ -995,6 +1360,140 @@ export class GmBookingPage implements OnInit, OnDestroy {
     return Number.isFinite(numericValue) ? Math.max(0, numericValue) : 0;
   }
 
+  private addConfirmedLocation(locations: GmAddressSearchResult[], address: string, coordinate?: GmCoordinate): void {
+    const normalizedAddress = address.trim();
+    if (!normalizedAddress || locations.some((location) => location.address === normalizedAddress)) {
+      return;
+    }
+
+    locations.push({
+      address: normalizedAddress,
+      coordinate: coordinate ? { ...coordinate, address: coordinate.address ?? normalizedAddress } : undefined,
+    });
+  }
+
+  private applyActiveAddressSelection(result: GmAddressSearchResult): void {
+    if (this.activeAddressField === 'pickup') {
+      this.applyPickup(result);
+      return;
+    }
+
+    if (this.activeAddressField === 'dropoff') {
+      this.applyDropoff(result);
+      return;
+    }
+
+    if (this.activeStopIndex !== null) {
+      this.applyStop(this.activeStopIndex, result);
+    }
+  }
+
+  private getDefaultScheduledAt(): string {
+    const scheduledAt = new Date();
+    scheduledAt.setHours(scheduledAt.getHours() + 1, 0, 0, 0);
+    return new Date(scheduledAt.getTime() - scheduledAt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  }
+
+  private applyMapAddressDetails(result: GmAddressSearchResult): void {
+    if (!this.mapDetailsRequired) {
+      return;
+    }
+
+    this.receiverName = this.mapAddressDetails.contactName.trim();
+    this.receiverPhone = this.mapAddressDetails.phone.trim();
+    if (this.mapAddressDetails.note.trim()) {
+      this.note = this.mapAddressDetails.note.trim();
+    }
+
+    if (this.mapAddressDetails.saveAddress && result.coordinate) {
+      this.customerAddressService
+        .createAddress({
+          label: this.receiverName || 'Địa chỉ',
+          address: result.address,
+          lat: result.coordinate.lat,
+          lng: result.coordinate.lng,
+          phone: this.receiverPhone,
+          contactName: this.receiverName,
+          contact_name: this.receiverName,
+          note: this.note,
+        })
+        .subscribe({
+          next: () => this.loadSavedAddresses(),
+          error: () => undefined,
+        });
+    }
+  }
+
+  private rememberConfirmedAddressHistory(result: GmAddressSearchResult): void {
+    if (!result.coordinate) {
+      return;
+    }
+
+    const item: GmBookingConfirmedAddressHistoryItem = {
+      id: this.createConfirmedAddressHistoryId(result),
+      address: result.address,
+      coordinate: {
+        ...result.coordinate,
+        address: result.address,
+      },
+      details: {
+        unit: '',
+        phone: this.mapAddressDetails.phone.trim(),
+        contactName: this.mapAddressDetails.contactName.trim(),
+        note: this.mapAddressDetails.note.trim(),
+        saveAddress: false,
+      },
+      confirmedAt: Date.now(),
+    };
+
+    this.confirmedAddressHistory = [
+      item,
+      ...this.confirmedAddressHistory.filter((historyItem) => historyItem.id !== item.id),
+    ].slice(0, 8);
+    this.writeConfirmedAddressHistory();
+  }
+
+  private loadConfirmedAddressHistory(): void {
+    if (typeof sessionStorage === 'undefined') {
+      this.confirmedAddressHistory = [];
+      return;
+    }
+
+    try {
+      const items = JSON.parse(
+        sessionStorage.getItem(GM_STORAGE_KEYS.confirmedAddressHistory) ?? '[]',
+      ) as GmBookingConfirmedAddressHistoryItem[];
+      this.confirmedAddressHistory = items
+        .filter((item) => Boolean(item.address && item.coordinate))
+        .map((item) => ({
+          ...item,
+          details: {
+            unit: '',
+            phone: item.details?.phone ?? '',
+            contactName: item.details?.contactName ?? '',
+            note: item.details?.note ?? '',
+            saveAddress: false,
+          },
+        }));
+    } catch {
+      this.confirmedAddressHistory = [];
+    }
+  }
+
+  private writeConfirmedAddressHistory(): void {
+    if (typeof sessionStorage === 'undefined') {
+      return;
+    }
+
+    sessionStorage.setItem(GM_STORAGE_KEYS.confirmedAddressHistory, JSON.stringify(this.confirmedAddressHistory));
+  }
+
+  private createConfirmedAddressHistoryId(result: GmAddressSearchResult): string {
+    const lat = result.coordinate?.lat ?? 0;
+    const lng = result.coordinate?.lng ?? 0;
+    return `${result.address.trim().toLowerCase()}|${Number(lat).toFixed(6)}|${Number(lng).toFixed(6)}`;
+  }
+
   private buildNote(): string {
     const noteParts = [
       this.note.trim(),
@@ -1002,6 +1501,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
       this.senderPhone.trim() ? `SĐT người gửi: ${this.senderPhone.trim()}` : '',
       this.receiverName.trim() ? `Người nhận: ${this.receiverName.trim()}` : '',
       this.receiverPhone.trim() ? `SĐT người nhận: ${this.receiverPhone.trim()}` : '',
+      this.receiverPays ? 'Người nhận trả tiền' : 'Người gửi trả tiền',
       this.codAmount > 0 ? `COD: ${this.codAmount}` : '',
       this.declaredValue > 0 ? `Giá trị khai báo: ${this.declaredValue}` : '',
       this.itemCount > 0 ? `Số kiện: ${this.itemCount}` : '',

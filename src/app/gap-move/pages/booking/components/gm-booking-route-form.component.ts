@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { GmBookingType } from '../../../core/interfaces/booking.interface';
@@ -21,6 +21,8 @@ import {
   styleUrls: ['./gm-booking-route-form.component.scss'],
 })
 export class GmBookingRouteFormComponent {
+  @ViewChild('routeList') private routeList?: ElementRef<HTMLElement>;
+
   @Input() type: GmBookingType = 'delivery';
   @Input() pickupAddress = '';
   @Input() dropoffAddress = '';
@@ -49,6 +51,11 @@ export class GmBookingRouteFormComponent {
   isSavedAddressOpen = false;
   activeTarget: GmBookingAddressTarget = { field: 'dropoff' };
   routeDragIndex: number | null = null;
+  routeDragOffsetY = 0;
+  private routePointerDragIndex: number | null = null;
+  private routeDragStartY = 0;
+  private routeDragMoved = false;
+  private suppressRouteClick = false;
 
   get activeTargetLabel(): string {
     if (this.activeTarget.field === 'pickup') {
@@ -64,7 +71,13 @@ export class GmBookingRouteFormComponent {
     this.activeTarget = target;
   }
 
-  openMapFor(target: GmBookingAddressTarget): void {
+  openMapFor(target: GmBookingAddressTarget, event?: Event): void {
+    if (this.suppressRouteClick) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      return;
+    }
+
     this.setActiveTarget(target);
     this.openMap.emit(target);
   }
@@ -80,6 +93,18 @@ export class GmBookingRouteFormComponent {
     this.moveDestinationPoint.emit({ fromIndex, toIndex });
   }
 
+  canDragDestinationPoints(): boolean {
+    return this.stopAddresses.length > 0;
+  }
+
+  routeDragTransform(index: number): string | null {
+    if (this.routeDragIndex !== index || !this.routeDragMoved) {
+      return null;
+    }
+
+    return `translateY(${this.routeDragOffsetY}px)`;
+  }
+
   swapPickupDropoff(): void {
     const tempAddress = this.pickupAddress;
     this.pickupAddressChange.emit(this.dropoffAddress);
@@ -90,6 +115,67 @@ export class GmBookingRouteFormComponent {
 
   startRouteDrag(index: number): void {
     this.routeDragIndex = index;
+  }
+
+  beginRoutePointerDrag(index: number, event: PointerEvent): void {
+    if (!this.canDragDestinationPoints() || this.isInteractiveRouteControl(event.target)) {
+      return;
+    }
+
+    this.routePointerDragIndex = index;
+    this.routeDragStartY = event.clientY;
+    this.routeDragOffsetY = 0;
+    this.routeDragMoved = false;
+    (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+  }
+
+  moveRoutePointerDrag(event: PointerEvent): void {
+    if (this.routePointerDragIndex === null) {
+      return;
+    }
+
+    const offsetY = event.clientY - this.routeDragStartY;
+    if (!this.routeDragMoved && Math.abs(offsetY) < 6) {
+      return;
+    }
+
+    this.routeDragMoved = true;
+    this.routeDragIndex = this.routePointerDragIndex;
+    this.routeDragOffsetY = offsetY;
+    event.preventDefault();
+  }
+
+  endRoutePointerDrag(event: PointerEvent): void {
+    if (this.routePointerDragIndex === null) {
+      return;
+    }
+
+    const fromIndex = this.routePointerDragIndex;
+    const shouldMove = this.routeDragMoved;
+    const toIndex = shouldMove ? this.getRouteDropIndex(event.clientY) : fromIndex;
+
+    (event.currentTarget as HTMLElement | null)?.releasePointerCapture?.(event.pointerId);
+    this.resetRoutePointerDrag();
+
+    if (!shouldMove) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.suppressRouteClick = true;
+    window.setTimeout(() => {
+      this.suppressRouteClick = false;
+    }, 0);
+
+    this.movePoint(fromIndex, toIndex);
+  }
+
+  cancelRoutePointerDrag(event?: PointerEvent): void {
+    if (event && this.routePointerDragIndex !== null) {
+      (event.currentTarget as HTMLElement | null)?.releasePointerCapture?.(event.pointerId);
+    }
+    this.resetRoutePointerDrag();
   }
 
   allowRouteDrop(event: DragEvent): void {
@@ -108,5 +194,37 @@ export class GmBookingRouteFormComponent {
 
   endRouteDrag(): void {
     this.routeDragIndex = null;
+  }
+
+  private resetRoutePointerDrag(): void {
+    this.routePointerDragIndex = null;
+    this.routeDragIndex = null;
+    this.routeDragStartY = 0;
+    this.routeDragOffsetY = 0;
+    this.routeDragMoved = false;
+  }
+
+  private getRouteDropIndex(clientY: number): number {
+    const rows = Array.from(this.routeList?.nativeElement.querySelectorAll<HTMLElement>('[data-route-destination-index]') ?? []);
+    if (!rows.length) {
+      return this.routePointerDragIndex ?? 0;
+    }
+
+    let closestIndex = Number(rows[0].dataset['routeDestinationIndex'] ?? 0);
+    let closestDistance = Number.POSITIVE_INFINITY;
+    rows.forEach((row) => {
+      const rect = row.getBoundingClientRect();
+      const distance = Math.abs(clientY - (rect.top + rect.height / 2));
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = Number(row.dataset['routeDestinationIndex'] ?? closestIndex);
+      }
+    });
+
+    return closestIndex;
+  }
+
+  private isInteractiveRouteControl(target: EventTarget | null): boolean {
+    return target instanceof HTMLElement && Boolean(target.closest('button, a, input, textarea, select'));
   }
 }

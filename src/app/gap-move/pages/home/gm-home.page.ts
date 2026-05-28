@@ -17,6 +17,14 @@ import { GM_STORAGE_KEYS } from '../../core/constants/gm-api.constants';
 import { GM_SERVICE_OPTIONS, GmServiceOption } from '../../core/constants/gm-services.constants';
 import { GmBannerCarouselComponent } from '../../shared/components/gm-banner-carousel/gm-banner-carousel.component';
 import { GmBookingCardComponent } from '../../shared/components/gm-booking-card/gm-booking-card.component';
+import {
+  GmLocationMapPickerComponent,
+  GmLocationMapAddressDetails,
+} from '../../shared/components/gm-location-picker/gm-location-map-picker.component';
+import {
+  GmLocationSearchHistoryItem,
+  GmLocationSearchPickerComponent,
+} from '../../shared/components/gm-location-picker/gm-location-search-picker.component';
 import { GmMapComponent, GmMapMarkerDragEvent } from '../../shared/components/gm-map/gm-map.component';
 import { GmHomeMobileRouteCardComponent } from './components/gm-home-mobile-route-card/gm-home-mobile-route-card.component';
 import {
@@ -54,6 +62,8 @@ interface GmNavigatorWithContacts extends Navigator {
     GmBookingCardComponent,
     GmMapComponent,
     GmHomeMobileRouteCardComponent,
+    GmLocationSearchPickerComponent,
+    GmLocationMapPickerComponent,
   ],
   templateUrl: './gm-home.page.html',
   styleUrls: ['./gm-home.page.scss'],
@@ -586,6 +596,22 @@ export class GmHomePage implements OnInit, OnDestroy {
     return this.pickupAddress || 'Chọn vị trí hiện tại';
   }
 
+  get addressSearchHistoryItems(): GmLocationSearchHistoryItem[] {
+    return this.confirmedAddressHistory.map((item) => ({
+      id: item.id,
+      address: item.address,
+      coordinate: item.coordinate,
+      detailsText: this.getConfirmedAddressHistoryDetailsText(item),
+      data: item,
+    }));
+  }
+
+  get sharedMapAddressDetails(): GmLocationMapAddressDetails {
+    return this.mapAddressDetails;
+  }
+
+  getSavedAddressDetailsTextForPicker = (address: GmCustomerAddress): string => this.getSavedAddressDetailsText(address);
+
   useCurrentLocation(): void {
     if (!navigator.geolocation) {
       this.pickupAddress = 'Từ';
@@ -772,6 +798,23 @@ export class GmHomePage implements OnInit, OnDestroy {
       resolved,
       field === 'stop' ? this.addressSearchStopIndex : null,
       this.cloneAddressDetails(item.details),
+    );
+  }
+
+  useAddressSearchHistoryItem(item: GmLocationSearchHistoryItem): void {
+    const historyItem = item.data as GmHomeConfirmedAddressHistoryItem | undefined;
+    if (historyItem) {
+      this.useConfirmedAddressHistory(historyItem);
+      return;
+    }
+
+    this.confirmAddressSelectionWithMap(
+      this.addressSearchField,
+      {
+        address: item.address,
+        coordinate: item.coordinate,
+      },
+      this.addressSearchField === 'stop' ? this.addressSearchStopIndex : null,
     );
   }
 
