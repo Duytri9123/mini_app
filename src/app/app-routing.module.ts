@@ -26,6 +26,12 @@ const routes: Routes = [
     loadChildren: () =>
       import('./bro-jet/bro-jet.module').then((m) => m.BroJetModule),
   },
+  // ── Realtime Local Social (app-mini) ───────────────────────────────────────
+  {
+    path: 'app-mini',
+    loadChildren: () =>
+      import('./app-mini/app-mini.module').then((m) => m.AppMiniModule),
+  },
   {
     path: '',
     redirectTo: 'gap-move',
