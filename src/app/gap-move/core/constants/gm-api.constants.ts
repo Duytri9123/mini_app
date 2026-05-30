@@ -4,6 +4,7 @@ export const GM_STORAGE_KEYS = {
   user: 'gm_user',
   customerAddressDetails: 'gm_customer_address_details',
   confirmedAddressHistory: 'gm_confirmed_address_history',
+  homeRouteDraft: 'gm_home_route_draft',
 } as const;
 
 export const GM_API_ENDPOINTS = {

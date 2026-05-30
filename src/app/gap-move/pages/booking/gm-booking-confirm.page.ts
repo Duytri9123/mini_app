@@ -33,4 +33,27 @@ export class GmBookingConfirmPage implements OnInit {
   formatAmount(amount: number): string {
     return formatVnd(amount);
   }
+
+  statusLabel(status: GmBooking['status']): string {
+    const labels: Record<GmBooking['status'], string> = {
+      draft: 'Nháp',
+      searching: 'Đang tìm tài xế',
+      driver_assigned: 'Đã có tài xế',
+      picked_up: 'Đã lấy hàng',
+      in_progress: 'Đang di chuyển',
+      completed: 'Hoàn thành',
+      cancelled: 'Đã hủy',
+    };
+    return labels[status];
+  }
+
+  paymentMethodLabel(method: GmBooking['paymentMethod']): string {
+    const labels: Record<GmBooking['paymentMethod'], string> = {
+      cash: 'Tiền mặt',
+      wallet: 'Ví GapMove',
+      vnpay: 'VNPay',
+      momo: 'MoMo',
+    };
+    return labels[method];
+  }
 }

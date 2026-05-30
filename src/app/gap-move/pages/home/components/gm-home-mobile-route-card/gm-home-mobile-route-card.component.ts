@@ -16,6 +16,7 @@ export class GmHomeMobileRouteCardComponent {
   @Input() pickupDetails: GmHomeAddressDetails | null = null;
   @Input() dropoffAddress = '';
   @Input() dropoffDetails: GmHomeAddressDetails | null = null;
+  @Input() dropoffPlaceholder = 'Đến';
   @Input() stopAddresses: string[] = [];
   @Input() stopDetails: GmHomeAddressDetails[] = [];
   @Input() routeDragGhost: GmHomeRouteDragGhost | null = null;
@@ -33,7 +34,7 @@ export class GmHomeMobileRouteCardComponent {
   @Output() openScheduleSheet = new EventEmitter<void>();
 
   get canReorderRoute(): boolean {
-    return this.stopAddresses.length > 0;
+    return this.stopAddresses.length + 2 > 1;
   }
 
   isRouteDragPlaceholder(index: number): boolean {

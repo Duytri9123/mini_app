@@ -105,6 +105,15 @@ export const GM_VEHICLE_OPTIONS: GmVehicleOption[] = [
     recommendedFor: 'Đi sân bay, đi nhóm nhỏ',
   },
   {
+    id: 'bagac',
+    title: 'Xe ba gác',
+    subtitle: 'Hàng cồng kềnh, vật liệu, đồ gỗ',
+    maxWeightKg: 600,
+    dimensions: '2.0 x 1.2 x 1.2 m',
+    driverIncluded: true,
+    recommendedFor: 'Vật liệu xây dựng, đồ cũ, hàng cồng kềnh',
+  },
+  {
     id: 'van',
     title: 'Xe van 500kg',
     subtitle: 'Hàng trung bình, cần kín mưa',

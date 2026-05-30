@@ -29,4 +29,30 @@ export class GmBookingCardComponent {
     };
     return labels[type];
   }
+
+  statusLabel(status: GmBooking['status']): string {
+    const labels: Record<GmBooking['status'], string> = {
+      draft: 'Nháp',
+      searching: 'Đang tìm tài xế',
+      driver_assigned: 'Đã có tài xế',
+      picked_up: 'Đã lấy hàng',
+      in_progress: 'Đang di chuyển',
+      completed: 'Hoàn thành',
+      cancelled: 'Đã hủy',
+    };
+    return labels[status];
+  }
+
+  statusClass(status: GmBooking['status']): string {
+    const classes: Record<GmBooking['status'], string> = {
+      draft: 'bg-slate-100 text-slate-600',
+      searching: 'bg-amber-50 text-amber-700',
+      driver_assigned: 'bg-sky-50 text-sky-700',
+      picked_up: 'bg-indigo-50 text-indigo-700',
+      in_progress: 'bg-violet-50 text-violet-700',
+      completed: 'bg-emerald-50 text-emerald-700',
+      cancelled: 'bg-rose-50 text-rose-700',
+    };
+    return classes[status];
+  }
 }

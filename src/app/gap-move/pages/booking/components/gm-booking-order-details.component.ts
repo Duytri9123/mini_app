@@ -70,12 +70,25 @@ export class GmBookingOrderDetailsComponent {
     'Mỹ phẩm',
     'Thực phẩm khô / đóng gói',
     'Thực phẩm tươi sống',
-    'Đồ điện tử',
+    'Thức ăn / Đồ uống đã chế biến',
     'Nội thất',
+    'Thiết bị gia dụng',
+    'Mẹ & Bé',
+    'Thuốc / Thực phẩm chức năng',
+    'Thiết bị điện tử / Công nghệ',
+    'Hoa tươi / Cây kiểng',
+    'Sách / Văn phòng phẩm',
+    'Phụ kiện xe',
+    'Đồ thể thao',
   ];
 
   selectedCargoSize = 'S';
   showSizeDetailsModal = false;
+  isCargoTypePickerOpen = false;
+  cargoTypeSearchQuery = '';
+  pendingCargoTypes: string[] = [];
+
+  @Output() modalStateChange = new EventEmitter<boolean>();
 
   get isCargoOrder(): boolean {
     return this.type !== 'ride';
@@ -83,6 +96,15 @@ export class GmBookingOrderDetailsComponent {
 
   get selectedCargoSizeDescription(): string {
     return this.cargoSizes.find((size) => size.id === this.selectedCargoSize)?.description ?? '';
+  }
+
+  get filteredCargoTypes(): string[] {
+    const query = this.cargoTypeSearchQuery.trim().toLowerCase();
+    if (!query) {
+      return this.cargoTypes;
+    }
+
+    return this.cargoTypes.filter((type) => type.toLowerCase().includes(query));
   }
 
   setScheduleMode(mode: 'now' | 'scheduled'): void {
@@ -96,7 +118,73 @@ export class GmBookingOrderDetailsComponent {
     this.heightCmChange.emit(size.heightCm);
   }
 
-  selectCargoType(type: string): void {
-    this.packageInfoChange.emit(type);
+  openSizeDetailsModal(): void {
+    this.showSizeDetailsModal = true;
+    this.modalStateChange.emit(true);
+  }
+
+  closeSizeDetailsModal(): void {
+    this.showSizeDetailsModal = false;
+    this.modalStateChange.emit(this.isCargoTypePickerOpen);
+  }
+
+  openCargoTypePicker(): void {
+    this.pendingCargoTypes = this.packageInfo ? this.packageInfo.split(', ').map(item => item.trim()).filter(Boolean) : [];
+    this.cargoTypeSearchQuery = '';
+    this.isCargoTypePickerOpen = true;
+    this.modalStateChange.emit(true);
+  }
+
+  closeCargoTypePicker(): void {
+    this.isCargoTypePickerOpen = false;
+    this.modalStateChange.emit(this.showSizeDetailsModal);
+  }
+
+  togglePendingCargoType(type: string): void {
+    const idx = this.pendingCargoTypes.indexOf(type);
+    if (idx > -1) {
+      this.pendingCargoTypes.splice(idx, 1);
+    } else {
+      this.pendingCargoTypes.push(type);
+    }
+  }
+
+  confirmCargoTypeSelection(): void {
+    this.packageInfoChange.emit(this.pendingCargoTypes.join(', '));
+    this.closeCargoTypePicker();
+  }
+
+  isCargoTypePending(type: string): boolean {
+    return this.pendingCargoTypes.includes(type);
+  }
+
+  private _cachedCargoTypes: string[] = [];
+  private _lastPackageInfo = '';
+
+  get selectedCargoTypes(): string[] {
+    if (this.packageInfo === this._lastPackageInfo && this._cachedCargoTypes.length > 0) {
+      return this._cachedCargoTypes;
+    }
+    this._lastPackageInfo = this.packageInfo;
+    this._cachedCargoTypes = this.packageInfo
+      ? this.packageInfo.split(', ').map((item) => item.trim()).filter(Boolean)
+      : [];
+    return this._cachedCargoTypes;
+  }
+
+  removeCargoType(type: string): void {
+    const updated = this.selectedCargoTypes.filter((t) => t !== type);
+    this.packageInfoChange.emit(updated.join(', '));
+  }
+
+  adjustWeight(amount: number): void {
+    const current = Number(this.weightKg) || 0;
+    const nextVal = Math.max(0, current + amount);
+    this.weightKgChange.emit(Math.round(nextVal * 10) / 10);
+  }
+
+  setWeight(val: any): void {
+    const numeric = parseFloat(val) || 0;
+    this.weightKgChange.emit(Math.max(0, numeric));
   }
 }

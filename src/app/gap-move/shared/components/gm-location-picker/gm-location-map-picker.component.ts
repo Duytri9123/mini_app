@@ -52,9 +52,15 @@ export class GmLocationMapPickerComponent {
   @Output() useContactBook = new EventEmitter<void>();
   @Output() useMyInfo = new EventEmitter<void>();
 
+  isDetailsOpen = false;
+
   updateSearchQuery(value: string): void {
     this.searchQuery = value;
     this.searchQueryChange.emit(value);
     this.searchInput.emit();
+  }
+
+  toggleDetails(): void {
+    this.isDetailsOpen = !this.isDetailsOpen;
   }
 }

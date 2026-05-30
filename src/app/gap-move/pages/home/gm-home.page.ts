@@ -50,6 +50,24 @@ interface GmNavigatorWithContacts extends Navigator {
   };
 }
 
+interface GmHomeRouteDraft {
+  pickupAddress?: string;
+  dropoffAddress?: string;
+  pickupCoordinate?: GmCoordinate;
+  dropoffCoordinate?: GmCoordinate;
+  pickupDetails?: Partial<GmHomeAddressDetails>;
+  dropoffDetails?: Partial<GmHomeAddressDetails>;
+  stopAddresses?: string[];
+  stopCoordinates?: Array<GmCoordinate | null | undefined>;
+  stopDetails?: Array<Partial<GmHomeAddressDetails> | null | undefined>;
+  scheduleMode?: 'now' | 'scheduled';
+  scheduledAt?: string;
+  activeMobileMode?: GmHomeMode;
+  selectedMobileVehicleId?: string;
+  selectedDeliveryPackageId?: GmHomeDeliveryPackage['id'];
+  dropoffPromotedFromStop?: boolean;
+}
+
 @Component({
   selector: 'app-gm-home',
   standalone: true,
@@ -334,6 +352,7 @@ export class GmHomePage implements OnInit, OnDestroy {
   pickupSuggestions: GmAddressSearchResult[] = [];
   dropoffSuggestions: GmAddressSearchResult[] = [];
   stopSuggestions: GmAddressSearchResult[][] = [];
+  dropoffPromotedFromStop = false;
   activeAddressField: GmHomeAddressField = 'pickup';
   activeStopIndex: number | null = null;
   isMapPickerOpen = false;
@@ -451,14 +470,30 @@ export class GmHomePage implements OnInit, OnDestroy {
     return indexes;
   }
 
+  private _cachedStopCoordinates: GmCoordinate[] = [];
+  private _cachedStopIndexes: number[] = [];
+  private _lastStopCoordinatesKey = '';
+
+  private updateStopCoordinatesCache(): void {
+    const key = JSON.stringify(this.stopCoordinates);
+    if (key === this._lastStopCoordinatesKey) {
+      return;
+    }
+    this._lastStopCoordinatesKey = key;
+    this._cachedStopCoordinates = this.stopCoordinates.filter((coordinate): coordinate is GmCoordinate => Boolean(coordinate));
+    this._cachedStopIndexes = this.stopCoordinates
+      .map((coordinate, index) => (coordinate ? index : null))
+      .filter((index): index is number => index !== null);
+  }
+
   get routeStopCoordinates(): GmCoordinate[] {
-    return this.stopCoordinates.filter((coordinate): coordinate is GmCoordinate => Boolean(coordinate));
+    this.updateStopCoordinatesCache();
+    return this._cachedStopCoordinates;
   }
 
   get routeStopIndexes(): number[] {
-    return this.stopCoordinates
-      .map((coordinate, index) => (coordinate ? index : null))
-      .filter((index): index is number => index !== null);
+    this.updateStopCoordinatesCache();
+    return this._cachedStopIndexes;
   }
 
   ngOnInit(): void {
@@ -468,7 +503,10 @@ export class GmHomePage implements OnInit, OnDestroy {
     );
     this.articles$ = this.articleService.getArticles().pipe(map((items) => items.slice(0, 3)));
     this.loadConfirmedAddressHistory();
-    this.useCurrentLocation();
+    const hasRouteDraft = this.restoreRouteDraft();
+    if (!hasRouteDraft) {
+      this.useCurrentLocation();
+    }
     this.loadSavedAddresses();
     this.startTitleTyping();
   }
@@ -490,6 +528,7 @@ export class GmHomePage implements OnInit, OnDestroy {
 
   selectServiceById(serviceId: GmBookingType): void {
     const queryParams = this.buildAddressQuery(serviceId);
+    this.writeRouteDraft();
     if (serviceId === 'multi_stop') {
       this.router.navigate(['/gap-move/multi-stop'], { queryParams });
       return;
@@ -522,6 +561,7 @@ export class GmHomePage implements OnInit, OnDestroy {
 
   continueWithMobileSelection(): void {
     const vehicle = this.selectedMobileVehicle;
+    this.writeRouteDraft();
     this.router.navigate(['/gap-move/booking/new'], {
       queryParams: {
         ...this.buildAddressQuery(vehicle.bookingType),
@@ -537,6 +577,7 @@ export class GmHomePage implements OnInit, OnDestroy {
   }
 
   startQuickBooking(): void {
+    this.writeRouteDraft();
     this.router.navigate(['/gap-move/booking/new'], { queryParams: this.buildAddressQuery('delivery') });
   }
 
@@ -584,7 +625,7 @@ export class GmHomePage implements OnInit, OnDestroy {
 
   get addressSearchPlaceholder(): string {
     if (this.addressSearchField === 'pickup') {
-      return 'Từ';
+      return 'Điểm lấy hàng';
     }
     if (this.addressSearchField === 'dropoff') {
       return this.stopAddresses.length ? 'Điểm cuối' : 'Đến';
@@ -594,6 +635,10 @@ export class GmHomePage implements OnInit, OnDestroy {
 
   get addressSearchCurrentAddress(): string {
     return this.pickupAddress || 'Chọn vị trí hiện tại';
+  }
+
+  get routeDropoffPlaceholder(): string {
+    return this.stopAddresses.length || this.dropoffPromotedFromStop ? 'Điểm cuối' : 'Đến';
   }
 
   get addressSearchHistoryItems(): GmLocationSearchHistoryItem[] {
@@ -614,7 +659,7 @@ export class GmHomePage implements OnInit, OnDestroy {
 
   useCurrentLocation(): void {
     if (!navigator.geolocation) {
-      this.pickupAddress = 'Từ';
+      this.pickupAddress = '';
       return;
     }
 
@@ -639,7 +684,7 @@ export class GmHomePage implements OnInit, OnDestroy {
       },
       () => {
         this.isLocating = false;
-        this.pickupAddress = 'Từ';
+        this.pickupAddress = '';
       },
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
     );
@@ -743,18 +788,57 @@ export class GmHomePage implements OnInit, OnDestroy {
   }
 
   useCurrentAddressForSearch(): void {
-    const coordinate = this.pickupCoordinate;
-    if (!coordinate) {
-      this.useCurrentLocation();
+    const field = this.addressSearchField;
+    const stopIndex = field === 'stop' ? this.addressSearchStopIndex : null;
+    const selectCurrentLocation = (resolved: GmAddressSearchResult): void => {
+      this.confirmAddressSelectionWithMap(field, resolved, stopIndex);
+    };
+
+    const existingCoordinate = this.pickupCoordinate;
+    if (existingCoordinate) {
+      selectCurrentLocation({
+        address: this.pickupAddress || existingCoordinate.address || 'Vị trí hiện tại',
+        coordinate: existingCoordinate,
+      });
       return;
     }
 
-    const resolved = {
-      address: this.pickupAddress || coordinate.address || 'Vị trí hiện tại',
-      coordinate,
-    };
-    const field = this.addressSearchField;
-    this.confirmAddressSelectionWithMap(field, resolved, field === 'stop' ? this.addressSearchStopIndex : null);
+    if (!navigator.geolocation) {
+      this.chooseLocationOnMapFromSearch();
+      return;
+    }
+
+    this.isLocating = true;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const fallbackAddress = 'Vị trí hiện tại';
+        const coordinate: GmCoordinate = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          address: fallbackAddress,
+        };
+        const fallback: GmAddressSearchResult = {
+          address: fallbackAddress,
+          coordinate,
+        };
+
+        this.geocodingService.reverseGeocode(coordinate.lat, coordinate.lng).subscribe({
+          next: (result) => {
+            this.isLocating = false;
+            selectCurrentLocation(result ?? fallback);
+          },
+          error: () => {
+            this.isLocating = false;
+            selectCurrentLocation(fallback);
+          },
+        });
+      },
+      () => {
+        this.isLocating = false;
+        this.chooseLocationOnMapFromSearch();
+      },
+      { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
+    );
   }
 
   useAddressSearchResult(result: GmAddressSearchResult): void {
@@ -778,7 +862,19 @@ export class GmHomePage implements OnInit, OnDestroy {
     };
     const savedDetails = this.createAddressDetailsFromSavedAddress(address);
     const field = this.addressSearchField;
-    this.confirmAddressSelectionWithMap(field, resolved, field === 'stop' ? this.addressSearchStopIndex : null, savedDetails);
+    if (field === 'pickup') {
+      this.applyPickup(resolved);
+      this.pickupDetails = this.cloneAddressDetails(savedDetails);
+    } else if (field === 'dropoff') {
+      this.applyDropoff(resolved);
+      this.dropoffDetails = this.cloneAddressDetails(savedDetails);
+    } else if (this.addressSearchStopIndex !== null) {
+      this.applyStop(this.addressSearchStopIndex, resolved);
+      this.stopDetails[this.addressSearchStopIndex] = this.cloneAddressDetails(savedDetails);
+    }
+
+    this.rememberConfirmedAddressHistory(resolved, savedDetails);
+    this.closeAddressSearch();
   }
 
   getSavedAddressDetailsText(address: GmCustomerAddress): string {
@@ -840,6 +936,15 @@ export class GmHomePage implements OnInit, OnDestroy {
   }
 
   clearDropoff(): void {
+    if (this.stopAddresses.length) {
+      const points = this.getRoutePointStates();
+      points.pop();
+      this.dropoffPromotedFromStop = true;
+      this.applyRoutePointStates(points);
+      return;
+    }
+
+    this.dropoffPromotedFromStop = false;
     this.dropoffAddress = '';
     this.dropoffCoordinate = undefined;
     this.dropoffDetails = this.createEmptyAddressDetails();
@@ -851,6 +956,7 @@ export class GmHomePage implements OnInit, OnDestroy {
       return;
     }
 
+    this.dropoffPromotedFromStop = false;
     const nextPickupAddress = this.dropoffAddress;
     const nextPickupCoordinate = this.dropoffCoordinate;
     const nextPickupDetails = this.cloneAddressDetails(this.dropoffDetails);
@@ -1063,6 +1169,19 @@ export class GmHomePage implements OnInit, OnDestroy {
     }
 
     return this.formatScheduleLabel(this.scheduledAt);
+  }
+
+  get scheduleTimeLabel(): string {
+    if (!this.scheduledAt) {
+      return '--:--';
+    }
+
+    const date = new Date(this.scheduledAt);
+    if (Number.isNaN(date.getTime())) {
+      return '--:--';
+    }
+
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
 
   get minScheduleDateTime(): string {
@@ -1301,6 +1420,105 @@ export class GmHomePage implements OnInit, OnDestroy {
     return queryParams;
   }
 
+  private writeRouteDraft(): void {
+    if (typeof sessionStorage === 'undefined') {
+      return;
+    }
+
+    const draft: GmHomeRouteDraft = {
+      pickupAddress: this.pickupAddress,
+      dropoffAddress: this.dropoffAddress,
+      pickupCoordinate: this.pickupCoordinate,
+      dropoffCoordinate: this.dropoffCoordinate,
+      pickupDetails: this.cloneAddressDetails(this.pickupDetails),
+      dropoffDetails: this.cloneAddressDetails(this.dropoffDetails),
+      stopAddresses: this.stopAddresses,
+      stopCoordinates: this.stopCoordinates,
+      stopDetails: this.stopDetails.map((details) => this.cloneAddressDetails(details)),
+      scheduleMode: this.scheduleMode,
+      scheduledAt: this.scheduledAt,
+      activeMobileMode: this.activeMobileMode,
+      selectedMobileVehicleId: this.selectedMobileVehicleId,
+      selectedDeliveryPackageId: this.selectedDeliveryPackageId,
+      dropoffPromotedFromStop: this.dropoffPromotedFromStop,
+    };
+
+    sessionStorage.setItem(GM_STORAGE_KEYS.homeRouteDraft, JSON.stringify(draft));
+  }
+
+  private restoreRouteDraft(): boolean {
+    if (typeof sessionStorage === 'undefined') {
+      return false;
+    }
+
+    try {
+      const draft = JSON.parse(sessionStorage.getItem(GM_STORAGE_KEYS.homeRouteDraft) ?? 'null') as GmHomeRouteDraft | null;
+      if (!draft || !this.hasMeaningfulRouteDraft(draft)) {
+        return false;
+      }
+
+      this.pickupAddress = draft.pickupAddress ?? '';
+      this.dropoffAddress = draft.dropoffAddress ?? '';
+      this.pickupCoordinate = draft.pickupCoordinate;
+      this.dropoffCoordinate = draft.dropoffCoordinate;
+      this.pickupDetails = this.normalizeAddressDetails(draft.pickupDetails);
+      this.dropoffDetails = this.normalizeAddressDetails(draft.dropoffDetails);
+      this.stopAddresses = Array.isArray(draft.stopAddresses) ? draft.stopAddresses : [];
+      this.stopCoordinates = this.stopAddresses.map((_, index) => draft.stopCoordinates?.[index] ?? undefined);
+      this.stopDetails = this.stopAddresses.map((_, index) => this.normalizeAddressDetails(draft.stopDetails?.[index]));
+      this.stopSuggestions = this.stopAddresses.map(() => []);
+      this.stopSearchTimers.forEach((timer) => clearTimeout(timer));
+      this.stopSearchTimers = this.stopAddresses.map(() => undefined);
+      this.dropoffPromotedFromStop = Boolean(draft.dropoffPromotedFromStop);
+
+      if (draft.scheduleMode === 'scheduled' && draft.scheduledAt) {
+        this.scheduleMode = 'scheduled';
+        this.scheduledAt = draft.scheduledAt;
+      } else {
+        this.scheduleMode = 'now';
+        this.scheduledAt = '';
+      }
+
+      if (draft.activeMobileMode === 'delivery' || draft.activeMobileMode === 'ride') {
+        this.activeMobileMode = draft.activeMobileMode;
+      }
+      if (draft.selectedMobileVehicleId && this.activeMobileVehicles.some((vehicle) => vehicle.id === draft.selectedMobileVehicleId)) {
+        this.selectedMobileVehicleId = draft.selectedMobileVehicleId;
+      }
+      if (draft.selectedDeliveryPackageId && this.deliveryPackages.some((item) => item.id === draft.selectedDeliveryPackageId)) {
+        this.selectedDeliveryPackageId = draft.selectedDeliveryPackageId;
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private hasMeaningfulRouteDraft(draft: GmHomeRouteDraft): boolean {
+    const pickupAddress = draft.pickupAddress?.trim() ?? '';
+    const dropoffAddress = draft.dropoffAddress?.trim() ?? '';
+    const stopAddresses = draft.stopAddresses ?? [];
+    const hasPickupAddress = Boolean(pickupAddress && pickupAddress !== 'Đang lấy địa chỉ hiện tại...' && pickupAddress !== 'Từ');
+    return Boolean(
+      hasPickupAddress ||
+        dropoffAddress ||
+        draft.pickupCoordinate ||
+        draft.dropoffCoordinate ||
+        stopAddresses.some((address) => address.trim()),
+    );
+  }
+
+  private normalizeAddressDetails(details?: Partial<GmHomeAddressDetails> | null): GmHomeAddressDetails {
+    return {
+      unit: details?.unit ?? '',
+      phone: details?.phone ?? '',
+      contactName: details?.contactName ?? '',
+      note: details?.note ?? '',
+      saveAddress: Boolean(details?.saveAddress),
+    };
+  }
+
   private searchAddress(field: 'pickup' | 'dropoff', query: string): void {
     if (query.trim().length < 2) {
       if (field === 'pickup') {
@@ -1495,7 +1713,7 @@ export class GmHomePage implements OnInit, OnDestroy {
 
   private getRoutePointPlaceholder(index: number): string {
     if (index === 0) {
-      return 'Từ';
+      return 'Điểm lấy hàng';
     }
     if (index === this.stopAddresses.length + 1) {
       return this.stopAddresses.length ? 'Điểm cuối' : 'Đến';
@@ -1632,7 +1850,7 @@ export class GmHomePage implements OnInit, OnDestroy {
   }
 
   private rememberConfirmedAddressHistory(result: GmAddressSearchResult, details: GmHomeAddressDetails): void {
-    if (!result.coordinate) {
+    if (!result.coordinate || this.isPlaceholderAddress(result.address)) {
       return;
     }
 
@@ -1671,7 +1889,7 @@ export class GmHomePage implements OnInit, OnDestroy {
         sessionStorage.getItem(GM_STORAGE_KEYS.confirmedAddressHistory) ?? '[]',
       ) as GmHomeConfirmedAddressHistoryItem[];
       this.confirmedAddressHistory = items
-        .filter((item) => Boolean(item.address && item.coordinate))
+        .filter((item) => Boolean(item.address && item.coordinate) && !this.isPlaceholderAddress(item.address))
         .map((item) => ({
           ...item,
           details: {
@@ -1699,6 +1917,11 @@ export class GmHomePage implements OnInit, OnDestroy {
     const lat = result.coordinate?.lat ?? 0;
     const lng = result.coordinate?.lng ?? 0;
     return `${result.address.trim().toLowerCase()}|${Number(lat).toFixed(6)}|${Number(lng).toFixed(6)}`;
+  }
+
+  private isPlaceholderAddress(address: string): boolean {
+    const normalized = address.trim().toLowerCase();
+    return normalized === 'nhập điểm lấy' || normalized === 'nhap diem lay';
   }
 
   private loadSavedAddresses(): void {

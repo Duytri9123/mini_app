@@ -1,4 +1,4 @@
-export type GmVehicleType = 'motorbike' | 'car' | 'van' | 'truck';
+export type GmVehicleType = 'motorbike' | 'car' | 'bagac' | 'van' | 'truck';
 
 export interface GmVehicle {
   id: string;

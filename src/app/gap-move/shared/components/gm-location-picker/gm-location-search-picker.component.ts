@@ -46,4 +46,8 @@ export class GmLocationSearchPickerComponent {
     this.queryChange.emit(value);
     this.queryInput.emit();
   }
+
+  clearQuery(): void {
+    this.updateQuery('');
+  }
 }

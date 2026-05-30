@@ -79,6 +79,7 @@ interface GmDeliveryServiceOption {
   subtitle: string;
   spriteClass: string;
   price: number;
+  vehicleType?: GmVehicleType;
 }
 
 type GmPromoOffer = {
@@ -164,7 +165,13 @@ export class GmBookingPage implements OnInit, OnDestroy {
   isPaymentSheetOpen = false;
   isPromoSheetOpen = false;
   isScheduleSheetOpen = false;
+  isConfirmSheetOpen = false;
+  isChildModalActive = false;
+  serviceSheetAutoOpened = false;
+  private _cachedDeliveryServiceOptions: GmDeliveryServiceOption[] = [];
+  private _lastEstimateKey = '';
   pendingDeliveryServiceId: GmBookingType = this.type;
+  pendingVehicleType: GmVehicleType = this.vehicleType;
   selectedPromoId = '';
   promoTab: 'code' | 'vpoint' = 'code';
   mapSearchQuery = '';
@@ -377,6 +384,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.loadConfirmedAddressHistory();
     this.loadSavedAddresses();
     this.selectedDrawerItem = this.drawerGroups[0].items.find((item) => item.type === this.type) ?? this.drawerGroups[0].items[0];
+    this.checkAndOpenServiceSheet();
   }
 
   ngOnDestroy(): void {
@@ -393,18 +401,104 @@ export class GmBookingPage implements OnInit, OnDestroy {
     return this.services.find((service) => service.id === this.type) ?? this.services[0];
   }
 
+  getServiceEstimateById(id: GmBookingType): number {
+    const service = this.services.find((s) => s.id === id) ?? this.services[0];
+    return this.getServiceEstimate(service);
+  }
+
   get deliveryServiceOptions(): GmDeliveryServiceOption[] {
-    return this.services.map((service) => ({
-      id: service.id,
-      title: service.title,
-      subtitle: service.subtitle,
-      spriteClass: this.serviceSpriteClass(service),
-      price: this.getServiceEstimate(service),
-    }));
+    const key = `${this.pickupAddress}_${this.dropoffAddress}_${this.promoCode}_${this.selectedAdditionalServices.join(',')}_${JSON.stringify(this.porterOptions)}`;
+    if (key === this._lastEstimateKey && this._cachedDeliveryServiceOptions.length > 0) {
+      return this._cachedDeliveryServiceOptions;
+    }
+
+    const bikeEstimate = this.getServiceEstimateById('delivery');
+    
+    const vanEstimate = calculateGapMovePrice({
+      type: 'truck',
+      vehicleType: 'van',
+      distanceKm: this.estimateDistanceFor('truck', 'van'),
+      durationMin: this.estimateDurationFor('truck', 'van'),
+      voucherDiscount: this.promoCode.trim() ? 10000 : 0,
+      porterOptions: this.porterOptions,
+      additionalServiceCount: this.selectedAdditionalServices.filter((item) => item !== 'porter').length,
+    }).finalAmount;
+
+    const truckEstimate = calculateGapMovePrice({
+      type: 'truck',
+      vehicleType: 'truck',
+      distanceKm: this.estimateDistanceFor('truck', 'truck'),
+      durationMin: this.estimateDurationFor('truck', 'truck'),
+      voucherDiscount: this.promoCode.trim() ? 10000 : 0,
+      porterOptions: this.porterOptions,
+      additionalServiceCount: this.selectedAdditionalServices.filter((item) => item !== 'porter').length,
+    }).finalAmount;
+
+    const bagacEstimate = calculateGapMovePrice({
+      type: 'truck',
+      vehicleType: 'bagac',
+      distanceKm: this.estimateDistanceFor('truck', 'bagac'),
+      durationMin: this.estimateDurationFor('truck', 'bagac'),
+      voucherDiscount: this.promoCode.trim() ? 10000 : 0,
+      porterOptions: this.porterOptions,
+      additionalServiceCount: this.selectedAdditionalServices.filter((item) => item !== 'porter').length,
+    }).finalAmount;
+
+    this._lastEstimateKey = key;
+    this._cachedDeliveryServiceOptions = [
+      {
+        id: 'delivery' as GmBookingType,
+        title: 'Xe máy',
+        subtitle: 'Hàng nhỏ, gọn nhẹ, giao nhanh',
+        spriteClass: 'gm-vehicle-sprite-bike',
+        price: bikeEstimate,
+        vehicleType: 'motorbike',
+      },
+      {
+        id: 'truck' as GmBookingType,
+        title: 'Xe ba gác',
+        subtitle: 'Hàng cồng kềnh, vật liệu, đồ gỗ',
+        spriteClass: 'gm-vehicle-sprite-bagac',
+        price: bagacEstimate,
+        vehicleType: 'bagac',
+      },
+      {
+        id: 'truck' as GmBookingType,
+        title: 'Xe van',
+        subtitle: 'Hàng trung bình, cần kín mưa',
+        spriteClass: 'gm-vehicle-sprite-van',
+        price: vanEstimate,
+        vehicleType: 'van',
+      },
+      {
+        id: 'truck' as GmBookingType,
+        title: 'Xe tải',
+        subtitle: 'Hàng cồng kềnh, chuyển trọn gói',
+        spriteClass: 'gm-vehicle-sprite-truck',
+        price: truckEstimate,
+        vehicleType: 'truck',
+      }
+    ];
+
+    return this._cachedDeliveryServiceOptions;
   }
 
   get selectedDeliveryService(): GmDeliveryServiceOption {
-    return this.deliveryServiceOptions.find((service) => service.id === this.type) ?? this.deliveryServiceOptions[0];
+    return this.deliveryServiceOptions.find((service) => service.id === this.type && (!service.vehicleType || service.vehicleType === this.vehicleType)) ?? this.deliveryServiceOptions[0];
+  }
+
+  get pendingDeliveryService(): GmDeliveryServiceOption {
+    return (
+      this.deliveryServiceOptions.find(
+        (service) =>
+          service.id === this.pendingDeliveryServiceId &&
+          (!service.vehicleType || service.vehicleType === this.pendingVehicleType),
+      ) ?? this.deliveryServiceOptions[0]
+    );
+  }
+
+  get pendingDeliveryServicePrice(): string {
+    return this.formatAmount(this.pendingDeliveryService?.price ?? 0);
   }
 
   get hasRouteLocations(): boolean {
@@ -447,11 +541,57 @@ export class GmBookingPage implements OnInit, OnDestroy {
     if (this.paymentMethod === 'wallet') {
       return 'Thẻ E-Green';
     }
+    if (this.type === 'ride') {
+      return 'Tiền mặt';
+    }
     return this.receiverPays ? 'Người nhận trả tiền' : 'Người gửi trả tiền';
   }
 
   get promoFooterLabel(): string {
-    return this.selectedPromoId ? 'Đã chọn ưu đãi' : 'Ưu đãi';
+    const selectedCode = (this.selectedPromoId || this.promoCode).trim().toUpperCase();
+    return selectedCode || 'Ưu đãi';
+  }
+
+  get promoActionLabel(): string {
+    return this.promoCode.trim() || this.selectedPromoId ? 'Áp dụng ưu đãi' : 'Bỏ qua ưu đãi';
+  }
+
+  get scheduleFooterLabel(): string {
+    if (this.scheduleMode === 'scheduled' && this.scheduledAt) {
+      return this.formatScheduleLabel(this.scheduledAt);
+    }
+
+    return 'Ngay bây giờ';
+  }
+
+  get scheduleDraftLabel(): string {
+    return this.scheduledAt ? this.formatScheduleLabel(this.scheduledAt) : 'Chọn thời gian';
+  }
+
+  get minScheduleDateTime(): string {
+    return this.toDateTimeLocal(new Date(Date.now() + 15 * 60 * 1000));
+  }
+
+  get minScheduleDate(): string {
+    return this.minScheduleDateTime.slice(0, 10);
+  }
+
+  get scheduledDate(): string {
+    return this.scheduledAt ? this.scheduledAt.slice(0, 10) : '';
+  }
+
+  set scheduledDate(value: string) {
+    const time = this.scheduledTime || '08:00';
+    this.scheduledAt = value ? `${value}T${time}` : '';
+  }
+
+  get scheduledTime(): string {
+    return this.scheduledAt && this.scheduledAt.length >= 16 ? this.scheduledAt.slice(11, 16) : '';
+  }
+
+  set scheduledTime(value: string) {
+    const date = this.scheduledDate || this.minScheduleDate;
+    this.scheduledAt = value ? `${date}T${value}` : (this.scheduledDate ? `${date}T08:00` : '');
   }
 
   get visibleAdditionalServiceOptions(): GmAdditionalServiceOption[] {
@@ -507,14 +647,30 @@ export class GmBookingPage implements OnInit, OnDestroy {
     return indexes;
   }
 
+  private _cachedStopCoordinates: GmCoordinate[] = [];
+  private _cachedStopIndexes: number[] = [];
+  private _lastStopCoordinatesKey = '';
+
+  private updateStopCoordinatesCache(): void {
+    const key = JSON.stringify(this.stopCoordinates);
+    if (key === this._lastStopCoordinatesKey) {
+      return;
+    }
+    this._lastStopCoordinatesKey = key;
+    this._cachedStopCoordinates = this.stopCoordinates.filter((coordinate): coordinate is GmCoordinate => Boolean(coordinate));
+    this._cachedStopIndexes = this.stopCoordinates
+      .map((coordinate, index) => (coordinate ? index : null))
+      .filter((index): index is number => index !== null);
+  }
+
   get routeStopCoordinates(): GmCoordinate[] {
-    return this.stopCoordinates.filter((coordinate): coordinate is GmCoordinate => Boolean(coordinate));
+    this.updateStopCoordinatesCache();
+    return this._cachedStopCoordinates;
   }
 
   get routeStopIndexes(): number[] {
-    return this.stopCoordinates
-      .map((coordinate, index) => (coordinate ? index : null))
-      .filter((index): index is number => index !== null);
+    this.updateStopCoordinatesCache();
+    return this._cachedStopIndexes;
   }
 
   get pendingMapAddress(): string {
@@ -532,7 +688,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   get mapSearchPlaceholder(): string {
     if (this.activeAddressField === 'pickup') {
-      return 'Từ';
+      return '';
     }
     if (this.activeAddressField === 'dropoff') {
       return this.stopAddresses.length ? 'Điểm cuối' : 'Đến';
@@ -592,11 +748,115 @@ export class GmBookingPage implements OnInit, OnDestroy {
   }
 
   get estimateDistanceKm(): number {
-    return this.estimateDistanceFor(this.type, this.vehicleType);
+    return this.estimateDistanceFor(this.type, this.vehicleType) + this.routeDetourKm;
   }
 
   get estimateDurationMin(): number {
-    return this.estimateDurationFor(this.type, this.vehicleType);
+    return this.estimateDurationFor(this.type, this.vehicleType) + Math.ceil(this.routeDetourKm * 3.6);
+  }
+
+  get routeDetourKm(): number {
+    const points = this.orderedRoutePoints;
+    if (points.length < 4) {
+      return 0;
+    }
+
+    const start = points[0];
+    const end = points[points.length - 1];
+    const waypoints = points.slice(1, points.length - 1);
+
+    const currentDistance = this.routeTotalDistance(points);
+    const optimalDistance = this.optimalRouteDistance(start, end, waypoints);
+    const detour = currentDistance - optimalDistance;
+    return detour > 0.1 ? Math.round(detour * 10) / 10 : 0;
+  }
+
+  get hasRouteDetourFee(): boolean {
+    return this.routeDetourKm > 0;
+  }
+
+  private get orderedRoutePoints(): GmCoordinate[] {
+    const points: GmCoordinate[] = [];
+    if (this.pickupCoordinate) {
+      points.push(this.pickupCoordinate);
+    }
+    this.stopCoordinates.forEach((coordinate) => {
+      if (coordinate) {
+        points.push(coordinate);
+      }
+    });
+    if (this.dropoffCoordinate) {
+      points.push(this.dropoffCoordinate);
+    }
+    return points;
+  }
+
+  private routeTotalDistance(points: GmCoordinate[]): number {
+    let total = 0;
+    for (let i = 0; i < points.length - 1; i += 1) {
+      total += this.haversineKm(points[i], points[i + 1]);
+    }
+    return total;
+  }
+
+  private optimalRouteDistance(start: GmCoordinate, end: GmCoordinate, waypoints: GmCoordinate[]): number {
+    if (!waypoints.length) {
+      return this.haversineKm(start, end);
+    }
+
+    let best = Number.POSITIVE_INFINITY;
+    const permute = (remaining: GmCoordinate[], ordered: GmCoordinate[]): void => {
+      if (!remaining.length) {
+        best = Math.min(best, this.routeTotalDistance([start, ...ordered, end]));
+        return;
+      }
+      for (let i = 0; i < remaining.length; i += 1) {
+        const next = remaining[i];
+        const rest = [...remaining.slice(0, i), ...remaining.slice(i + 1)];
+        permute(rest, [...ordered, next]);
+      }
+    };
+
+    if (waypoints.length <= 6) {
+      permute(waypoints, []);
+      return best;
+    }
+    return this.nearestNeighborDistance(start, end, waypoints);
+  }
+
+  private nearestNeighborDistance(start: GmCoordinate, end: GmCoordinate, waypoints: GmCoordinate[]): number {
+    const remaining = [...waypoints];
+    const ordered: GmCoordinate[] = [];
+    let current = start;
+    while (remaining.length) {
+      let nearestIndex = 0;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+      remaining.forEach((point, index) => {
+        const distance = this.haversineKm(current, point);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestIndex = index;
+        }
+      });
+      current = remaining[nearestIndex];
+      ordered.push(current);
+      remaining.splice(nearestIndex, 1);
+    }
+    return this.routeTotalDistance([start, ...ordered, end]);
+  }
+
+  private haversineKm(from: GmCoordinate, to: GmCoordinate): number {
+    const earthRadiusKm = 6371;
+    const toRad = (value: number): number => (value * Math.PI) / 180;
+    const dLat = toRad(to.lat - from.lat);
+    const dLng = toRad(to.lng - from.lng);
+    const lat1 = toRad(from.lat);
+    const lat2 = toRad(to.lat);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return earthRadiusKm * c;
   }
 
   get priceEstimate(): GmPriceBreakdown {
@@ -609,6 +869,19 @@ export class GmBookingPage implements OnInit, OnDestroy {
       porterOptions: this.porterOptions,
       additionalServiceCount: this.selectedAdditionalServices.filter((item) => item !== 'porter').length,
     });
+  }
+
+  getVehicleEstimatePrice(vehicleId: GmVehicleType): number {
+    const estimate = calculateGapMovePrice({
+      type: this.type,
+      vehicleType: vehicleId,
+      distanceKm: this.estimateDistanceFor(this.type, vehicleId),
+      durationMin: this.estimateDurationFor(this.type, vehicleId),
+      voucherDiscount: this.promoCode.trim() ? 10000 : 0,
+      porterOptions: this.porterOptions,
+      additionalServiceCount: this.selectedAdditionalServices.filter((item) => item !== 'porter').length,
+    });
+    return estimate.finalAmount;
   }
 
   selectService(type: GmBookingType): void {
@@ -648,6 +921,13 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
     if (service.id === 'porter') {
       this.porterOptions.enabled = !selected;
+    }
+  }
+
+  toggleAdditionalServiceById(id: GmAdditionalServiceKey): void {
+    const option = this.additionalServiceOptions.find((o) => o.id === id);
+    if (option) {
+      this.toggleAdditionalService(option);
     }
   }
 
@@ -737,6 +1017,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
     this.selectedPromoId = offer.id;
     this.promoCode = offer.id;
+    this.closePromoSheet();
   }
 
   skipPromoAndContinue(): void {
@@ -745,12 +1026,35 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.closePromoSheet();
   }
 
+  applyPromoAndContinue(): void {
+    const code = this.promoCode.trim().toUpperCase();
+    if (!code) {
+      this.skipPromoAndContinue();
+      return;
+    }
+
+    this.promoCode = code;
+    this.selectedPromoId = this.promoOffers.some((offer) => offer.id === code) ? code : '';
+    this.closePromoSheet();
+  }
+
   openScheduleSheet(): void {
+    if (!this.scheduledAt) {
+      this.scheduledAt = this.getDefaultScheduledAt();
+    }
     this.isScheduleSheetOpen = true;
   }
 
   closeScheduleSheet(): void {
     this.isScheduleSheetOpen = false;
+  }
+
+  onChildModalStateChange(isActive: boolean): void {
+    this.isChildModalActive = isActive;
+  }
+
+  openInvoiceInfo(): void {
+    this.toastService.info('Tính năng xuất hóa đơn VAT đang được phát triển!');
   }
 
   confirmScheduleBooking(): void {
@@ -761,8 +1065,16 @@ export class GmBookingPage implements OnInit, OnDestroy {
     this.closeScheduleSheet();
   }
 
+  selectDeliveryOption(option: GmDeliveryServiceOption): void {
+    this.selectService(option.id);
+    if (option.vehicleType) {
+      this.vehicleType = option.vehicleType;
+    }
+  }
+
   openDeliveryServiceSheet(): void {
     this.pendingDeliveryServiceId = this.type;
+    this.pendingVehicleType = this.vehicleType;
     this.isDeliveryServiceSheetOpen = true;
   }
 
@@ -772,14 +1084,20 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   selectPendingDeliveryService(service: GmDeliveryServiceOption): void {
     this.pendingDeliveryServiceId = service.id;
+    if (service.vehicleType) {
+      this.pendingVehicleType = service.vehicleType;
+    }
   }
 
   confirmDeliveryServiceSelection(): void {
-    const selectedService = this.deliveryServiceOptions.find((service) => service.id === this.pendingDeliveryServiceId);
+    const selectedService = this.deliveryServiceOptions.find(
+      (service) => service.id === this.pendingDeliveryServiceId &&
+                   (!service.vehicleType || service.vehicleType === this.pendingVehicleType)
+    );
     this.closeDeliveryServiceSheet();
 
     if (selectedService) {
-      this.selectService(selectedService.id);
+      this.selectDeliveryOption(selectedService);
     }
   }
 
@@ -895,7 +1213,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   useCurrentLocation(): void {
     if (!navigator.geolocation) {
-      this.pickupAddress = 'Nhập điểm lấy hoặc chọn trên bản đồ';
+      this.pickupAddress = '';
       return;
     }
 
@@ -920,7 +1238,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
       },
       () => {
         this.isLocating = false;
-        this.pickupAddress = 'Nhập điểm lấy hoặc chọn trên bản đồ';
+        this.pickupAddress = '';
       },
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
     );
@@ -1056,21 +1374,22 @@ export class GmBookingPage implements OnInit, OnDestroy {
   }
 
   selectMapSavedAddress(address: GmCustomerAddress): void {
+    const details = this.customerAddressService.getAddressDetails(address);
     const selection = {
       address: address.address,
       coordinate: this.customerAddressService.toCoordinate(address),
     };
-    this.pendingMapSelection = selection;
-    this.mapSearchQuery = selection.address;
-    this.mapSearchResults = [];
     this.mapAddressDetails = {
-      unit: '',
-      phone: address.phone || this.mapAddressDetails.phone,
-      contactName: address.contactName || address.contact_name || this.mapAddressDetails.contactName,
-      note: address.note || this.mapAddressDetails.note,
+      unit: details.unit,
+      phone: details.phone,
+      contactName: details.contactName,
+      note: details.note,
       saveAddress: false,
     };
-    this.openMapPickerMapMode();
+    this.applyActiveAddressSelection(selection);
+    this.applySavedAddressContactDetails(details);
+    this.rememberConfirmedAddressHistory(selection);
+    this.closeMapPicker();
   }
 
   selectCurrentMapLocation(): void {
@@ -1254,6 +1573,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
     const map: Record<GmVehicleType, string> = {
       motorbike: 'gm-vehicle-sprite-bike',
       car: 'gm-vehicle-sprite-car',
+      bagac: 'gm-vehicle-sprite-bagac',
       van: 'gm-vehicle-sprite-van',
       truck: 'gm-vehicle-sprite-truck',
     };
@@ -1265,7 +1585,59 @@ export class GmBookingPage implements OnInit, OnDestroy {
     return service ? this.serviceSpriteClass(service) : '';
   }
 
+  get bookingValidationError(): string | null {
+    if (!this.pickupAddress.trim()) {
+      return this.type === 'porter' ? 'Vui lòng chọn điểm bê hàng' : 'Vui lòng chọn điểm lấy/đón hàng';
+    }
+    if (!this.dropoffAddress.trim()) {
+      return this.type === 'porter' ? 'Vui lòng chọn điểm hoàn tất' : 'Vui lòng chọn điểm giao/đến';
+    }
+    if (this.type !== 'ride' && this.type !== 'porter') {
+      if (!this.packageInfo.trim()) {
+        return 'Vui lòng chọn loại hàng hoá';
+      }
+    }
+    if (this.scheduleMode === 'scheduled' && !this.scheduledAt) {
+      return 'Vui lòng chọn thời gian hẹn giờ';
+    }
+    return null;
+  }
+
+  get canSubmitBooking(): boolean {
+    return this.bookingValidationError === null;
+  }
+
+  get confirmTotalLabel(): string {
+    return this.formatAmount(this.priceEstimate.finalAmount);
+  }
+
   submit(): void {
+    const error = this.bookingValidationError;
+    if (error) {
+      this.toastService.error(error);
+      return;
+    }
+    this.openConfirmSheet();
+  }
+
+  openConfirmSheet(): void {
+    this.isConfirmSheetOpen = true;
+  }
+
+  closeConfirmSheet(): void {
+    this.isConfirmSheetOpen = false;
+  }
+
+  confirmPlaceOrder(): void {
+    if (this.bookingValidationError) {
+      this.toastService.error(this.bookingValidationError);
+      return;
+    }
+    this.closeConfirmSheet();
+    this.placeOrder();
+  }
+
+  private placeOrder(): void {
     const porterOptions = this.porterOptions.enabled ? this.porterOptions : undefined;
     const additionalServices = this.porterOptions.enabled
       ? Array.from(new Set([...this.selectedAdditionalServices, 'porter' as const]))
@@ -1341,6 +1713,9 @@ export class GmBookingPage implements OnInit, OnDestroy {
     if (vehicleType === 'truck') {
       return 12.8;
     }
+    if (vehicleType === 'bagac') {
+      return 9.5;
+    }
     if (vehicleType === 'van') {
       return 8.6;
     }
@@ -1362,7 +1737,11 @@ export class GmBookingPage implements OnInit, OnDestroy {
 
   private addConfirmedLocation(locations: GmAddressSearchResult[], address: string, coordinate?: GmCoordinate): void {
     const normalizedAddress = address.trim();
-    if (!normalizedAddress || locations.some((location) => location.address === normalizedAddress)) {
+    if (
+      !normalizedAddress ||
+      this.isPlaceholderAddress(normalizedAddress) ||
+      locations.some((location) => location.address === normalizedAddress)
+    ) {
       return;
     }
 
@@ -1370,6 +1749,11 @@ export class GmBookingPage implements OnInit, OnDestroy {
       address: normalizedAddress,
       coordinate: coordinate ? { ...coordinate, address: coordinate.address ?? normalizedAddress } : undefined,
     });
+  }
+
+  private isPlaceholderAddress(address: string): boolean {
+    const normalized = address.trim().toLowerCase();
+    return normalized === 'nhập điểm lấy' || normalized === 'nhap diem lay';
   }
 
   private applyActiveAddressSelection(result: GmAddressSearchResult): void {
@@ -1391,7 +1775,37 @@ export class GmBookingPage implements OnInit, OnDestroy {
   private getDefaultScheduledAt(): string {
     const scheduledAt = new Date();
     scheduledAt.setHours(scheduledAt.getHours() + 1, 0, 0, 0);
-    return new Date(scheduledAt.getTime() - scheduledAt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    return this.toDateTimeLocal(scheduledAt);
+  }
+
+  private toDateTimeLocal(date: Date): string {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  }
+
+  private formatScheduleLabel(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return 'Đặt lịch';
+    }
+
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const isSameDay = (left: Date, right: Date): boolean =>
+      left.getDate() === right.getDate() &&
+      left.getMonth() === right.getMonth() &&
+      left.getFullYear() === right.getFullYear();
+
+    const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    if (isSameDay(date, today)) {
+      return `Hôm nay, ${time}`;
+    }
+    if (isSameDay(date, tomorrow)) {
+      return `Ngày mai, ${time}`;
+    }
+
+    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}, ${time}`;
   }
 
   private applyMapAddressDetails(result: GmAddressSearchResult): void {
@@ -1424,8 +1838,20 @@ export class GmBookingPage implements OnInit, OnDestroy {
     }
   }
 
+  private applySavedAddressContactDetails(details: { phone: string; contactName: string; note: string }): void {
+    if (this.activeAddressField === 'pickup') {
+      this.senderName = details.contactName || this.senderName;
+      this.senderPhone = details.phone || this.senderPhone;
+      return;
+    }
+
+    this.receiverName = details.contactName || this.receiverName;
+    this.receiverPhone = details.phone || this.receiverPhone;
+    this.note = details.note || this.note;
+  }
+
   private rememberConfirmedAddressHistory(result: GmAddressSearchResult): void {
-    if (!result.coordinate) {
+    if (!result.coordinate || this.isPlaceholderAddress(result.address)) {
       return;
     }
 
@@ -1464,7 +1890,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
         sessionStorage.getItem(GM_STORAGE_KEYS.confirmedAddressHistory) ?? '[]',
       ) as GmBookingConfirmedAddressHistoryItem[];
       this.confirmedAddressHistory = items
-        .filter((item) => Boolean(item.address && item.coordinate))
+        .filter((item) => Boolean(item.address && item.coordinate) && !this.isPlaceholderAddress(item.address))
         .map((item) => ({
           ...item,
           details: {
@@ -1513,12 +1939,20 @@ export class GmBookingPage implements OnInit, OnDestroy {
     return noteParts.join(' | ');
   }
 
+  checkAndOpenServiceSheet(): void {
+    if (this.hasRouteLocations && !this.isDeliveryServiceSheetOpen && !this.serviceSheetAutoOpened) {
+      this.serviceSheetAutoOpened = true;
+      this.openDeliveryServiceSheet();
+    }
+  }
+
   private applyPickup(result: GmAddressSearchResult): void {
     this.pickupAddress = result.address;
     if (result.coordinate) {
       this.pickupCoordinate = result.coordinate;
       this.locationService.updateLocation(result.coordinate);
     }
+    this.checkAndOpenServiceSheet();
   }
 
   private applyDropoff(result: GmAddressSearchResult): void {
@@ -1526,6 +1960,7 @@ export class GmBookingPage implements OnInit, OnDestroy {
     if (result.coordinate) {
       this.dropoffCoordinate = result.coordinate;
     }
+    this.checkAndOpenServiceSheet();
   }
 
   private applyStop(index: number, result: GmAddressSearchResult): void {
@@ -1729,6 +2164,6 @@ export class GmBookingPage implements OnInit, OnDestroy {
   }
 
   private isVehicleType(value: unknown): value is GmVehicleType {
-    return value === 'motorbike' || value === 'car' || value === 'van' || value === 'truck';
+    return value === 'motorbike' || value === 'car' || value === 'bagac' || value === 'van' || value === 'truck';
   }
 }

@@ -3,92 +3,290 @@
     <h2 class="flex items-center gap-2 text-base font-extrabold text-slate-950">
       <ion-icon name="cube-outline" class="text-xl text-slate-400"></ion-icon>
       <span>Thông tin hàng hoá<span class="text-[#ff5a00]">*</span></span>
-      <button type="button" aria-label="Xem chi tiết kích cỡ" (click)="showSizeDetailsModal = true" class="flex items-center">
-        <ion-icon name="information-circle-outline" class="text-lg text-[#008c95] hover:text-[#ff5a00] transition"></ion-icon>
+      <button type="button" aria-label="Xem chi tiết kích cỡ" (click)="openSizeDetailsModal()"
+        class="flex items-center">
+        <ion-icon name="information-circle-outline"
+          class="text-lg text-[#008c95] hover:text-[#ff5a00] transition"></ion-icon>
       </button>
     </h2>
-    <button type="button" class="text-sm font-extrabold text-[#ff5a00]">Xem hình ảnh</button>
+    <button type="button" class="flex h-8 w-8 items-center justify-center rounded-full text-slate-400"
+      aria-label="Thu gọn thông tin hàng hóa">
+      <ion-icon name="chevron-up-outline" class="text-lg"></ion-icon>
+    </button>
   </div>
 
   <div>
-    <div class="mb-2 flex items-end justify-between gap-3 cursor-pointer active:opacity-75 transition" (click)="showSizeDetailsModal = true">
-      <label class="text-sm font-extrabold text-slate-700 cursor-pointer">Kích cỡ <span class="text-[#ff5a00]">*</span></label>
-      <span class="min-w-0 truncate text-sm font-bold text-[#008c95] flex items-center gap-1 hover:text-[#ff5a00] transition">
-        {{ selectedCargoSizeDescription }}
-        <ion-icon name="chevron-forward-outline" class="text-xs"></ion-icon>
-      </span>
+    <div class="mb-3 flex items-center justify-between gap-3">
+      <label class="text-sm font-extrabold text-slate-700 cursor-pointer" (click)="openSizeDetailsModal()">Kích cỡ
+        <span class="text-[#ff5a00]">*</span></label>
+      <button type="button"
+        class=" flex max-w-full items-center  gap-1 text-left text-sm font-bold text-[#ff5a00] active:opacity-75"
+        (click)="openSizeDetailsModal()">
+        <span class="truncate text-slate-600">{{ selectedCargoSizeDescription }}</span>
+        <ion-icon name="chevron-forward-outline" class="text-xs text-slate-500"></ion-icon>
+      </button>
     </div>
-    <swiper-container class="gm-cargo-size-swiper" slides-per-view="auto" space-between="8" free-mode="true">
+    <swiper-container class="gm-cargo-size-swiper" slides-per-view="auto" space-between="6" free-mode="true">
       <swiper-slide *ngFor="let size of cargoSizes">
-        <button
-          type="button"
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-sm font-bold transition active:scale-95"
+        <button type="button"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-bold transition active:scale-95"
           [ngClass]="selectedCargoSize === size.id ? 'border-[#ff5a00] bg-orange-50 text-[#ff5a00] shadow-sm shadow-orange-500/10' : 'border-slate-200 bg-white text-slate-900'"
-          (click)="selectCargoSize(size)"
-        >
+          (click)="selectCargoSize(size)">
           {{ size.id }}
         </button>
       </swiper-slide>
     </swiper-container>
   </div>
 
-  <label class="mt-4 block text-sm font-extrabold text-slate-700">
-    Khối lượng (kg) <span class="text-[#ff5a00]">*</span>
-    <input
-      type="number"
-      min="0"
-      name="weightKg"
-      [ngModel]="weightKg"
-      (ngModelChange)="weightKgChange.emit($event)"
-      class="mt-2 h-14 w-full rounded-xl border border-slate-200 px-4 text-base font-semibold outline-none focus:border-[#ff5a00]"
-    />
-  </label>
+  <div class="mt-3">
+    <label class="block text-sm font-extrabold text-slate-700">
+      Khối lượng (kg) <span class="text-[#ff5a00]">*</span>
+    </label>
+    <div class="mt-2 flex items-center gap-2">
+      <!-- Decrement Stepper -->
+      <button type="button"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-extrabold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 active:scale-90"
+        (click)="adjustWeight(-1)" aria-label="Giảm 1kg">
+        <ion-icon name="remove-outline" class="stroke-[3]"></ion-icon>
+      </button>
+
+      <!-- Sleek Input Field -->
+      <div class="relative flex-1">
+        <ion-icon name="scale-outline"
+          class="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400"></ion-icon>
+        <input type="number" min="0" step="0.1" name="weightKg" [ngModel]="weightKg" (ngModelChange)="setWeight($event)"
+          class="h-10 w-full rounded-xl border border-slate-200 pl-11 pr-12 text-center text-base font-extrabold text-slate-800 outline-none transition focus:border-[#ff5a00] focus:ring-4 focus:ring-orange-500/10"
+          placeholder="0" />
+        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-extrabold text-slate-400">kg</span>
+      </div>
+
+      <!-- Increment Stepper -->
+      <button type="button"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-extrabold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 active:scale-90"
+        (click)="adjustWeight(1)" aria-label="Tăng 1kg">
+        <ion-icon name="add-outline" class="stroke-[3]"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Quick Presets -->
+    <!-- <div class="mt-2 flex flex-wrap gap-1.5">
+      <button *ngFor="let preset of [1, 5, 10, 20, 50]" type="button"
+        class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-extrabold text-slate-600 transition hover:border-[#ff5a00] hover:text-[#ff5a00] active:scale-95"
+        (click)="adjustWeight(preset - (weightKg || 0))">
+        +{{ preset }} kg
+      </button>
+    </div> -->
+  </div>
 
   <div class="mt-4">
-    <label class="mb-2 block text-sm font-extrabold text-slate-700">Loại hàng hoá <span class="text-[#ff5a00]">*</span></label>
+    <label class="mb-2 block text-sm font-extrabold text-slate-700">Loại hàng hoá <span
+        class="text-[#ff5a00]">*</span></label>
     <swiper-container class="gm-cargo-type-swiper" slides-per-view="auto" space-between="8" free-mode="true">
-      <swiper-slide *ngFor="let cargoType of cargoTypes">
-        <button
-          type="button"
-          class="shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95"
-          [ngClass]="packageInfo === cargoType ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'"
-          (click)="selectCargoType(cargoType)"
-        >
-          {{ cargoType }}
+      <!-- Custom Individual Badges for each Selected Cargo Type -->
+      <swiper-slide *ngFor="let type of selectedCargoTypes">
+        <span
+          class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-orange-100 bg-orange-50/35 py-1.5 pl-3.5 pr-2 text-sm font-semibold text-[#ff5a00] transition hover:bg-orange-50/60 whitespace-nowrap">
+          <span class="truncate">{{ type }}</span>
+          <button type="button"
+            class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-100/80 text-[#ff5a00] transition hover:bg-[#ff5a00] hover:text-white active:scale-90"
+            (click)="removeCargoType(type)" aria-label="Xóa loại hàng hóa">
+            <ion-icon name="close-outline" class="text-xs"></ion-icon>
+          </button>
+        </span>
+      </swiper-slide>
+
+      <!-- Add Button -->
+      <swiper-slide>
+        <button type="button"
+          class="inline-flex items-center gap-1.5 rounded-full border border-dashed border-slate-300 bg-white px-4 py-1.5 text-sm font-extrabold text-slate-700 transition hover:border-[#ff5a00] hover:text-[#ff5a00] hover:bg-orange-50/5 active:scale-95 whitespace-nowrap"
+          (click)="openCargoTypePicker()">
+          <ion-icon name="add-outline" class="text-lg text-[#ff5a00]"></ion-icon>
+          <span>{{ selectedCargoTypes.length ? 'Thêm loại' : 'Thêm hàng hoá' }}</span>
         </button>
       </swiper-slide>
     </swiper-container>
   </div>
 
-  <!-- Size Details Modal -->
-  <div *ngIf="showSizeDetailsModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-    <div class="w-full max-w-sm rounded-[24px] bg-white p-5 shadow-2xl animate-fade-in relative z-[110]">
-      <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-base font-extrabold text-slate-900">Chi tiết kích cỡ hàng hóa</h3>
-        <button type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 active:scale-95 transition" (click)="showSizeDetailsModal = false">
-          <ion-icon name="close-outline" class="text-xl"></ion-icon>
+  <!-- Backdrop for Cargo Type Picker -->
+  <div *ngIf="isCargoTypePickerOpen"
+    class="fixed inset-0 z-[109] bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 lg:z-[105]"
+    (click)="closeCargoTypePicker()">
+  </div>
+
+  <section *ngIf="isCargoTypePickerOpen"
+    class="fixed inset-0 z-[110] flex flex-col overflow-hidden bg-white lg:left-1/2 lg:top-1/2 lg:h-[88vh] lg:max-h-[760px] lg:w-[390px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-[24px] lg:shadow-2xl">
+    <header class="grid grid-cols-[36px_minmax(0,1fr)_36px] items-center border-b border-slate-100 px-4 py-4">
+      <button type="button" class="flex h-9 w-9 items-center justify-center text-slate-950 active:scale-95"
+        aria-label="Quay lại" (click)="closeCargoTypePicker()">
+        <ion-icon name="chevron-back-outline" class="text-3xl"></ion-icon>
+      </button>
+      <h3 class="truncate text-center text-xl font-extrabold leading-tight text-slate-950">Chọn loại hàng hóa</h3>
+      <span class="text-right text-xs font-extrabold text-slate-400">{{ cargoTypes.length }}</span>
+    </header>
+
+    <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-24 pt-4">
+      <label
+        class="flex h-12 items-center gap-2 rounded-2xl bg-slate-100 px-3 transition focus-within:ring-2 focus-within:ring-orange-100">
+        <input name="cargoTypeSearch" [(ngModel)]="cargoTypeSearchQuery" placeholder="Tìm loại hàng hoá"
+          class="min-w-0 flex-1 border-0 bg-transparent text-base font-extrabold text-slate-800 outline-none placeholder:text-slate-400" />
+        <ion-icon name="search-outline" class="text-2xl text-slate-500"></ion-icon>
+      </label>
+
+      <h4 class="mb-3 mt-5 text-lg font-extrabold text-slate-950">Tất cả mặt hàng</h4>
+      <div class="divide-y divide-slate-100 border-y border-slate-100">
+        <button *ngFor="let cargoType of filteredCargoTypes" type="button"
+          class="flex min-h-[50px] w-full items-center gap-3 text-left active:bg-slate-50 px-1 py-1"
+          (click)="togglePendingCargoType(cargoType)">
+          <span class="min-w-0 flex-1 text-base font-semibold leading-6 text-slate-900">{{ cargoType }}</span>
+          <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition"
+            [ngClass]="isCargoTypePending(cargoType) ? 'border-[#ff5a00] bg-[#ff5a00] text-white shadow-sm' : 'border-slate-300 bg-white'">
+            <ion-icon *ngIf="isCargoTypePending(cargoType)" name="checkmark-outline"
+              class="text-base font-bold"></ion-icon>
+          </span>
         </button>
       </div>
 
-      <div class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
-        <div *ngFor="let size of cargoSizes" class="flex items-center justify-between rounded-xl border p-3 cursor-pointer transition"
-          [ngClass]="selectedCargoSize === size.id ? 'border-[#ff5a00] bg-orange-50/20' : 'border-slate-100 hover:bg-slate-50'"
-          (click)="selectCargoSize(size); showSizeDetailsModal = false">
-          <span class="flex h-9 w-9 items-center justify-center rounded-full text-xs font-black shrink-0"
-            [ngClass]="selectedCargoSize === size.id ? 'bg-[#ff5a00] text-white' : 'bg-slate-100 text-slate-700'">
-            {{ size.id }}
-          </span>
-          <div class="ml-3 flex-1 min-w-0">
-            <span class="block text-sm font-bold text-slate-900">Kích cỡ {{ size.id }}</span>
-            <span class="block text-xs font-semibold text-slate-500 truncate">{{ size.description }}</span>
+      <p *ngIf="!filteredCargoTypes.length" class="py-8 text-center text-sm font-semibold text-slate-400">Không tìm thấy
+        loại hàng hoá phù hợp.</p>
+    </div>
+
+    <div class="absolute inset-x-0 bottom-0 border-t border-slate-100 bg-white px-4 pb-4 pt-3">
+      <button type="button"
+        class="h-12 w-full rounded-2xl bg-[#ff5a00] text-base font-extrabold text-white shadow-lg shadow-orange-500/20 transition active:scale-[0.99]"
+        (click)="confirmCargoTypeSelection()">
+        Xác nhận (Đã chọn {{ pendingCargoTypes.length }})
+      </button>
+    </div>
+  </section>
+
+  <!-- Backdrop for Size Details Modal -->
+  <div *ngIf="showSizeDetailsModal"
+    class="fixed inset-0 z-[119] bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 lg:z-[115]"
+    (click)="closeSizeDetailsModal()">
+  </div>
+
+  <!-- Size Details Modal (Redesigned as bottom sheet / centered card with 3D illustration and slider) -->
+  <section *ngIf="showSizeDetailsModal"
+    class="fixed inset-0 z-[120] flex flex-col overflow-hidden bg-white lg:left-1/2 lg:top-1/2 lg:h-[88vh] lg:max-h-[760px] lg:w-[390px] lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-[24px] lg:shadow-2xl">
+    <!-- Header -->
+    <header class="grid grid-cols-[36px_minmax(0,1fr)_36px] items-center border-b border-slate-100 px-4 py-4 shrink-0">
+      <button type="button" class="flex h-9 w-9 items-center justify-center text-slate-950 active:scale-95 transition"
+        aria-label="Đóng" (click)="closeSizeDetailsModal()">
+        <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+      </button>
+      <h3 class="truncate text-center text-lg font-extrabold leading-tight text-slate-950">Kích cỡ hàng hoá</h3>
+      <span></span>
+    </header>
+
+    <!-- Content Area -->
+    <div class="min-h-0 flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-5">
+      <!-- Instruction -->
+      <p class="text-sm font-medium leading-relaxed text-slate-600">
+        Hãy chọn tổng kích thước của các gói hàng để Ahamove sắp xếp tài xế và xe phù hợp cho bạn.
+      </p>
+
+      <!-- Active Size Card Preview -->
+      <div
+        class="w-full rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50/40 to-orange-50/10 p-5 shadow-sm">
+        <div class="mb-4">
+          <h4 class="text-lg font-black text-slate-900">Size {{ selectedCargoSize }}</h4>
+          <p class="text-sm font-bold text-[#ff5a00]">{{ selectedCargoSizeDescription }}</p>
+        </div>
+
+        <!-- Dynamic Visual Box Illustration (Pure CSS + SVG) -->
+        <div
+          class="flex h-[200px] w-full items-center justify-center rounded-xl bg-slate-50 p-4 border border-slate-100/60 overflow-hidden relative">
+          <!-- Box dimensions visualizer -->
+          <div
+            class="gm-dynamic-box-container w-full h-full flex items-center justify-center transition-all duration-300"
+            [ngClass]="'gm-box-' + selectedCargoSize.toLowerCase()">
+            <!-- Animated Package box SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-40 h-40">
+              <!-- Drop shadow -->
+              <ellipse cx="100" cy="165" rx="70" ry="12" fill="#e2e8f0" opacity="0.8" />
+
+              <!-- 3D Box Drawings using dynamic properties -->
+              <!-- Left Face -->
+              <polygon points="100,150 40,120 40,65 100,95" fill="#f6ad55" class="transition-all duration-300" />
+              <polygon points="100,150 40,120 40,65 100,95" fill="#ed8936" opacity="0.15"
+                class="transition-all duration-300" />
+
+              <!-- Right Face -->
+              <polygon points="100,150 160,120 160,65 100,95" fill="#dd6b20" class="transition-all duration-300" />
+
+              <!-- Top Face -->
+              <polygon points="100,95 40,65 100,35 160,65" fill="#fbd38d" class="transition-all duration-300" />
+
+              <!-- Front Highlight line -->
+              <line x1="100" y1="95" x2="100" y2="150" stroke="#fbd38d" stroke-width="1.5" stroke-linecap="round"
+                opacity="0.7" />
+
+
+              <!-- Dimension Labels overlay -->
+              <!-- Width line & label -->
+              <g class="transition-all duration-300">
+                <path d="M 40 135 L 90 160" stroke="#718096" stroke-width="1" stroke-dasharray="3,3" />
+                <path d="M 40 135 L 43 133 M 40 135 L 44 138" stroke="#718096" stroke-width="1" />
+                <path d="M 90 160 L 87 162 M 90 160 L 86 157" stroke="#718096" stroke-width="1" />
+                <!-- Width Label Bubble -->
+                <rect x="52" y="138" width="22" height="13" rx="4" fill="white" stroke="#cbd5e0" stroke-width="1" />
+                <text x="63" y="148" text-anchor="middle" font-size="8" font-weight="900" fill="#2d3748">
+                  {{ selectedCargoSize === 'S' ? '25' : selectedCargoSize === 'M' ? '40' : selectedCargoSize === 'L' ?
+                  '50' : selectedCargoSize === 'XL' ? '60' : selectedCargoSize === '2XL' ? '80' : '100' }}
+                </text>
+              </g>
+
+              <!-- Length line & label -->
+              <g class="transition-all duration-300">
+                <path d="M 110 160 L 160 135" stroke="#718096" stroke-width="1" stroke-dasharray="3,3" />
+                <path d="M 110 160 L 113 162 M 110 160 L 114 157" stroke="#718096" stroke-width="1" />
+                <path d="M 160 135 L 157 133 M 160 135 L 156 138" stroke="#718096" stroke-width="1" />
+                <!-- Length Label Bubble -->
+                <rect x="124" y="138" width="22" height="13" rx="4" fill="white" stroke="#cbd5e0" stroke-width="1" />
+                <text x="135" y="148" text-anchor="middle" font-size="8" font-weight="900" fill="#2d3748">
+                  {{ selectedCargoSize === 'S' ? '32' : selectedCargoSize === 'M' ? '40' : selectedCargoSize === 'L' ?
+                  '50' : selectedCargoSize === 'XL' ? '60' : selectedCargoSize === '2XL' ? '80' : '100' }}
+                </text>
+              </g>
+
+              <!-- Height line & label -->
+              <g class="transition-all duration-300">
+                <path d="M 172 65 L 172 120" stroke="#718096" stroke-width="1" stroke-dasharray="3,3" />
+                <path d="M 172 65 L 170 68 M 172 65 L 174 68" stroke="#718096" stroke-width="1" />
+                <path d="M 172 120 L 170 117 M 172 120 L 174 117" stroke="#718096" stroke-width="1" />
+                <!-- Height Label Bubble -->
+                <rect x="178" y="85" width="22" height="13" rx="4" fill="white" stroke="#cbd5e0" stroke-width="1" />
+                <text x="189" y="95" text-anchor="middle" font-size="8" font-weight="900" fill="#2d3748">
+                  {{ selectedCargoSize === 'S' ? '12' : selectedCargoSize === 'M' ? '40' : selectedCargoSize === 'L' ?
+                  '50' : selectedCargoSize === 'XL' ? '60' : selectedCargoSize === '2XL' ? '80' : '100' }}
+                </text>
+              </g>
+            </svg>
           </div>
-          <span class="text-xs font-extrabold text-[#ff5a00] shrink-0 ml-2" *ngIf="selectedCargoSize === size.id">Đang chọn</span>
         </div>
       </div>
 
-      <button type="button" class="mt-5 h-12 w-full rounded-2xl bg-[#ff5a00] font-extrabold text-white shadow-lg shadow-orange-500/20 active:scale-[0.99] transition" (click)="showSizeDetailsModal = false">
-        Xác nhận
+      <!-- Size Selector Bubble Row -->
+      <div class="mt-2 flex flex-col gap-3">
+        <span class="text-sm font-extrabold text-slate-700">Chọn kích cỡ</span>
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          <button *ngFor="let size of cargoSizes" type="button"
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-sm font-black transition active:scale-90"
+            [ngClass]="selectedCargoSize === size.id ? 'border-[#ff5a00] bg-orange-50 text-[#ff5a00] ring-2 ring-orange-100 shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'"
+            (click)="selectCargoSize(size)">
+            {{ size.id }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Button -->
+    <div class="border-t border-slate-100 bg-white px-5 pb-5 pt-4 shrink-0">
+      <button type="button"
+        class="h-12 w-full rounded-2xl bg-[#ff5a00] text-base font-extrabold text-white shadow-lg shadow-orange-500/20 transition active:scale-[0.99]"
+        (click)="closeSizeDetailsModal()">
+        Tôi đã hiểu
       </button>
     </div>
-  </div>
+  </section>
 </section>

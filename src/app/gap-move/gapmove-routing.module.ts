@@ -44,7 +44,7 @@ const routes: Routes = [
         loadComponent: () =>
           import('./pages/bookings/gm-bookings.page').then((m) => m.GmBookingsPage),
         canActivate: [gmAuthGuard],
-        data: { tab: 'bookings', title: 'Chuyen di', showBack: true, hideUser: true },
+        data: { tab: 'bookings', title: 'Chuyến đi', showBack: true, hideUser: true },
       },
       {
         path: 'booking/new',

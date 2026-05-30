@@ -83,7 +83,7 @@ export class GmBookingService {
   }
 
   createBooking(request: GmCreateBookingRequest): Observable<GmBooking> {
-    const distanceKm = request.type === 'porter' ? 0 : request.vehicleType === 'truck' ? 12.8 : request.vehicleType === 'van' ? 8.6 : 5.6;
+    const distanceKm = request.type === 'porter' ? 0 : request.vehicleType === 'truck' ? 12.8 : request.vehicleType === 'bagac' ? 9.5 : request.vehicleType === 'van' ? 8.6 : 5.6;
     const durationMin =
       request.type === 'porter'
         ? Math.max(30, (request.porterOptions?.helperCount ?? 1) * 20 + (request.porterOptions?.floorCount ?? 0) * 8)

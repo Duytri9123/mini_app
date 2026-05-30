@@ -33,4 +33,39 @@ export class GmBookingDetailPage implements OnInit {
   formatAmount(amount: number): string {
     return formatVnd(amount);
   }
+
+  typeLabel(type: GmBooking['type']): string {
+    const labels: Record<GmBooking['type'], string> = {
+      ride: 'Đặt xe',
+      delivery: 'Giao hàng',
+      truck: 'Xe tải',
+      moving: 'Chuyển nhà',
+      porter: 'Bê hộ',
+      multi_stop: 'Đa điểm',
+    };
+    return labels[type];
+  }
+
+  statusLabel(status: GmBooking['status']): string {
+    const labels: Record<GmBooking['status'], string> = {
+      draft: 'Nháp',
+      searching: 'Đang tìm tài xế',
+      driver_assigned: 'Đã có tài xế',
+      picked_up: 'Đã lấy hàng',
+      in_progress: 'Đang di chuyển',
+      completed: 'Hoàn thành',
+      cancelled: 'Đã hủy',
+    };
+    return labels[status];
+  }
+
+  paymentStatusLabel(status: GmBooking['paymentStatus']): string {
+    const labels: Record<GmBooking['paymentStatus'], string> = {
+      pending: 'Chờ thanh toán',
+      paid: 'Đã thanh toán',
+      failed: 'Thất bại',
+      refunded: 'Đã hoàn tiền',
+    };
+    return labels[status];
+  }
 }

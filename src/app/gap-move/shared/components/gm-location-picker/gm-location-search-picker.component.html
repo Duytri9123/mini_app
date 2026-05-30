@@ -1,22 +1,31 @@
 <div class="fixed inset-0 z-[90] bg-white px-4 pt-7" [class.lg:hidden]="mobileOnly">
-  <div class="gm-address-search-box flex h-13 items-center gap-3 rounded-2xl bg-white px-3 shadow-lg shadow-slate-900/8 ring-1 ring-slate-100/90">
-    <button type="button" class="flex h-9 w-9 shrink-0 items-center justify-center text-slate-500" aria-label="Quay lại" (click)="closePicker.emit()">
-      <ion-icon name="chevron-back-outline" class="text-2xl"></ion-icon>
+  <div class="gm-address-search-box flex h-12 items-center gap-2 rounded-2xl bg-white px-2 shadow-lg shadow-slate-900/10 ring-1 ring-primary/15">
+    <button type="button" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 active:bg-slate-100" aria-label="Quay lại" (click)="closePicker.emit()">
+      <ion-icon name="chevron-back-outline" class="text-xl"></ion-icon>
     </button>
-    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-inverse-primary text-white">
-      <ion-icon name="location" class="text-lg"></ion-icon>
+    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-inverse-primary text-white shadow-sm">
+      <ion-icon name="location" class="text-base"></ion-icon>
     </span>
     <input
       name="locationSearchQuery"
-      class="gm-address-search-input min-w-0 flex-1 border-0 bg-transparent text-base font-bold text-slate-800 outline-none placeholder:text-slate-400"
+      class="gm-address-search-input h-9 min-w-0 flex-1 rounded-xl border-0 bg-slate-50 px-3 text-[15px] font-extrabold text-slate-900 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-1 focus:ring-primary/25"
       [ngModel]="query"
       (ngModelChange)="updateQuery($event)"
       [placeholder]="placeholder"
     />
+    <button
+      *ngIf="query"
+      type="button"
+      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 active:bg-slate-100"
+      aria-label="Xóa nội dung tìm kiếm"
+      (click)="clearQuery()"
+    >
+      <ion-icon name="close-circle-outline" class="text-xl"></ion-icon>
+    </button>
   </div>
 
   <div class="mt-5">
-    <button type="button" class="flex w-full items-center gap-4 border-b border-slate-100/80 pb-3.5 text-left" (click)="useCurrentLocation.emit()">
+    <button type="button" class="flex w-full items-center gap-4 border-b border-slate-100/80 pb-3.5 text-left active:bg-slate-50" (click)="useCurrentLocation.emit()">
       <ion-icon name="locate-outline" class="text-2xl text-slate-500"></ion-icon>
       <span class="min-w-0">
         <span class="block text-sm font-extrabold text-slate-900">Vị trí hiện tại</span>
@@ -65,7 +74,7 @@
       <button
         *ngFor="let item of confirmedHistory"
         type="button"
-        class="flex w-full items-start gap-3 py-2.5 text-left"
+        class="flex w-full items-start gap-3 py-2.5 text-left active:bg-slate-50"
         (click)="selectConfirmedHistory.emit(item)"
       >
         <ion-icon name="time-outline" class="mt-0.5 text-xl text-slate-500"></ion-icon>

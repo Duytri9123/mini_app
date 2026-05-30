@@ -26,6 +26,7 @@ export class GmBookingRouteFormComponent {
   @Input() type: GmBookingType = 'delivery';
   @Input() pickupAddress = '';
   @Input() dropoffAddress = '';
+  @Input() dropoffPlaceholder = 'Đến';
   @Input() stopAddresses: string[] = [];
   @Input() pickupSuggestions: GmAddressSearchResult[] = [];
   @Input() dropoffSuggestions: GmAddressSearchResult[] = [];
@@ -42,6 +43,8 @@ export class GmBookingRouteFormComponent {
   @Output() stopInput = new EventEmitter<number>();
   @Output() addStop = new EventEmitter<void>();
   @Output() removeStop = new EventEmitter<number>();
+  @Output() clearDropoff = new EventEmitter<void>();
+  @Output() swapRoutePoints = new EventEmitter<void>();
   @Output() toggleRouteReorder = new EventEmitter<void>();
   @Output() moveDestinationPoint = new EventEmitter<GmBookingDestinationPointMove>();
   @Output() openMap = new EventEmitter<GmBookingAddressTarget>();
@@ -93,8 +96,8 @@ export class GmBookingRouteFormComponent {
     this.moveDestinationPoint.emit({ fromIndex, toIndex });
   }
 
-  canDragDestinationPoints(): boolean {
-    return this.stopAddresses.length > 0;
+  canDragRoutePoints(): boolean {
+    return this.stopAddresses.length + 2 > 1;
   }
 
   routeDragTransform(index: number): string | null {
@@ -105,20 +108,12 @@ export class GmBookingRouteFormComponent {
     return `translateY(${this.routeDragOffsetY}px)`;
   }
 
-  swapPickupDropoff(): void {
-    const tempAddress = this.pickupAddress;
-    this.pickupAddressChange.emit(this.dropoffAddress);
-    this.dropoffAddressChange.emit(tempAddress);
-    this.pickupInput.emit();
-    this.dropoffInput.emit();
-  }
-
   startRouteDrag(index: number): void {
     this.routeDragIndex = index;
   }
 
   beginRoutePointerDrag(index: number, event: PointerEvent): void {
-    if (!this.canDragDestinationPoints() || this.isInteractiveRouteControl(event.target)) {
+    if (!this.canDragRoutePoints() || this.isInteractiveRouteControl(event.target)) {
       return;
     }
 
@@ -205,19 +200,19 @@ export class GmBookingRouteFormComponent {
   }
 
   private getRouteDropIndex(clientY: number): number {
-    const rows = Array.from(this.routeList?.nativeElement.querySelectorAll<HTMLElement>('[data-route-destination-index]') ?? []);
+    const rows = Array.from(this.routeList?.nativeElement.querySelectorAll<HTMLElement>('[data-route-index]') ?? []);
     if (!rows.length) {
       return this.routePointerDragIndex ?? 0;
     }
 
-    let closestIndex = Number(rows[0].dataset['routeDestinationIndex'] ?? 0);
+    let closestIndex = Number(rows[0].dataset['routeIndex'] ?? 0);
     let closestDistance = Number.POSITIVE_INFINITY;
     rows.forEach((row) => {
       const rect = row.getBoundingClientRect();
       const distance = Math.abs(clientY - (rect.top + rect.height / 2));
       if (distance < closestDistance) {
         closestDistance = distance;
-        closestIndex = Number(row.dataset['routeDestinationIndex'] ?? closestIndex);
+        closestIndex = Number(row.dataset['routeIndex'] ?? closestIndex);
       }
     });
 

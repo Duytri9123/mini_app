@@ -159,6 +159,14 @@
   }
 }
 
+.gm-booking-schedule-datetime {
+  --background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 18px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .gm-booking-footer {
     padding-bottom: calc(1rem + env(safe-area-inset-bottom));
@@ -290,23 +298,23 @@
 .gm-delivery-service-title {
   -webkit-line-clamp: 2;
   color: #0f172a;
-  font-size: 17px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 750;
   line-height: 1.2;
 }
 
 .gm-delivery-service-subtitle {
   -webkit-line-clamp: 2;
   color: #64748b;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1.25;
 }
 
 .gm-delivery-service-price {
   color: #0f172a;
-  font-size: 16px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 750;
   white-space: nowrap;
 }
 
@@ -333,6 +341,10 @@
 }
 
 .gm-vehicle-sprite-multistop {
+  background-image: url('/assets/icon/xebaga.png');
+}
+
+.gm-vehicle-sprite-bagac {
   background-image: url('/assets/icon/xebaga.png');
 }
 

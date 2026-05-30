@@ -36,6 +36,7 @@ const BASE_FARE_BY_TYPE: Record<GmBookingType, number> = {
 const VEHICLE_MULTIPLIER: Record<GmVehicleType, number> = {
   motorbike: 1,
   car: 1.8,
+  bagac: 2,
   van: 2.4,
   truck: 3.2,
 };
