@@ -18,66 +18,6 @@
   </header>
 
 
-  <form
-    class="rls-compose"
-    [formGroup]="postForm"
-    (ngSubmit)="submitPost()"
-    aria-label="Đăng nội dung mới"
-  >
-    <div class="rls-compose__top">
-      <div>
-        <span>Đăng tải</span>
-        <strong>{{ isAuthenticated ? 'Chia sẻ ngay quanh bạn' : 'OTP để đăng bài' }}</strong>
-      </div>
-      <a routerLink="/app-mini/friends" class="rls-compose__friends">
-        <i class="fa-solid fa-address-book" aria-hidden="true"></i>
-        <span>Danh bạ</span>
-      </a>
-    </div>
-
-    <div class="rls-compose-types" role="group" aria-label="Loại nội dung">
-      <button
-        *ngFor="let item of contentTypes"
-        type="button"
-        [class.is-active]="postForm.value.type === item.type"
-        (click)="selectContentType(item.type)"
-      >
-        <i [ngClass]="item.iconClass" aria-hidden="true"></i>
-        <span>{{ item.label }}</span>
-      </button>
-    </div>
-
-    <textarea
-      formControlName="content"
-      class="rls-compose-input"
-      rows="3"
-      maxlength="280"
-      placeholder="Có gì đang diễn ra quanh bạn?"
-      [class.is-invalid]="contentCtrl?.invalid && contentCtrl?.touched"
-    ></textarea>
-
-    <div class="rls-compose__footer">
-      <span
-        *ngIf="contentCtrl?.invalid && contentCtrl?.touched"
-        class="rls-compose-error"
-        role="alert"
-      >
-        Nội dung cần từ 3 đến 280 ký tự.
-      </span>
-      <span *ngIf="!(contentCtrl?.invalid && contentCtrl?.touched)" class="rls-compose-counter">
-        {{ postForm.value.content?.length || 0 }}/280
-      </span>
-      <button
-        type="submit"
-        class="rls-compose-submit"
-        [disabled]="posting"
-        [attr.aria-busy]="posting"
-      >
-        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-        <span>{{ posting ? 'Đang đăng' : 'Đăng' }}</span>
-      </button>
-    </div>
-  </form>
 
   <section class="rls-feed-chips" aria-label="Chủ đề nhanh">
     <span>Check-in nóng</span>

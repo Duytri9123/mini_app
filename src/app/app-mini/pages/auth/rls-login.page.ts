@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, isDevMode, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -42,6 +42,7 @@ export class RlsLoginPage implements OnInit {
     private readonly toast: RlsToastService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -77,13 +78,21 @@ export class RlsLoginPage implements OnInit {
 
     this.auth
       .requestPhoneOtp({ phone: this.pendingPhone })
-      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: () => {
+          this.loading = false;
           this.step = 'otp';
+          if (isDevMode()) {
+            this.otpForm.patchValue({ otp: '666666' });
+          }
           this.toast.success('Mã OTP đã được gửi tới số điện thoại của bạn.');
+          setTimeout(() => this.cdr.detectChanges(), 0);
         },
-        error: (err) => this.handleError(err, 'Không thể gửi OTP. Vui lòng thử lại.'),
+        error: (err) => {
+          this.loading = false;
+          this.handleError(err, 'Không thể gửi OTP. Vui lòng thử lại.');
+          setTimeout(() => this.cdr.detectChanges(), 0);
+        },
       });
   }
 

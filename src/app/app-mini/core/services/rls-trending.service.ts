@@ -66,10 +66,10 @@ export class RlsTrendingService {
     this.loading$.next(true);
 
     return this.api
-      .get<RlsTrendingPlace[]>(RLS_API.TRENDING_NEARBY, {
+      .get<any[]>(RLS_API.TRENDING_NEARBY, {
         lat: query.lat,
         lng: query.lng,
-        radius: query.radiusM,
+        radius_m: query.radiusM,   // backend nhận radius_m
         limit: query.limit,
       })
       .pipe(
@@ -145,20 +145,67 @@ const VALID_REASONS: ReadonlySet<RlsTrendingReason> = new Set<RlsTrendingReason>
 const DEFAULT_REASON: RlsTrendingReason = 'rising';
 
 /**
- * Chuẩn hoá danh sách trending từ backend: bỏ phần tử rỗng và đảm bảo mỗi spot
- * có `reason` hợp lệ (R6.4 — "mỗi spot phải có lý do"). KHÔNG xếp hạng lại / lọc
- * bán kính (đó là việc của backend — single source of truth); chỉ giữ thứ tự
- * backend trả về. Hàm thuần.
+ * Chuẩn hoá danh sách trending từ backend: bỏ phần tử rỗng, đảm bảo mỗi spot
+ * có `reason` hợp lệ, và map snake_case → camelCase cho các field mới từ
+ * TrendingController (trending_post, active_users, active_count, time_ago,
+ * reason_label, thumbnail_url, distance_m, heat_score).
+ * KHÔNG xếp hạng lại / lọc bán kính — single source of truth là backend.
  */
 export function normalizeTrending(
-  data: readonly RlsTrendingPlace[] | null | undefined,
+  data: readonly any[] | null | undefined,
 ): RlsTrendingPlace[] {
   if (!Array.isArray(data)) {
     return [];
   }
   return data
-    .filter((item): item is RlsTrendingPlace => item != null)
-    .map((item) => ensureReason(item));
+    .filter((item): item is Record<string, any> => item != null)
+    .map((item) => {
+      const place: RlsTrendingPlace = {
+        id: item['id'] ?? item['location_id'],
+        name: item['name'],
+        category: item['category'],
+        lat: item['lat'],
+        lng: item['lng'],
+        thumbnailUrl: item['thumbnail_url'] ?? item['thumbnailUrl'] ?? null,
+        distanceM: item['distance_m'] ?? item['distanceM'],
+        trendScore: item['heat_score'] ?? item['trendScore'],
+        reason: VALID_REASONS.has(item['reason']) ? item['reason'] : DEFAULT_REASON,
+        reason_label: item['reason_label'] ?? item['reasonLabel'],
+        reasonLabel: item['reason_label'] ?? item['reasonLabel'],
+        rank: item['rank'],
+        trendingPost: item['trending_post']
+          ? {
+              id: item['trending_post']['id'],
+              content: item['trending_post']['content'],
+              reactionsCount: item['trending_post']['reactions_count'] ?? 0,
+              commentsCount: item['trending_post']['comments_count'] ?? 0,
+              media: item['trending_post']['media'] ?? null,
+              author: item['trending_post']['author']
+                ? {
+                    id: item['trending_post']['author']['id'],
+                    name: item['trending_post']['author']['name'],
+                    username: item['trending_post']['author']['username'],
+                    avatarUrl: item['trending_post']['author']['avatar_url'] ?? null,
+                  }
+                : null,
+              createdAt: item['trending_post']['created_at'],
+            }
+          : null,
+        activeUsers: (item['active_users'] ?? []).map((u: any) => ({
+          id: u['id'],
+          name: u['name'],
+          username: u['username'],
+          avatarUrl: u['avatar_url'] ?? null,
+        })),
+        activeCount: item['active_count'] ?? 0,
+        timeAgo: item['time_ago'] ?? null,
+        stats: {
+          activeCount: item['active_count'] ?? 0,
+          heatScore: item['heat_score'] ?? 0,
+        },
+      };
+      return place;
+    });
 }
 
 /** Đảm bảo spot có `reason` thuộc enum hợp lệ, fallback `rising` nếu thiếu/lạ. */

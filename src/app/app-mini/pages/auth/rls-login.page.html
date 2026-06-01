@@ -4,26 +4,10 @@
       <div class="rls-auth-logo">
         <span class="rls-neon-text">RLS</span>
       </div>
-      <h1 class="rls-auth-title">Vào Mini bằng OTP</h1>
-      <p class="rls-auth-subtitle">
-        Đăng nhập bằng số điện thoại. Người mới chỉ cần thêm tuổi và giới tính ở bước cuối.
-      </p>
+      <h1 class="rls-auth-title">Vào Mini Nào </h1>
+
     </div>
 
-    <div class="rls-auth-steps" aria-label="Tiến trình đăng nhập">
-      <span [class.is-active]="step === 'phone'" [class.is-done]="step !== 'phone'">
-        <strong>1</strong>
-        SĐT
-      </span>
-      <span [class.is-active]="step === 'otp'" [class.is-done]="step === 'profile'">
-        <strong>2</strong>
-        OTP
-      </span>
-      <span [class.is-active]="step === 'profile'">
-        <strong>3</strong>
-        Hồ sơ
-      </span>
-    </div>
 
     <div *ngIf="generalError" class="rls-form-error-banner" role="alert">
       {{ generalError }}
@@ -36,12 +20,6 @@
       class="rls-auth-form"
       novalidate
     >
-      <section class="rls-step-panel">
-        <span class="rls-step-kicker">Bước 1</span>
-        <h2>Nhập số điện thoại</h2>
-        <p>Mã OTP sẽ dùng cho cả đăng nhập và đăng ký tài khoản mới.</p>
-      </section>
-
       <div class="rls-form-group">
         <label for="rls-phone" class="rls-form-label">Số điện thoại</label>
         <input
@@ -61,9 +39,6 @@
         </span>
       </div>
 
-      <p class="rls-auth-note">
-        Nếu số này chưa có tài khoản, hệ thống sẽ chuyển sang bước hồ sơ sau khi OTP hợp lệ.
-      </p>
 
       <button
         type="submit"

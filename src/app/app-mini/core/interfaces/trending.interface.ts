@@ -21,6 +21,34 @@ import { RlsLocation } from './location.interface';
  */
 export type RlsTrendingReason = 'crowded' | 'viral' | 'event' | 'rising';
 
+/** Tác giả tối giản trong bài post trending. */
+export interface RlsTrendingPostAuthor {
+  id: number;
+  name: string;
+  username: string;
+  avatarUrl?: string | null;
+}
+
+/** Bài post trending tại một địa điểm (từ TrendingController). */
+export interface RlsTrendingPost {
+  id: number;
+  content: string;
+  reactionsCount: number;
+  commentsCount: number;
+  /** URL ảnh đầu tiên nếu có. */
+  media?: string | null;
+  author?: RlsTrendingPostAuthor | null;
+  createdAt: string;
+}
+
+/** Người dùng đang active tại địa điểm. */
+export interface RlsActiveUser {
+  id: number;
+  name: string;
+  username: string;
+  avatarUrl?: string | null;
+}
+
 /**
  * Một spot trending (mở rộng {@link RlsLocation}) — đơn vị render của
  * `RlsTrendingPanelComponent` (`@Input items`) và `RlsTrendingCardComponent`.
@@ -32,10 +60,20 @@ export interface RlsTrendingPlace extends RlsLocation {
   reason: RlsTrendingReason;
   /** Nhãn hiển thị do backend trả (tuỳ chọn) — fallback map ở client nếu thiếu. */
   reasonLabel?: string;
+  /** Nhãn lý do từ TrendingController (vd "5 người đang ở đây"). */
+  reason_label?: string;
   /** Thứ hạng trong danh sách (1-based, tuỳ chọn). */
   rank?: number;
   /** Score xếp hạng đã decay (tuỳ chọn) — chỉ để hiển thị/ debug. */
   trendScore?: number;
+  /** Bài post trending mới nhất tại địa điểm này. */
+  trendingPost?: RlsTrendingPost | null;
+  /** Người dùng đang active (check-in gần đây). */
+  activeUsers?: RlsActiveUser[];
+  /** Số người đang active. */
+  activeCount?: number;
+  /** Thời gian tương đối của hoạt động gần nhất (vd "2m ago"). */
+  timeAgo?: string | null;
 }
 
 /**

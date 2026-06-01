@@ -95,41 +95,43 @@
 
   </div>
 
-  <!-- Toast NEARBY TRENDING (luôn hiện ở góc dưới trái) -->
+  <!-- Toast NEARBY TRENDING — auto-rotate qua các trending spots -->
   <div
     class="rls-home__toast"
-    (click)="openPanel('trending')"
+    [class.toast-exit]="toastAnim === 'exit'"
+    [class.toast-enter]="toastAnim === 'enter'"
+    (click)="onToastClick()"
     role="button"
     tabindex="0"
     aria-label="Xem địa điểm trending gần đây"
   >
-    <div class="rls-home__toast-thumb">
-      <ng-container *ngIf="trending.length > 0 && trending[0].thumbnailUrl; else toastFallback">
-        <img [src]="trending[0].thumbnailUrl" [alt]="trending[0].name" />
+    <!-- Thumbnail / fallback -->
+    <div class="rls-home__toast-thumb" [attr.data-cat]="toastItem?.category">
+      <ng-container *ngIf="toastThumbUrl; else toastFallback">
+        <img [src]="toastThumbUrl" [alt]="toastItem?.name" loading="lazy" />
       </ng-container>
       <ng-template #toastFallback>
-        <span>PHO</span>
+        <span>{{ toastThumbFallback }}</span>
       </ng-template>
     </div>
+
+    <!-- Nội dung -->
     <div class="rls-home__toast-body">
       <div class="rls-home__toast-eyebrow">
         <strong>NEARBY TRENDING</strong>
-        <time>2m ago</time>
+        <time>{{ toastTimeAgo }}</time>
       </div>
-      <p class="rls-home__toast-title">
-        {{ trending.length > 0 ? trending[0].name : 'Bến bờ Huế secret spot 🍜' }}
-      </p>
-      <p class="rls-home__toast-sub">
-        <ng-container *ngIf="trending.length > 0; else toastSubFallback">
-          {{ trending[0].reasonLabel || trending[0].reason }}
-          <ng-container *ngIf="trending[0].stats?.activeCount">
-            · {{ trending[0].stats?.activeCount }} người đang ở đây
-          </ng-container>
-        </ng-container>
-        <ng-template #toastSubFallback>
-          @minh_nguyen is here with 5 oth...
-        </ng-template>
-      </p>
+      <p class="rls-home__toast-title">{{ toastTitle }}</p>
+      <p class="rls-home__toast-sub">{{ toastSub }}</p>
+    </div>
+
+    <!-- Dot indicators (chỉ hiện khi có > 1 item) -->
+    <div class="rls-home__toast-dots" *ngIf="trending.length > 1" aria-hidden="true">
+      <span
+        *ngFor="let item of trending; let i = index"
+        class="rls-home__toast-dot"
+        [class.is-active]="i === toastIndex"
+      ></span>
     </div>
   </div>
 
