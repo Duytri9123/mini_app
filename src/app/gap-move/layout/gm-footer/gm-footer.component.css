@@ -1,3 +1,0 @@
-.gm-footer {
-  min-height: calc(72px + env(safe-area-inset-bottom, 0px));
-}

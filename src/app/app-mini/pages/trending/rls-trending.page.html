@@ -1,0 +1,93 @@
+<div class="rls-trending-page">
+  <header class="rls-trending-header">
+    <a routerLink="/app-mini/home-map" class="rls-back-btn" aria-label="Quay lại bản đồ">
+      <span aria-hidden="true">←</span>
+    </a>
+    <div>
+      <span class="rls-trending-eyebrow">Heat ranking</span>
+      <h2 class="rls-trending-header-title">Trending</h2>
+    </div>
+  </header>
+
+  <section class="rls-trending-hero" aria-label="Thông số trending">
+    <div class="rls-trending-hero__copy">
+      <h3>Bảng nhiệt khu vực</h3>
+      <p>Điểm nóng được gom theo lượng check-in, reaction và tín hiệu tăng trưởng.</p>
+    </div>
+    <div class="rls-trending-kpis">
+      <div class="rls-trending-kpi">
+        <span>{{ visibleHotSpots }}</span>
+        <small>hotspot</small>
+      </div>
+      <div class="rls-trending-kpi">
+        <span>{{ averageHeatScore }}</span>
+        <small>heat TB</small>
+      </div>
+      <div class="rls-trending-kpi">
+        <span>{{ crowdedSpots }}</span>
+        <small>đông người</small>
+      </div>
+      <div class="rls-trending-kpi">
+        <span>{{ nearestDistanceText }}</span>
+        <small>gần nhất</small>
+      </div>
+    </div>
+  </section>
+
+  <div class="rls-tabs" role="tablist" aria-label="Loại trending">
+    <button
+      class="rls-tab"
+      [class.rls-tab--active]="activeTab === 'nearby'"
+      (click)="selectTab('nearby')"
+      role="tab"
+      [attr.aria-selected]="activeTab === 'nearby'"
+      id="tab-nearby"
+      aria-controls="panel-nearby"
+    >
+      Gần bạn
+    </button>
+    <button
+      class="rls-tab"
+      [class.rls-tab--active]="activeTab === 'places'"
+      (click)="selectTab('places')"
+      role="tab"
+      [attr.aria-selected]="activeTab === 'places'"
+      id="tab-places"
+      aria-controls="panel-places"
+    >
+      Top places
+    </button>
+  </div>
+
+  <div
+    *ngIf="loading && currentList.length === 0"
+    class="rls-trending-list"
+    aria-busy="true"
+    aria-label="Đang tải..."
+  >
+    <div *ngFor="let i of [1,2,3,4]" class="rls-skeleton-card"></div>
+  </div>
+
+  <div
+    *ngIf="!loading && currentList.length === 0"
+    class="rls-trending-empty"
+    role="status"
+  >
+    <span class="rls-trending-empty-icon" aria-hidden="true">#</span>
+    <p>Chưa có địa điểm trending từ backend.</p>
+    <p class="rls-trending-empty-hint">Bảng nhiệt phía trên đang dùng baseline để giữ nhịp hiển thị.</p>
+  </div>
+
+  <div
+    *ngIf="currentList.length > 0"
+    class="rls-trending-list"
+    role="tabpanel"
+    [id]="activeTab === 'nearby' ? 'panel-nearby' : 'panel-places'"
+    [attr.aria-labelledby]="activeTab === 'nearby' ? 'tab-nearby' : 'tab-places'"
+  >
+    <rls-trending-card
+      *ngFor="let place of currentList; let i = index; trackBy: trackByPlace"
+      [place]="place"
+    ></rls-trending-card>
+  </div>
+</div>

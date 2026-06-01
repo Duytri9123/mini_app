@@ -1,0 +1,9 @@
+<span
+  *ngIf="badge"
+  [class]="badgeClass"
+  role="status"
+  [attr.aria-label]="ariaLabel"
+>
+  <span aria-hidden="true">{{ icon }}</span>
+  <span>{{ badge.value }}</span>
+</span>

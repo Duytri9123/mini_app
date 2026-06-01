@@ -1,0 +1,136 @@
+<div class="rls-story-page">
+  <header class="rls-story-header">
+    <a routerLink="/app-mini/home-map" class="rls-back-btn" aria-label="Quay lại bản đồ">
+      <span aria-hidden="true">←</span>
+    </a>
+    <div>
+      <span class="rls-story-eyebrow">24h radar</span>
+      <h2 class="rls-story-header-title">Stories gần bạn</h2>
+    </div>
+  </header>
+
+  <section class="rls-story-radar" aria-label="Thông số stories">
+    <div>
+      <h3>Khoảnh khắc trong bán kính gần nhất</h3>
+      <p>Story mới được ưu tiên theo vị trí, độ nóng và thời gian còn lại.</p>
+    </div>
+    <div class="rls-story-stats">
+      <div class="rls-story-stat">
+        <span>{{ activeStoryCount }}</span>
+        <small>đang sống</small>
+      </div>
+      <div class="rls-story-stat">
+        <span>{{ videoStoryCount }}</span>
+        <small>video</small>
+      </div>
+      <div class="rls-story-stat">
+        <span>{{ unseenStoryCount }}</span>
+        <small>chưa xem</small>
+      </div>
+      <div class="rls-story-stat">
+        <span>{{ averageTtlHours }}h</span>
+        <small>TTL TB</small>
+      </div>
+    </div>
+  </section>
+
+  <div
+    *ngIf="loading && stories.length === 0"
+    class="rls-story-ring-skeleton"
+    aria-busy="true"
+    aria-label="Đang tải stories..."
+  >
+    <div *ngFor="let i of [1,2,3,4,5]" class="rls-ring-skeleton-item"></div>
+  </div>
+
+  <div *ngIf="!loading && stories.length === 0" class="rls-story-empty">
+    <span class="rls-story-empty-icon" aria-hidden="true">24</span>
+    <p>Chưa có story realtime trong vùng này.</p>
+    <p class="rls-story-empty-hint">Radar vẫn hiển thị baseline để giữ nhịp giao diện.</p>
+  </div>
+
+  <div
+    *ngIf="stories.length > 0"
+    class="rls-story-ring-row"
+    role="list"
+    aria-label="Danh sách stories"
+  >
+    <button
+      *ngFor="let story of stories; let i = index; trackBy: trackByStory"
+      class="rls-story-ring-item"
+      (click)="openStory(i)"
+      [attr.aria-label]="'Xem story của ' + (story.authorName ?? 'người dùng')"
+      role="listitem"
+    >
+      <rls-story-ring [story]="story"></rls-story-ring>
+      <span class="rls-story-ring-name">{{ story.authorName ?? 'Ẩn danh' }}</span>
+    </button>
+  </div>
+
+  <p *ngIf="stories.length > 0" class="rls-story-count">
+    {{ stories.length }} story đang hoạt động
+  </p>
+</div>
+
+<div
+  *ngIf="activeStory"
+  class="rls-story-viewer-overlay"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'Story của ' + (activeStory.authorName ?? 'người dùng')"
+>
+  <div
+    class="rls-story-progress"
+    role="progressbar"
+    [attr.aria-valuenow]="activeIndex! + 1"
+    [attr.aria-valuemax]="stories.length"
+  >
+    <div
+      *ngFor="let story of stories; let i = index"
+      class="rls-story-progress-segment"
+      [class.rls-story-progress-segment--done]="i < activeIndex!"
+      [class.rls-story-progress-segment--active]="i === activeIndex"
+    ></div>
+  </div>
+
+  <div class="rls-story-author">
+    <div
+      class="rls-story-author-avatar"
+      [style.background-image]="activeStory.authorAvatar ? 'url(' + activeStory.authorAvatar + ')' : null"
+    >
+      <span *ngIf="!activeStory.authorAvatar" aria-hidden="true">?</span>
+    </div>
+    <span class="rls-story-author-name">{{ activeStory.authorName ?? 'Ẩn danh' }}</span>
+    <button class="rls-story-close-btn" (click)="closeViewer()" aria-label="Đóng story">×</button>
+  </div>
+
+  <div class="rls-story-media">
+    <img
+      *ngIf="activeStory.mediaType === 'image'"
+      [src]="activeStory.mediaUrl"
+      [alt]="'Story của ' + (activeStory.authorName ?? 'người dùng')"
+      class="rls-story-img"
+    />
+    <video
+      *ngIf="activeStory.mediaType === 'video'"
+      [src]="activeStory.mediaUrl"
+      class="rls-story-video"
+      autoplay
+      muted
+      playsinline
+      loop
+    ></video>
+  </div>
+
+  <button
+    class="rls-story-nav rls-story-nav--prev"
+    (click)="prevStory()"
+    aria-label="Story trước"
+    [disabled]="activeIndex === 0"
+  ></button>
+  <button
+    class="rls-story-nav rls-story-nav--next"
+    (click)="nextStory()"
+    aria-label="Story tiếp theo"
+  ></button>
+</div>

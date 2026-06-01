@@ -4,9 +4,9 @@
   "compilerOptions": {
     "outDir": "./out-tsc/app",
     "types": [],
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
   "files": ["src/main.ts", "src/polyfills.ts"],
-  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/env.d.ts", "src/app/bro-jet/**/*.ts"],
+  "include": ["src/**/*.d.ts", "src/**/*.ts"],
   "exclude": ["src/**/*.spec.ts"]
 }

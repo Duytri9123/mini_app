@@ -7,7 +7,16 @@ export const environment = {
   BASE_URL: BASE_URL_VALUE,
   GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID_VALUE,
   NDAMAPS_API_KEY: '',
-  VIETMAP_API_KEY: '',
+
+  // Laravel Reverb (Pusher protocol) — consumed by RlsRealtimeService (app-mini).
+  // WebSocket host derived from BASE_URL at runtime (no hardcoded URL — R14.3, R14.6).
+  reverb: {
+    appKey: 'rls-reverb-key',
+    wsHost: '',
+    wsPort: 443,
+    wssPort: 443,
+    forceTLS: true,
+  },
   firebase: {
     apiKey: 'AIzaSyD0_UAJLa0bqSkdspVCiRDX25CiI-UuA3A',
     authDomain: 'jetjet-88753.firebaseapp.com',

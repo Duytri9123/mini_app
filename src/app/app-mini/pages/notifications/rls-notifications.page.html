@@ -1,0 +1,109 @@
+<div class="rls-notif-page">
+  <header class="rls-notif-header">
+    <a routerLink="/app-mini/home-map" class="rls-back-btn" aria-label="Quay lại bản đồ">
+      <span aria-hidden="true">←</span>
+    </a>
+    <div class="rls-notif-title-wrap">
+      <span class="rls-notif-eyebrow">Signal inbox</span>
+      <h2 class="rls-notif-header-title">
+        Thông báo
+        <span *ngIf="unreadCount > 0" class="rls-unread-badge" aria-label="{{ unreadCount }} chưa đọc">
+          {{ unreadCount > 99 ? '99+' : unreadCount }}
+        </span>
+      </h2>
+    </div>
+    <button
+      *ngIf="unreadCount > 0"
+      class="rls-mark-all-btn"
+      (click)="onMarkAllRead()"
+      aria-label="Đánh dấu tất cả đã đọc"
+    >
+      Đọc tất cả
+    </button>
+  </header>
+
+  <section class="rls-notif-summary" aria-label="Thông số thông báo">
+    <div class="rls-notif-summary__copy">
+      <h3>Trung tâm tín hiệu</h3>
+      <p>Lọc nhanh các cảnh báo nóng, sự kiện gần bạn và hoạt động bạn bè.</p>
+    </div>
+    <div class="rls-notif-stats">
+      <div class="rls-notif-stat">
+        <span>{{ totalSignals }}</span>
+        <small>tín hiệu</small>
+      </div>
+      <div class="rls-notif-stat">
+        <span>{{ displayUnreadSignals }}</span>
+        <small>chưa đọc</small>
+      </div>
+      <div class="rls-notif-stat">
+        <span>{{ prioritySignals }}</span>
+        <small>ưu tiên</small>
+      </div>
+      <div class="rls-notif-stat">
+        <span>{{ readRate }}%</span>
+        <small>đã xử lý</small>
+      </div>
+    </div>
+  </section>
+
+  <div
+    *ngIf="loading && notifications.length === 0"
+    class="rls-notif-list"
+    aria-busy="true"
+    aria-label="Đang tải thông báo..."
+  >
+    <div *ngFor="let i of [1,2,3,4,5]" class="rls-skeleton-item"></div>
+  </div>
+
+  <div *ngIf="!loading && notifications.length === 0" class="rls-notif-empty" role="status">
+    <span class="rls-notif-empty-icon" aria-hidden="true">!</span>
+    <p>Chưa có thông báo từ backend.</p>
+    <p class="rls-notif-empty-hint">Summary phía trên đang dùng baseline cho trạng thái demo.</p>
+  </div>
+
+  <ul
+    *ngIf="notifications.length > 0"
+    class="rls-notif-list"
+    role="list"
+    aria-label="Danh sách thông báo"
+  >
+    <li
+      *ngFor="let notif of notifications; trackBy: trackByNotif"
+      class="rls-notif-item"
+      [class.rls-notif-item--unread]="!notif.isRead"
+      (click)="onMarkRead(notif.id)"
+      role="listitem"
+      [attr.aria-label]="(notif.isRead ? '' : 'Chưa đọc: ') + (notif.title ?? typeLabel(notif.type))"
+    >
+      <span *ngIf="!notif.isRead" class="rls-notif-dot" aria-hidden="true"></span>
+
+      <div class="rls-notif-content">
+        <div class="rls-notif-type-badge">{{ typeLabel(notif.type) }}</div>
+        <p *ngIf="notif.title" class="rls-notif-title">{{ notif.title }}</p>
+        <p *ngIf="notif.body" class="rls-notif-body">{{ notif.body }}</p>
+        <time class="rls-notif-time" [attr.datetime]="notif.createdAt">
+          {{ notif.createdAt | date:'dd/MM/yyyy HH:mm' }}
+        </time>
+      </div>
+    </li>
+  </ul>
+
+  <div *ngIf="notifications.length > 0" class="rls-notif-load-more">
+    <button
+      *ngIf="hasMore && !loading"
+      class="rls-btn rls-btn--ghost"
+      (click)="onLoadMore()"
+    >
+      Tải thêm
+    </button>
+    <span
+      *ngIf="loading && notifications.length > 0"
+      class="rls-spinner rls-spinner--sm"
+      aria-label="Đang tải..."
+    ></span>
+    <p *ngIf="!hasMore && notifications.length > 0" class="rls-notif-end-hint">
+      Đã hết thông báo
+    </p>
+  </div>
+</div>

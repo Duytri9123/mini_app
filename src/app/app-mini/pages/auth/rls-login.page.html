@@ -1,0 +1,192 @@
+<div class="rls-auth-page">
+  <div class="rls-auth-card">
+    <div class="rls-auth-header">
+      <div class="rls-auth-logo">
+        <span class="rls-neon-text">RLS</span>
+      </div>
+      <h1 class="rls-auth-title">Vào Mini bằng OTP</h1>
+      <p class="rls-auth-subtitle">
+        Đăng nhập bằng số điện thoại. Người mới chỉ cần thêm tuổi và giới tính ở bước cuối.
+      </p>
+    </div>
+
+    <div class="rls-auth-steps" aria-label="Tiến trình đăng nhập">
+      <span [class.is-active]="step === 'phone'" [class.is-done]="step !== 'phone'">
+        <strong>1</strong>
+        SĐT
+      </span>
+      <span [class.is-active]="step === 'otp'" [class.is-done]="step === 'profile'">
+        <strong>2</strong>
+        OTP
+      </span>
+      <span [class.is-active]="step === 'profile'">
+        <strong>3</strong>
+        Hồ sơ
+      </span>
+    </div>
+
+    <div *ngIf="generalError" class="rls-form-error-banner" role="alert">
+      {{ generalError }}
+    </div>
+
+    <form
+      *ngIf="step === 'phone'"
+      [formGroup]="phoneForm"
+      (ngSubmit)="requestOtp()"
+      class="rls-auth-form"
+      novalidate
+    >
+      <section class="rls-step-panel">
+        <span class="rls-step-kicker">Bước 1</span>
+        <h2>Nhập số điện thoại</h2>
+        <p>Mã OTP sẽ dùng cho cả đăng nhập và đăng ký tài khoản mới.</p>
+      </section>
+
+      <div class="rls-form-group">
+        <label for="rls-phone" class="rls-form-label">Số điện thoại</label>
+        <input
+          id="rls-phone"
+          type="tel"
+          formControlName="phone"
+          class="rls-form-input"
+          [class.rls-form-input--error]="phoneCtrl?.invalid && phoneCtrl?.touched"
+          placeholder="0901234567"
+          autocomplete="tel"
+          inputmode="tel"
+        />
+        <span class="rls-form-field-error" *ngIf="phoneCtrl?.invalid && phoneCtrl?.touched" role="alert">
+          <ng-container *ngIf="phoneCtrl?.errors?.['required']">Vui lòng nhập số điện thoại.</ng-container>
+          <ng-container *ngIf="phoneCtrl?.errors?.['pattern']">Số điện thoại chưa đúng định dạng Việt Nam.</ng-container>
+          <ng-container *ngIf="fieldError('phone')">{{ fieldError('phone') }}</ng-container>
+        </span>
+      </div>
+
+      <p class="rls-auth-note">
+        Nếu số này chưa có tài khoản, hệ thống sẽ chuyển sang bước hồ sơ sau khi OTP hợp lệ.
+      </p>
+
+      <button
+        type="submit"
+        class="rls-btn rls-btn--primary rls-btn--full"
+        [disabled]="loading"
+        [attr.aria-busy]="loading"
+      >
+        <span *ngIf="!loading">Gửi mã OTP</span>
+        <span *ngIf="loading" class="rls-spinner" aria-label="Đang xử lý..."></span>
+      </button>
+    </form>
+
+    <form
+      *ngIf="step === 'otp'"
+      [formGroup]="otpForm"
+      (ngSubmit)="verifyOtp()"
+      class="rls-auth-form"
+      novalidate
+    >
+      <section class="rls-step-panel">
+        <span class="rls-step-kicker">Bước 2</span>
+        <h2>Xác thực OTP</h2>
+        <p>Mã đã gửi tới {{ pendingPhone }}. Nhập 4-6 chữ số để tiếp tục.</p>
+      </section>
+
+      <div class="rls-form-group">
+        <label for="rls-otp" class="rls-form-label">Mã OTP</label>
+        <input
+          id="rls-otp"
+          type="text"
+          formControlName="otp"
+          class="rls-form-input rls-otp-input"
+          [class.rls-form-input--error]="otpCtrl?.invalid && otpCtrl?.touched"
+          placeholder="123456"
+          autocomplete="one-time-code"
+          inputmode="numeric"
+          maxlength="6"
+        />
+        <span class="rls-form-field-error" *ngIf="otpCtrl?.invalid && otpCtrl?.touched" role="alert">
+          <ng-container *ngIf="otpCtrl?.errors?.['required']">Vui lòng nhập OTP.</ng-container>
+          <ng-container *ngIf="otpCtrl?.errors?.['pattern']">OTP gồm 4-6 chữ số.</ng-container>
+          <ng-container *ngIf="fieldError('otp')">{{ fieldError('otp') }}</ng-container>
+        </span>
+      </div>
+
+      <button
+        type="submit"
+        class="rls-btn rls-btn--primary rls-btn--full"
+        [disabled]="loading"
+        [attr.aria-busy]="loading"
+      >
+        <span *ngIf="!loading">Xác thực OTP</span>
+        <span *ngIf="loading" class="rls-spinner" aria-label="Đang xử lý..."></span>
+      </button>
+
+      <div class="rls-auth-inline">
+        <button type="button" class="rls-text-btn" (click)="backToPhone()">Đổi số</button>
+        <button type="button" class="rls-text-btn" (click)="resendOtp()">Gửi lại mã</button>
+      </div>
+    </form>
+
+    <form
+      *ngIf="step === 'profile'"
+      [formGroup]="profileForm"
+      (ngSubmit)="completeProfile()"
+      class="rls-auth-form"
+      novalidate
+    >
+      <section class="rls-step-panel">
+        <span class="rls-step-kicker">Bước 3</span>
+        <h2>Hoàn thiện hồ sơ</h2>
+        <p>Chỉ cần tuổi và giới tính để cá nhân hóa feed, bản đồ và gợi ý bạn bè.</p>
+      </section>
+
+      <div class="rls-form-grid">
+        <div class="rls-form-group">
+          <label for="rls-age" class="rls-form-label">Tuổi</label>
+          <input
+            id="rls-age"
+            type="number"
+            formControlName="age"
+            class="rls-form-input"
+            min="13"
+            max="100"
+            inputmode="numeric"
+          />
+          <span class="rls-form-field-error" *ngIf="ageCtrl?.invalid && ageCtrl?.touched" role="alert">
+            Tuổi hợp lệ từ 13 đến 100.
+          </span>
+        </div>
+
+        <div class="rls-form-group">
+          <label for="rls-gender" class="rls-form-label">Giới tính</label>
+          <select id="rls-gender" formControlName="gender" class="rls-form-input">
+            <option value="" disabled>Chọn</option>
+            <option value="female">Nữ</option>
+            <option value="male">Nam</option>
+            <option value="other">Khác</option>
+            <option value="prefer_not_to_say">Không muốn nói</option>
+          </select>
+          <span class="rls-form-field-error" *ngIf="genderCtrl?.invalid && genderCtrl?.touched" role="alert">
+            Vui lòng chọn giới tính.
+          </span>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="rls-btn rls-btn--primary rls-btn--full"
+        [disabled]="loading"
+        [attr.aria-busy]="loading"
+      >
+        <span *ngIf="!loading">Hoàn tất</span>
+        <span *ngIf="loading" class="rls-spinner" aria-label="Đang xử lý..."></span>
+      </button>
+    </form>
+
+    <div class="rls-auth-footer">
+      <p>
+        <a routerLink="/app-mini/home-map" class="rls-link rls-link--muted">
+          Tiếp tục xem bản đồ
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

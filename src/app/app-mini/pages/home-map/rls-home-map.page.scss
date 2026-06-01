@@ -1,0 +1,550 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.rls-home {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #0e1225;
+
+  &__map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  // ── Overlay trên cùng ────────────────────────────────────────────────────
+  &__top {
+    position: absolute;
+    top: max(16px, env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__quick {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+
+    a {
+      display: inline-flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-height: 34px;
+      padding: 0 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      background: rgba(10, 14, 33, 0.72);
+      color: #e2e8f0;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      backdrop-filter: blur(14px);
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+
+      &:active {
+        background: rgba(0, 251, 251, 0.15);
+      }
+
+      i {
+        color: var(--rls-secondary, #00fbfb);
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  // ── Cụm nút bên phải (filter + locate + 3D + post) ─────────────────────
+  &__fab-group {
+    position: absolute;
+    right: 14px;
+    bottom: calc(var(--rls-shell-nav-height, 78px) + 16px);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  // Tất cả FAB đồng nhất 46×46
+  &__fab,
+  &__post-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(12, 16, 36, 0.85);
+    color: #e2e8f0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+    text-decoration: none;
+
+    &:active {
+      transform: scale(0.92);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__fab {
+    // Nút locate — viền cyan
+    &--locate {
+      border-color: rgba(0, 251, 251, 0.35);
+      color: var(--rls-secondary, #00fbfb);
+      box-shadow:
+        0 0 14px rgba(0, 251, 251, 0.2),
+        0 4px 16px rgba(0, 0, 0, 0.45);
+
+      &.is-busy svg {
+        animation: rls-spin 1s linear infinite;
+      }
+    }
+
+    // Nút satellite — active thì sáng xanh lá
+    &--satellite {
+      color: #64748b;
+
+      &.is-active {
+        color: #34d399;
+        border-color: rgba(52, 211, 153, 0.4);
+        box-shadow:
+          0 0 14px rgba(52, 211, 153, 0.25),
+          0 4px 16px rgba(0, 0, 0, 0.45);
+      }
+    }
+  }
+
+  // Nút post — viền đồng/cam
+  &__post-btn {
+    position: static; // nằm trong fab-group, không absolute riêng
+    border: 2px solid rgba(205, 133, 63, 0.65);
+    color: #cd853f;
+    box-shadow:
+      0 0 16px rgba(205, 133, 63, 0.35),
+      0 4px 16px rgba(0, 0, 0, 0.45);
+  }
+
+  // ── Toast "NEARBY TRENDING" ──────────────────────────────────────────────
+  &__toast {
+    position: absolute;
+    left: 16px;
+    bottom: calc(var(--rls-shell-nav-height, 96px) + 16px);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100% - 96px);
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 14, 33, 0.88);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+
+  &__toast-thumb {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255, 89, 190, 0.15);
+    border: 1px solid rgba(255, 89, 190, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    span {
+      color: #f472b6;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  &__toast-body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__toast-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+
+    strong {
+      color: #f472b6;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    time {
+      color: #64748b;
+      font-size: 10px;
+    }
+  }
+
+  &__toast-title {
+    color: #f8fafc;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__toast-sub {
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // ── Bottom sheet nội dung (không dùng nữa — giữ lại phòng) ─────────────
+  &__sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0 16px 16px;
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0 14px;
+  }
+
+  &__tab {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
+    transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+    &.is-active {
+      color: var(--rls-secondary, #00fbfb);
+      background: rgba(0, 251, 251, 0.1);
+      border-color: rgba(0, 251, 251, 0.2);
+      box-shadow: 0 0 16px rgba(0, 251, 251, 0.18);
+    }
+  }
+
+  &__panel {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // ── Backdrop (nhẹ hơn vì panel nhỏ) ─────────────────────────────────────
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 28;
+    background: rgba(0, 0, 0, 0);
+    pointer-events: none;
+    transition: background 0.25s ease;
+
+    &.is-open {
+      background: rgba(0, 0, 0, 0.18);
+      pointer-events: auto;
+    }
+  }
+
+  // ── Floating panel (tooltip nổi góc trái) ────────────────────────────────
+  &__drawer {
+    position: absolute;
+    left: 12px;
+    bottom: calc(var(--rls-shell-nav-height, 78px) + 110px);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    width: min(72vw, 280px);
+    height: 58vh;
+    max-height: 58vh;
+    border-radius: 18px;
+    background: rgba(11, 15, 35, 0.95);
+    border: 1px solid rgba(0, 251, 251, 0.18);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 0 24px rgba(0, 251, 251, 0.08);
+    backdrop-filter: blur(20px);
+    transform: translateX(-110%) scale(0.92);
+    transform-origin: bottom left;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.22s ease;
+    will-change: transform, opacity;
+
+    &.is-open {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  // ── Header panel ─────────────────────────────────────────────────────────
+  &__drawer-handle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px 6px;
+    flex-shrink: 0;
+  }
+
+  &__drawer-pill {
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__drawer-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:active {
+      background: rgba(255, 255, 255, 0.16);
+      color: #f8fafc;
+    }
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 5px;
+    padding: 0 12px 8px;
+    flex-shrink: 0;
+  }
+
+  &__tab {
+    flex: 1;
+    padding: 7px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
+    transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+    &.is-active {
+      color: var(--rls-secondary, #00fbfb);
+      background: rgba(0, 251, 251, 0.1);
+      border-color: rgba(0, 251, 251, 0.22);
+      box-shadow: 0 0 10px rgba(0, 251, 251, 0.14);
+    }
+  }
+
+  &__panel {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 12px 12px;
+  }
+}
+
+// ── Bỏ filter tối trên bản đồ — để bản đồ hiển thị màu gốc ─────────────────
+:host ::ng-deep .rls-home__map .maplibregl-canvas {
+  filter: none;
+}
+
+// ── Ẩn attribution mặc định của MapLibre ────────────────────────────────────
+:host ::ng-deep .maplibregl-ctrl-attrib {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .rls-home {
+    &__quick a {
+      min-height: 34px;
+      font-size: 11px;
+    }
+  }
+}
+
+@keyframes rls-spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Custom DOM marker (MapLibre) ─────────────────────────────────────────────
+:host ::ng-deep .rls-map-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.6));
+
+  // Avatar ring
+  .rls-map-marker-avatar {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px;
+    padding: 2.5px;
+    background: conic-gradient(#00fbfb, #7c5fff, #ff59be, #00fbfb);
+    box-shadow: 0 0 14px rgba(0, 251, 251, 0.55);
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 9999px;
+      object-fit: cover;
+      border: 2px solid #0e1225;
+    }
+
+    .rls-map-marker-dot {
+      width: 100%;
+      height: 100%;
+      border-radius: 9999px;
+      background: #22d3ee;
+      border: 2px solid #0e1225;
+    }
+  }
+
+  // LIVE badge
+  .rls-map-marker-live {
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  // Count badge
+  .rls-map-marker-count {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 9999px;
+    background: #ff59be;
+    border: 1.5px solid #0e1225;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 16px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  // Label
+  .rls-map-marker-label {
+    max-width: 80px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(10, 14, 33, 0.85);
+    border: 1px solid rgba(0, 251, 251, 0.2);
+    color: #f8fafc;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    backdrop-filter: blur(6px);
+  }
+
+  // Màu ring theo loại
+  &.rls-map-marker-food .rls-map-marker-avatar {
+    background: conic-gradient(#fb923c, #fbbf24, #fb923c);
+    box-shadow: 0 0 14px rgba(251, 146, 60, 0.6);
+  }
+  &.rls-map-marker-cafe .rls-map-marker-avatar {
+    background: conic-gradient(#f472b6, #e879f9, #f472b6);
+    box-shadow: 0 0 14px rgba(244, 114, 182, 0.6);
+  }
+  &.rls-map-marker-event .rls-map-marker-avatar {
+    background: conic-gradient(#a78bfa, #818cf8, #a78bfa);
+    box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
+  }
+  &.rls-map-marker-hot_area .rls-map-marker-avatar {
+    background: conic-gradient(#ef4444, #f97316, #ef4444);
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.75);
+  }
+
+  &.is-active .rls-map-marker-avatar {
+    animation: rls-ring-pulse 2s ease-out infinite;
+  }
+}
+
+@keyframes rls-ring-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 251, 251, 0.7); }
+  60%  { box-shadow: 0 0 0 10px rgba(0, 251, 251, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 251, 251, 0); }
+}
+
+@keyframes rls-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.6); }
+  70%  { box-shadow: 0 0 0 12px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+}

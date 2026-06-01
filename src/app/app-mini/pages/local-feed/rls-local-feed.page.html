@@ -1,0 +1,139 @@
+<div class="rls-feed-page">
+  <header class="rls-feed-header">
+    <div>
+      <span class="rls-feed-eyebrow">Local signal</span>
+      <h2 class="rls-feed-title">Feed địa phương</h2>
+    </div>
+    <button
+      class="rls-icon-btn"
+      (click)="onRefresh()"
+      [disabled]="refreshing || loading"
+      aria-label="Làm mới feed"
+    >
+      <span
+        class="rls-icon rls-icon--refresh"
+        [class.rls-icon--spinning]="refreshing"
+      ></span>
+    </button>
+  </header>
+
+
+  <form
+    class="rls-compose"
+    [formGroup]="postForm"
+    (ngSubmit)="submitPost()"
+    aria-label="Đăng nội dung mới"
+  >
+    <div class="rls-compose__top">
+      <div>
+        <span>Đăng tải</span>
+        <strong>{{ isAuthenticated ? 'Chia sẻ ngay quanh bạn' : 'OTP để đăng bài' }}</strong>
+      </div>
+      <a routerLink="/app-mini/friends" class="rls-compose__friends">
+        <i class="fa-solid fa-address-book" aria-hidden="true"></i>
+        <span>Danh bạ</span>
+      </a>
+    </div>
+
+    <div class="rls-compose-types" role="group" aria-label="Loại nội dung">
+      <button
+        *ngFor="let item of contentTypes"
+        type="button"
+        [class.is-active]="postForm.value.type === item.type"
+        (click)="selectContentType(item.type)"
+      >
+        <i [ngClass]="item.iconClass" aria-hidden="true"></i>
+        <span>{{ item.label }}</span>
+      </button>
+    </div>
+
+    <textarea
+      formControlName="content"
+      class="rls-compose-input"
+      rows="3"
+      maxlength="280"
+      placeholder="Có gì đang diễn ra quanh bạn?"
+      [class.is-invalid]="contentCtrl?.invalid && contentCtrl?.touched"
+    ></textarea>
+
+    <div class="rls-compose__footer">
+      <span
+        *ngIf="contentCtrl?.invalid && contentCtrl?.touched"
+        class="rls-compose-error"
+        role="alert"
+      >
+        Nội dung cần từ 3 đến 280 ký tự.
+      </span>
+      <span *ngIf="!(contentCtrl?.invalid && contentCtrl?.touched)" class="rls-compose-counter">
+        {{ postForm.value.content?.length || 0 }}/280
+      </span>
+      <button
+        type="submit"
+        class="rls-compose-submit"
+        [disabled]="posting"
+        [attr.aria-busy]="posting"
+      >
+        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+        <span>{{ posting ? 'Đang đăng' : 'Đăng' }}</span>
+      </button>
+    </div>
+  </form>
+
+  <section class="rls-feed-chips" aria-label="Chủ đề nhanh">
+    <span>Check-in nóng</span>
+    <span>Review 2 phút</span>
+    <span>Clip khu phố</span>
+    <span>Bạn bè gần đây</span>
+    <span>Đang viral</span>
+  </section>
+
+  <div
+    *ngIf="loading && posts.length === 0"
+    class="rls-feed-list"
+    aria-busy="true"
+    aria-label="Đang tải feed"
+  >
+    <div *ngFor="let i of [1,2,3]" class="rls-skeleton-card"></div>
+  </div>
+
+  <div *ngIf="!loading && posts.length === 0" class="rls-feed-empty">
+    <span class="rls-feed-empty-icon" aria-hidden="true">+</span>
+    <p>Bảng tin đang chờ tín hiệu mới trong khu vực này.</p>
+    <p class="rls-feed-empty-hint">
+      Khi người dùng đăng bài, feed sẽ ưu tiên nội dung gần bạn và nội dung từ bạn bè trong danh bạ.
+    </p>
+  </div>
+
+  <div
+    *ngIf="posts.length > 0"
+    class="rls-feed-list"
+    role="feed"
+    aria-label="Danh sách bài đăng"
+  >
+    <rls-feed-card
+      *ngFor="let post of posts; trackBy: trackByPost"
+      [post]="post"
+      (react)="onReact($event.post.id, $event.type)"
+    ></rls-feed-card>
+
+    <div class="rls-feed-load-more">
+      <button
+        *ngIf="hasMore && !loading"
+        class="rls-btn rls-btn--ghost"
+        (click)="onLoadMore()"
+      >
+        Tải thêm
+      </button>
+      <div
+        *ngIf="loading && posts.length > 0"
+        class="rls-loading-indicator"
+        aria-label="Đang tải thêm..."
+      >
+        <span class="rls-spinner rls-spinner--sm"></span>
+      </div>
+      <p *ngIf="!hasMore && posts.length > 0" class="rls-feed-end-hint">
+        Đã hết bài đăng
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,137 @@
+<div class="rls-auth-page">
+  <!-- Header -->
+  <div class="rls-auth-header">
+    <div class="rls-auth-logo">
+      <span class="rls-neon-text">RLS</span>
+    </div>
+    <h1 class="rls-auth-title">Tạo tài khoản</h1>
+    <p class="rls-auth-subtitle">Tham gia cộng đồng địa phương của bạn</p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="rls-auth-form" novalidate>
+
+    <!-- General error -->
+    <div *ngIf="generalError" class="rls-form-error-banner" role="alert">
+      {{ generalError }}
+    </div>
+
+    <!-- Display name -->
+    <div class="rls-form-group">
+      <label for="rls-display-name" class="rls-form-label">Tên hiển thị <span aria-hidden="true">*</span></label>
+      <input
+        id="rls-display-name"
+        type="text"
+        formControlName="display_name"
+        class="rls-form-input"
+        [class.rls-form-input--error]="nameCtrl?.invalid && nameCtrl?.touched"
+        placeholder="Tên của bạn"
+        autocomplete="name"
+        aria-describedby="rls-name-error"
+      />
+      <span id="rls-name-error" class="rls-form-field-error"
+        *ngIf="nameCtrl?.invalid && nameCtrl?.touched" role="alert">
+        <ng-container *ngIf="nameCtrl?.errors?.['required']">Tên hiển thị là bắt buộc.</ng-container>
+        <ng-container *ngIf="nameCtrl?.errors?.['minlength']">Tên tối thiểu 2 ký tự.</ng-container>
+        <ng-container *ngIf="fieldError('display_name')">{{ fieldError('display_name') }}</ng-container>
+      </span>
+    </div>
+
+    <!-- Email -->
+    <div class="rls-form-group">
+      <label for="rls-reg-email" class="rls-form-label">Email <span aria-hidden="true">*</span></label>
+      <input
+        id="rls-reg-email"
+        type="email"
+        formControlName="email"
+        class="rls-form-input"
+        [class.rls-form-input--error]="emailCtrl?.invalid && emailCtrl?.touched"
+        placeholder="you@example.com"
+        autocomplete="email"
+        aria-describedby="rls-reg-email-error"
+      />
+      <span id="rls-reg-email-error" class="rls-form-field-error"
+        *ngIf="emailCtrl?.invalid && emailCtrl?.touched" role="alert">
+        <ng-container *ngIf="emailCtrl?.errors?.['required']">Email là bắt buộc.</ng-container>
+        <ng-container *ngIf="emailCtrl?.errors?.['email']">Email không hợp lệ.</ng-container>
+        <ng-container *ngIf="fieldError('email')">{{ fieldError('email') }}</ng-container>
+      </span>
+    </div>
+
+    <!-- Username (optional) -->
+    <div class="rls-form-group">
+      <label for="rls-username" class="rls-form-label">
+        Username <span class="rls-form-label--optional">(tuỳ chọn)</span>
+      </label>
+      <input
+        id="rls-username"
+        type="text"
+        formControlName="username"
+        class="rls-form-input"
+        placeholder="@username"
+        autocomplete="username"
+      />
+      <span class="rls-form-field-error" *ngIf="fieldError('username')">{{ fieldError('username') }}</span>
+    </div>
+
+    <!-- Password -->
+    <div class="rls-form-group">
+      <label for="rls-reg-password" class="rls-form-label">Mật khẩu <span aria-hidden="true">*</span></label>
+      <input
+        id="rls-reg-password"
+        type="password"
+        formControlName="password"
+        class="rls-form-input"
+        [class.rls-form-input--error]="passwordCtrl?.invalid && passwordCtrl?.touched"
+        placeholder="Tối thiểu 8 ký tự"
+        autocomplete="new-password"
+        aria-describedby="rls-reg-password-error"
+      />
+      <span id="rls-reg-password-error" class="rls-form-field-error"
+        *ngIf="passwordCtrl?.invalid && passwordCtrl?.touched" role="alert">
+        <ng-container *ngIf="passwordCtrl?.errors?.['required']">Mật khẩu là bắt buộc.</ng-container>
+        <ng-container *ngIf="passwordCtrl?.errors?.['minlength']">Mật khẩu tối thiểu 8 ký tự.</ng-container>
+        <ng-container *ngIf="fieldError('password')">{{ fieldError('password') }}</ng-container>
+      </span>
+    </div>
+
+    <!-- Confirm password -->
+    <div class="rls-form-group">
+      <label for="rls-confirm-password" class="rls-form-label">Xác nhận mật khẩu <span aria-hidden="true">*</span></label>
+      <input
+        id="rls-confirm-password"
+        type="password"
+        formControlName="password_confirmation"
+        class="rls-form-input"
+        [class.rls-form-input--error]="(confirmCtrl?.invalid && confirmCtrl?.touched) || passwordMismatch"
+        placeholder="Nhập lại mật khẩu"
+        autocomplete="new-password"
+        aria-describedby="rls-confirm-error"
+      />
+      <span id="rls-confirm-error" class="rls-form-field-error"
+        *ngIf="(confirmCtrl?.invalid && confirmCtrl?.touched) || passwordMismatch" role="alert">
+        <ng-container *ngIf="confirmCtrl?.errors?.['required']">Xác nhận mật khẩu là bắt buộc.</ng-container>
+        <ng-container *ngIf="passwordMismatch">Mật khẩu không khớp.</ng-container>
+      </span>
+    </div>
+
+    <!-- Submit -->
+    <button
+      type="submit"
+      class="rls-btn rls-btn--primary rls-btn--full"
+      [disabled]="loading"
+      [attr.aria-busy]="loading"
+    >
+      <span *ngIf="!loading">Tạo tài khoản</span>
+      <span *ngIf="loading" class="rls-spinner" aria-label="Đang xử lý..."></span>
+    </button>
+  </form>
+
+  <!-- Footer links -->
+  <div class="rls-auth-footer">
+    <p>
+      Đã có tài khoản?
+      <a routerLink="/app-mini/login" class="rls-link">Đăng nhập</a>
+    </p>
+  </div>
+</div>

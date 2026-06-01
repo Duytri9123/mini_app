@@ -59,9 +59,6 @@
       "es2022",
       "dom"
     ],
-    "types": [
-      "leaflet"
-    ],
     "useDefineForClassFields": false
   },
   "angularCompilerOptions": {

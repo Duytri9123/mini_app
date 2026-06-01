@@ -1,0 +1,54 @@
+<button
+  type="button"
+  class="relative inline-flex flex-col items-center transition-transform duration-200"
+  [class]="wrapperScaleClass"
+  (click)="onTap()"
+  [attr.aria-label]="ariaLabel"
+>
+  <!-- Vòng pulse phụ trợ phía sau (cường độ theo state — R3.3) -->
+  <span
+    *ngIf="showPulseRing"
+    class="pointer-events-none absolute inset-0 -z-10 rounded-full border opacity-60"
+    [class]="ringClass + ' ' + pulseClass"
+    aria-hidden="true"
+  ></span>
+
+  <!-- Badge countdown/count (R3.5) -->
+  <rls-neon-badge
+    *ngIf="marker.badge"
+    class="absolute -right-2 -top-2 z-10"
+    [badge]="marker.badge"
+  ></rls-neon-badge>
+
+  <!-- Thân marker ảnh tròn với viền + glow neon theo type (R3.1, R3.2) -->
+  <span
+    class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 bg-slate-900/80 backdrop-blur-sm"
+    [class]="ringClass"
+  >
+    <img
+      *ngIf="imageUrl"
+      [src]="imageUrl"
+      [alt]="marker.label || marker.type"
+      class="h-full w-full object-cover"
+      (error)="onImageError($event)"
+    />
+    <span
+      *ngIf="!imageUrl"
+      class="text-lg"
+      aria-hidden="true"
+    >{{ typeIcon }}</span>
+  </span>
+
+  <!-- Mũi nhọn chỉ vị trí -->
+  <span
+    class="-mt-0.5 h-2 w-2 rotate-45 border-b-2 border-r-2 bg-slate-900/80"
+    [class]="ringClass"
+    aria-hidden="true"
+  ></span>
+
+  <!-- Nhãn ngắn (tuỳ chọn) -->
+  <span
+    *ngIf="marker.label"
+    class="mt-1 max-w-[5rem] truncate rounded-full bg-slate-900/70 px-2 py-0.5 text-[10px] font-medium text-slate-100 backdrop-blur-sm"
+  >{{ marker.label }}</span>
+</button>

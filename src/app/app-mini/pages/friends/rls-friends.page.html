@@ -1,0 +1,103 @@
+<div class="rls-friends-page">
+  <header class="rls-friends-header">
+    <div>
+      <span class="rls-friends-eyebrow">Social graph</span>
+      <h2 class="rls-friends-title">Bạn bè</h2>
+    </div>
+    <button
+      type="button"
+      class="rls-icon-btn"
+      (click)="loadSuggestions()"
+      [disabled]="loading"
+      aria-label="Làm mới gợi ý"
+    >
+      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <section class="rls-friends-hero" aria-label="Thông số kết nối">
+    <div class="rls-friends-hero__copy">
+      <h3>Vòng kết nối quanh bạn</h3>
+      <p>Danh bạ, bạn chung và điểm nóng gần đây tạo thành lớp feed riêng cho từng người.</p>
+    </div>
+    <div class="rls-friends-stats">
+      <div>
+        <span>{{ matchedCount || suggestions.length }}</span>
+        <small>trùng danh bạ</small>
+      </div>
+      <div>
+        <span>{{ requestedCount }}</span>
+        <small>đã mời</small>
+      </div>
+      <div>
+        <span>{{ friendContentCount }}</span>
+        <small>bài từ bạn bè</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="rls-contact-sync" aria-label="Đồng bộ danh bạ">
+    <div>
+      <span>Danh bạ</span>
+      <strong>{{ contactApiAvailable ? 'Có thể chọn liên hệ' : 'Dùng danh bạ mẫu' }}</strong>
+    </div>
+    <button
+      type="button"
+      class="rls-sync-btn"
+      (click)="syncContacts()"
+      [disabled]="importing"
+      [attr.aria-busy]="importing"
+    >
+      <i class="fa-solid fa-address-book" aria-hidden="true"></i>
+      <span>{{ importing ? 'Đang đồng bộ' : 'Đồng bộ' }}</span>
+    </button>
+  </section>
+
+  <section class="rls-friends-groups" aria-label="Nhóm gợi ý">
+    <button type="button" *ngFor="let group of quickGroups">
+      <span>{{ group.label }}</span>
+      <strong>{{ group.value }}</strong>
+    </button>
+  </section>
+
+  <section class="rls-friends-list" aria-label="Gợi ý kết bạn">
+    <div *ngIf="loading" class="rls-friend-skeleton"></div>
+
+    <article
+      *ngFor="let item of suggestions; trackBy: trackBySuggestion"
+      class="rls-friend-row"
+    >
+      <div class="rls-friend-avatar" aria-hidden="true">
+        <img *ngIf="item.avatarUrl; else initial" [src]="item.avatarUrl" [alt]="item.displayName" />
+        <ng-template #initial>{{ item.displayName.charAt(0) }}</ng-template>
+      </div>
+
+      <div class="rls-friend-main">
+        <div class="rls-friend-main__top">
+          <h3>{{ item.displayName }}</h3>
+          <span>{{ sourceLabel(item.source) }}</span>
+        </div>
+        <p>
+          {{ item.mutualCount }} bạn chung
+          <ng-container *ngIf="item.distanceLabel"> · {{ item.distanceLabel }}</ng-container>
+          <ng-container *ngIf="item.lastActiveLabel"> · {{ item.lastActiveLabel }}</ng-container>
+        </p>
+        <div class="rls-friend-metrics">
+          <small>{{ item.postsCount }} bài đăng</small>
+          <small>{{ item.phone || 'đã xác minh OTP' }}</small>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="rls-friend-action"
+        [class.is-done]="item.status !== 'suggested'"
+        [disabled]="item.status !== 'suggested'"
+        (click)="connect(item)"
+      >
+        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+        <span>{{ actionLabel(item) }}</span>
+      </button>
+    </article>
+  </section>
+</div>

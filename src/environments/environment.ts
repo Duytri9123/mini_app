@@ -1,5 +1,5 @@
-const BASE_URL_VALUE = 'https://admin-jet.tinopage.com';
-// const BASE_URL_VALUE = 'http://192.168.1.92:8000';
+// const BASE_URL_VALUE = 'https://cms.gapmove.com';
+const BASE_URL_VALUE = 'http://127.0.0.1:8002/';
 const GOOGLE_CLIENT_ID_VALUE =
   '764570307183-17o4dsc046ga93sojamt9p640irkgsc8.apps.googleusercontent.com';
 
@@ -9,7 +9,18 @@ export const environment = {
 
   GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID_VALUE,
   NDAMAPS_API_KEY: 'EEIC7Jm9qNPD0L5HpyasquCJ7bnHjhdv',
-  VIETMAP_API_KEY: 'EEIC7Jm9qNPD0L5HpyasquCJ7bnHjhdv',
+
+  // Laravel Reverb (Pusher protocol) — consumed by RlsRealtimeService (app-mini).
+  // Only the app key is a fixed config value (mirror backend REVERB_APP_KEY);
+  // the WebSocket host is derived from BASE_URL at runtime so no URL is hardcoded
+  // (requirements 14.3, 14.6). Leave `wsHost` blank to derive from BASE_URL.
+  reverb: {
+    appKey: 'rls-reverb-key',
+    wsHost: '',
+    wsPort: 443,
+    wssPort: 443,
+    forceTLS: true,
+  },
   firebase: {
     apiKey: 'AIzaSyD0_UAJLa0bqSkdspVCiRDX25CiI-UuA3A',
     authDomain: 'jetjet-88753.firebaseapp.com',

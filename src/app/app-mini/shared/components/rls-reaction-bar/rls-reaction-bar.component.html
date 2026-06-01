@@ -1,0 +1,30 @@
+<div
+  class="flex items-center gap-1.5"
+  role="group"
+  aria-label="Reaction"
+>
+  <button
+    *ngFor="let r of reactions; trackBy: trackByType"
+    type="button"
+    (click)="onReact(r.type)"
+    [disabled]="disabled"
+    [attr.aria-pressed]="active === r.type"
+    [attr.aria-label]="r.label"
+    [title]="r.label"
+    class="flex items-center gap-1 rounded-full px-2.5 py-1 text-sm transition-all duration-150 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+    [ngClass]="
+      active === r.type
+        ? 'bg-white/10 ring-1 ring-cyan-400/50 backdrop-blur-md ' + r.glow
+        : 'bg-white/5 hover:bg-white/10 ring-1 ring-white/10'
+    "
+  >
+    <span class="text-base leading-none">{{ r.emoji }}</span>
+    <span
+      *ngIf="showLabels"
+      class="text-xs font-medium"
+      [ngClass]="active === r.type ? 'text-cyan-200' : 'text-slate-300'"
+    >
+      {{ r.label }}
+    </span>
+  </button>
+</div>

@@ -1,21 +1,19 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
-import { BjToastComponent } from './bro-jet/shared/components/bj-toast/bj-toast.component';
-import { BjAuthInterceptor } from './bro-jet/core/interceptors/bj-auth.interceptor';
 
 import { AngularFireModule } from '@angular/fire/compat';
 import { AngularFireAuthModule } from '@angular/fire/compat/auth';
 import { environment } from '../environments/environment';
 
 @NgModule({
-  declarations: [AppComponent, BjToastComponent],
+  declarations: [AppComponent],
   imports: [
     BrowserModule,
     HttpClientModule,
@@ -26,7 +24,6 @@ import { environment } from '../environments/environment';
   ],
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    { provide: HTTP_INTERCEPTORS, useClass: BjAuthInterceptor, multi: true },
   ],
   bootstrap: [AppComponent],
 })

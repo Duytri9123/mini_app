@@ -1,0 +1,215 @@
+:host {
+  display: block;
+  background: var(--rls-bg, #0a0a0f);
+  min-height: 100vh;
+}
+
+.rls-location-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 5rem;
+}
+
+.rls-location-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rls-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 1.125rem;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(167, 139, 250, 0.15);
+    color: #a78bfa;
+  }
+}
+
+.rls-location-header-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rls-location-hero {
+  margin-bottom: 1rem;
+}
+
+.rls-skeleton-hero {
+  height: 220px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: rls-shimmer 1.4s infinite;
+}
+
+@keyframes rls-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.rls-location-cover {
+  position: relative;
+  height: 220px;
+  background: #1e1e2e center/cover no-repeat;
+  overflow: hidden;
+}
+
+.rls-location-cover-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 60%);
+}
+
+.rls-location-cover-content {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+}
+
+.rls-location-name {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.25rem;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.rls-location-address {
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.75);
+  margin: 0;
+}
+
+.rls-location-stats {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.rls-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.875rem 0.5rem;
+  border-right: 1px solid rgba(255,255,255,0.06);
+
+  &:last-child { border-right: none; }
+}
+
+.rls-stat-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.rls-stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.125rem;
+}
+
+.rls-location-not-found {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.rls-location-feed {
+  padding: 0 0.75rem;
+}
+
+.rls-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin: 0 0 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.rls-skeleton-card {
+  height: 160px;
+  border-radius: 1rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: rls-shimmer 1.4s infinite;
+}
+
+.rls-feed-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9375rem;
+}
+
+.rls-feed-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+.rls-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s;
+
+  &--ghost {
+    background: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    &:hover { background: rgba(255, 255, 255, 0.1); }
+  }
+}
+
+.rls-spinner {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid rgba(167, 139, 250, 0.3);
+  border-top-color: #a78bfa;
+  border-radius: 50%;
+  animation: rls-spin 0.7s linear infinite;
+
+  &--sm { width: 1.25rem; height: 1.25rem; }
+}
+
+@keyframes rls-spin {
+  to { transform: rotate(360deg); }
+}
+
+.rls-link {
+  color: #a78bfa;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}

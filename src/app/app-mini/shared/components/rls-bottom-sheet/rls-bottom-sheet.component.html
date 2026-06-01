@@ -1,0 +1,38 @@
+<!--
+  RlsBottomSheetComponent — bottom sheet snap points (design.md §9.3, R2.4/R14.5).
+  Dark neon glow + light glassmorphism qua Tailwind v4. Nội dung truyền qua ng-content.
+-->
+<section
+  #sheet
+  class="pointer-events-auto flex w-full flex-col overflow-hidden rounded-t-[26px] border-t border-cyan-300/20 bg-[#0d1228]/90 text-slate-100 shadow-[0_-4px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-[height,transform] duration-300 ease-out"
+  [class.duration-0]="dragging"
+  [class.transition-none]="dragging"
+  [style.height.%]="heightPercent"
+  [style.transform]="'translateY(' + translatePx + 'px)'"
+>
+  <!-- Drag handle (kéo để snap, click để luân chuyển) -->
+  <button
+    type="button"
+    class="flex w-full shrink-0 cursor-grab touch-none flex-col items-center gap-1 px-4 pb-1 pt-3 active:cursor-grabbing"
+    [attr.aria-label]="'Kéo để thay đổi kích thước bảng (snap: ' + snap + ')'"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerUp($event)"
+    (click)="cycle()"
+  >
+    <span
+      class="h-1.5 w-12 rounded-full bg-cyan-300/60 shadow-[0_0_10px_rgba(0,251,251,0.7)]"
+    ></span>
+  </button>
+
+  <!-- Slot header tuỳ chọn (search bar / tiêu đề) -->
+  <div class="shrink-0 px-4">
+    <ng-content select="[sheetHeader]"></ng-content>
+  </div>
+
+  <!-- Nội dung cuộn (nearby / trending panel) -->
+  <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[env(safe-area-inset-bottom)]">
+    <ng-content></ng-content>
+  </div>
+</section>

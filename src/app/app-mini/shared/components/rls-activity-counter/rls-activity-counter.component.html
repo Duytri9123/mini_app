@@ -1,0 +1,11 @@
+<span
+  [class]="containerClass"
+  role="status"
+  [attr.aria-label]="safeCount + ' ' + label"
+>
+  <span class="relative flex h-1.5 w-1.5 items-center justify-center">
+    <span [class]="dotClass" aria-hidden="true"></span>
+  </span>
+  <span class="tabular-nums">{{ safeCount }}</span>
+  <span class="opacity-80">{{ label }}</span>
+</span>

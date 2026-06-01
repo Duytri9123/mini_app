@@ -1,0 +1,21 @@
+<button
+  type="button"
+  class="relative inline-flex items-center justify-center"
+  (click)="onTap()"
+  [attr.aria-label]="ariaLabel"
+>
+  <!-- Vòng pulse ngoài (hiệu ứng campus cluster) -->
+  <span
+    class="pointer-events-none absolute inset-0 -z-10 animate-ping rounded-full border opacity-50"
+    [class]="glowClass"
+    aria-hidden="true"
+  ></span>
+
+  <!-- Bong bóng đếm số (kích thước + glow theo mật độ — R3.4) -->
+  <span
+    class="flex items-center justify-center rounded-full border-2 font-bold tabular-nums backdrop-blur-md"
+    [class]="sizeClass + ' ' + glowClass"
+  >
+    {{ displayCount }}
+  </span>
+</button>

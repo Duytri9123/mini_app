@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/appmini-check",
+    "types": ["leaflet"],
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src/app/app-mini/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}

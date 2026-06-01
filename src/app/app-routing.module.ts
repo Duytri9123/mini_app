@@ -14,18 +14,6 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 // import { BetaRouteBlockGuard } from './gogo/guards/beta-route-block.guard';
 
 const routes: Routes = [
-  // ── GapMove delivery and ride booking ─────────────────────────────────────
-  {
-    path: 'gap-move',
-    loadChildren: () =>
-      import('./gap-move/gapmove.module').then((m) => m.GapMoveModule),
-  },
-  // ── BRO JET Auto Spa ──────────────────────────────────────────────────────
-  {
-    path: 'bro-jet',
-    loadChildren: () =>
-      import('./bro-jet/bro-jet.module').then((m) => m.BroJetModule),
-  },
   // ── Realtime Local Social (app-mini) ───────────────────────────────────────
   {
     path: 'app-mini',
@@ -34,7 +22,7 @@ const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'gap-move',
+    redirectTo: 'app-mini',
     pathMatch: 'full',
   },
 

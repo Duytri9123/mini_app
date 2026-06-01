@@ -1,6 +1,196 @@
-<div class="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-950 px-6 text-center text-slate-100">
-  <div class="rounded-2xl border border-cyan-500/30 bg-slate-900/60 px-8 py-10 shadow-[0_0_24px_rgba(34,211,238,0.25)] backdrop-blur-md">
-    <h1 class="text-xl font-semibold text-cyan-300">Realtime Local Social</h1>
-    <p class="mt-2 text-sm text-slate-400">Bản đồ realtime sẽ sẵn sàng ở đây.</p>
+<!--
+  RlsHomeMapPage — bản đồ realtime toàn màn hình.
+  Không dùng bottom sheet — thay bằng drawer slide-up khi cần.
+-->
+<div class="rls-home">
+
+  <!-- Bản đồ MapLibre (toàn màn hình) -->
+  <div #mapContainer class="rls-home__map"></div>
+
+  <!-- Overlay trên cùng: search bar + quick nav -->
+  <div class="rls-home__top">
+    <rls-search-bar (query)="onSearch($event)"></rls-search-bar>
+
+    <nav class="rls-home__quick" aria-label="Lối tắt">
+      <a routerLink="/app-mini/feed">
+        <i class="fa-solid fa-rss" aria-hidden="true"></i>
+        Feed
+      </a>
+      <a routerLink="/app-mini/trending">
+        <i class="fa-solid fa-fire" aria-hidden="true"></i>
+        Hot
+      </a>
+      <a routerLink="/app-mini/stories">
+        <i class="fa-solid fa-circle-play" aria-hidden="true"></i>
+        Stories
+      </a>
+      <a routerLink="/app-mini/notifications">
+        <i class="fa-solid fa-bell" aria-hidden="true"></i>
+        Tin
+      </a>
+    </nav>
   </div>
+
+  <!-- Cụm nút phải: post + filter + locate + 3D — tất cả 46×46, đồng đều -->
+  <div class="rls-home__fab-group">
+
+    <!-- Nút post / checkin (màu đồng) — đặt trên cùng cho nổi bật -->
+    <a
+      class="rls-home__post-btn"
+      routerLink="/app-mini/post/create"
+      aria-label="Tạo bài viết hoặc check-in"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+
+    <!-- Nút filter -->
+    <button
+      type="button"
+      class="rls-home__fab"
+      aria-label="Bộ lọc bản đồ"
+      (click)="openPanel('nearby')"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="4" y1="6" x2="20" y2="6" stroke-linecap="round"/>
+        <line x1="4" y1="12" x2="14" y2="12" stroke-linecap="round"/>
+        <line x1="4" y1="18" x2="10" y2="18" stroke-linecap="round"/>
+        <circle cx="17" cy="12" r="2.5" fill="currentColor" stroke="none"/>
+        <circle cx="13" cy="18" r="2.5" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+
+    <!-- Nút định vị -->
+    <button
+      type="button"
+      class="rls-home__fab rls-home__fab--locate"
+      [class.is-busy]="locating"
+      (click)="locateMe()"
+      aria-label="Về vị trí của tôi"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="3.5"/>
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Nút toggle vệ tinh -->
+    <button
+      type="button"
+      class="rls-home__fab rls-home__fab--satellite"
+      [class.is-active]="isSatellite"
+      (click)="toggleSatellite()"
+      aria-label="Chuyển chế độ vệ tinh"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <!-- Quả địa cầu -->
+        <circle cx="12" cy="12" r="9"/>
+        <ellipse cx="12" cy="12" rx="4" ry="9"/>
+        <line x1="3" y1="12" x2="21" y2="12" stroke-linecap="round"/>
+        <line x1="5" y1="7" x2="19" y2="7" stroke-linecap="round"/>
+        <line x1="5" y1="17" x2="19" y2="17" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+  </div>
+
+  <!-- Toast NEARBY TRENDING (luôn hiện ở góc dưới trái) -->
+  <div
+    class="rls-home__toast"
+    (click)="openPanel('trending')"
+    role="button"
+    tabindex="0"
+    aria-label="Xem địa điểm trending gần đây"
+  >
+    <div class="rls-home__toast-thumb">
+      <ng-container *ngIf="trending.length > 0 && trending[0].thumbnailUrl; else toastFallback">
+        <img [src]="trending[0].thumbnailUrl" [alt]="trending[0].name" />
+      </ng-container>
+      <ng-template #toastFallback>
+        <span>PHO</span>
+      </ng-template>
+    </div>
+    <div class="rls-home__toast-body">
+      <div class="rls-home__toast-eyebrow">
+        <strong>NEARBY TRENDING</strong>
+        <time>2m ago</time>
+      </div>
+      <p class="rls-home__toast-title">
+        {{ trending.length > 0 ? trending[0].name : 'Bến bờ Huế secret spot 🍜' }}
+      </p>
+      <p class="rls-home__toast-sub">
+        <ng-container *ngIf="trending.length > 0; else toastSubFallback">
+          {{ trending[0].reasonLabel || trending[0].reason }}
+          <ng-container *ngIf="trending[0].stats?.activeCount">
+            · {{ trending[0].stats?.activeCount }} người đang ở đây
+          </ng-container>
+        </ng-container>
+        <ng-template #toastSubFallback>
+          @minh_nguyen is here with 5 oth...
+        </ng-template>
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Backdrop khi drawer mở ── -->
+  <div
+    class="rls-home__backdrop"
+    [class.is-open]="panelOpen"
+    (click)="closePanel()"
+    aria-hidden="true"
+  ></div>
+
+  <!-- ── Drawer slide-up (thay thế bottom sheet) ── -->
+  <div
+    class="rls-home__drawer"
+    [class.is-open]="panelOpen"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Địa điểm gần bạn và trending"
+  >
+    <!-- Handle + nút đóng -->
+    <div class="rls-home__drawer-handle">
+      <span class="rls-home__drawer-pill">Địa điểm</span>
+      <button type="button" class="rls-home__drawer-close" (click)="closePanel()" aria-label="Đóng">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="rls-home__tabs">
+      <button
+        type="button"
+        class="rls-home__tab"
+        [class.is-active]="activeTab === 'nearby'"
+        (click)="selectTab('nearby')"
+      >
+        Gần bạn
+      </button>
+      <button
+        type="button"
+        class="rls-home__tab"
+        [class.is-active]="activeTab === 'trending'"
+        (click)="selectTab('trending')"
+      >
+        Trending
+      </button>
+    </div>
+
+    <!-- Nội dung tab -->
+    <div class="rls-home__panel">
+      <rls-nearby-panel
+        *ngIf="activeTab === 'nearby'"
+        [places]="nearby"
+        [loading]="loadingNearby"
+        (select)="onSelectPlace($event)"
+      ></rls-nearby-panel>
+
+      <rls-trending-panel
+        *ngIf="activeTab === 'trending'"
+        [items]="trending"
+        [loading]="loadingTrending"
+        (open)="onSelectPlace($event)"
+      ></rls-trending-panel>
+    </div>
+  </div>
+
 </div>

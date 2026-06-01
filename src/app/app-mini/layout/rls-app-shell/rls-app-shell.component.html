@@ -1,0 +1,24 @@
+<div
+  class="rls-shell"
+  [class.rls-shell--map]="isMapPage"
+  [class.rls-shell--no-nav]="hideNav"
+>
+  <main class="rls-shell__content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <nav *ngIf="!hideNav" class="rls-shell__nav" aria-label="Mini app navigation">
+    <a
+      *ngFor="let item of navItems"
+      class="rls-shell__nav-item"
+      [class.rls-shell__nav-item--prominent]="item.prominent"
+      [routerLink]="item.path"
+      [routerLinkActive]="item.activeDisabled ? '' : 'is-active'"
+      [routerLinkActiveOptions]="{ exact: item.exact }"
+      [attr.aria-label]="item.label"
+    >
+      <i class="rls-shell__nav-icon" [ngClass]="item.iconClass" aria-hidden="true"></i>
+      <span class="rls-shell__nav-label">{{ item.label }}</span>
+    </a>
+  </nav>
+</div>

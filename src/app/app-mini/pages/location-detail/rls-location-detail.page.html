@@ -1,0 +1,85 @@
+<div class="rls-location-page">
+  <!-- Back button -->
+  <header class="rls-location-header">
+    <a routerLink="/app-mini/home-map" class="rls-back-btn" aria-label="Quay lại bản đồ">
+      <span aria-hidden="true">←</span>
+    </a>
+    <h2 class="rls-location-header-title">
+      {{ location?.name ?? 'Địa điểm' }}
+    </h2>
+  </header>
+
+  <!-- Location info skeleton -->
+  <div *ngIf="loadingLocation" class="rls-location-hero rls-skeleton-hero" aria-busy="true" aria-label="Đang tải..."></div>
+
+  <!-- Location info -->
+  <section *ngIf="!loadingLocation && location" class="rls-location-hero">
+    <div
+      class="rls-location-cover"
+      [style.background-image]="location.thumbnailUrl ? 'url(' + location.thumbnailUrl + ')' : null"
+      role="img"
+      [attr.aria-label]="location.name"
+    >
+      <div class="rls-location-cover-overlay"></div>
+      <div class="rls-location-cover-content">
+        <h1 class="rls-location-name">{{ location.name }}</h1>
+        <p *ngIf="location.category" class="rls-location-address">
+          <span aria-hidden="true">🏷️</span> {{ location.category }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="rls-location-stats" role="list">
+      <div class="rls-stat" role="listitem">
+        <span class="rls-stat-value">{{ location.stats?.checkinsCount ?? 0 }}</span>
+        <span class="rls-stat-label">Check-in</span>
+      </div>
+      <div class="rls-stat" role="listitem">
+        <span class="rls-stat-value">{{ location.stats?.postsCount ?? 0 }}</span>
+        <span class="rls-stat-label">Bài đăng</span>
+      </div>
+      <div class="rls-stat" role="listitem">
+        <span class="rls-stat-value">{{ (location.stats?.heatScore ?? 0) | number:'1.0-0' }}</span>
+        <span class="rls-stat-label">Heat</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Location not found -->
+  <div *ngIf="!loadingLocation && !location" class="rls-location-not-found">
+    <p>Không tìm thấy địa điểm này.</p>
+    <a routerLink="/app-mini/home-map" class="rls-link">Quay lại bản đồ</a>
+  </div>
+
+  <!-- Feed section -->
+  <section class="rls-location-feed" aria-label="Bài đăng tại địa điểm">
+    <h3 class="rls-section-title">Bài đăng tại đây</h3>
+
+    <!-- Feed skeleton -->
+    <div *ngIf="loadingFeed && posts.length === 0" aria-busy="true">
+      <div *ngFor="let i of [1,2]" class="rls-skeleton-card"></div>
+    </div>
+
+    <!-- Empty feed -->
+    <div *ngIf="!loadingFeed && posts.length === 0" class="rls-feed-empty">
+      <p>Chưa có bài đăng nào tại đây.</p>
+    </div>
+
+    <!-- Feed list -->
+    <div *ngIf="posts.length > 0" role="feed">
+      <rls-feed-card
+        *ngFor="let post of posts; trackBy: trackByPost"
+        [post]="post"
+        (react)="onReact($event.post.id, $event.type)"
+      ></rls-feed-card>
+
+      <div class="rls-feed-load-more">
+        <button *ngIf="hasMore && !loadingFeed" class="rls-btn rls-btn--ghost" (click)="onLoadMore()">
+          Tải thêm
+        </button>
+        <span *ngIf="loadingFeed && posts.length > 0" class="rls-spinner rls-spinner--sm" aria-label="Đang tải..."></span>
+      </div>
+    </div>
+  </section>
+</div>

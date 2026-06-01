@@ -1,0 +1,89 @@
+<!--
+  RlsNearbyPanelComponent — panel "gần bạn" (design.md §9.3, R2.4/R14.5).
+  Dark neon glow + light glassmorphism qua Tailwind v4.
+-->
+<div class="flex flex-col gap-3 py-2">
+  <!-- Tiêu đề panel -->
+  <h2 class="flex items-center gap-2 text-sm font-semibold text-cyan-300">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+    Gần bạn
+  </h2>
+
+  <!-- Skeleton khi đang nạp -->
+  <ng-container *ngIf="loading; else loadedTpl">
+    <div *ngFor="let _ of [1, 2, 3]" class="flex items-center gap-3 rounded-2xl bg-slate-900/45 p-3">
+      <div class="h-12 w-12 shrink-0 animate-pulse rounded-xl bg-slate-700/60"></div>
+      <div class="flex-1 space-y-2">
+        <div class="h-3 w-2/3 animate-pulse rounded bg-slate-700/60"></div>
+        <div class="h-3 w-1/3 animate-pulse rounded bg-slate-700/40"></div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #loadedTpl>
+    <!-- Empty state -->
+    <div
+      *ngIf="!places.length"
+      class="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-cyan-300/20 bg-slate-950/25 py-10 text-center text-slate-400"
+    >
+      <svg class="h-8 w-8 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+      </svg>
+      <p class="text-sm font-medium">Chưa có địa điểm nào gần đây</p>
+    </div>
+
+    <!-- Danh sách địa điểm -->
+    <ul class="flex flex-col gap-2">
+      <li *ngFor="let place of places; trackBy: trackById">
+        <button
+          type="button"
+          class="flex w-full items-center gap-3 rounded-2xl border border-cyan-300/15 bg-slate-950/45 p-3 text-left shadow-[0_0_18px_rgba(0,251,251,0.08)] backdrop-blur-md transition-all duration-200 hover:border-cyan-300/40 hover:bg-slate-900/70 hover:shadow-[0_0_18px_rgba(0,251,251,0.2)] active:scale-[0.99]"
+          (click)="onSelect(place)"
+        >
+          <!-- Thumbnail / fallback -->
+          <div class="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-800">
+            <img
+              *ngIf="place.thumbnailUrl"
+              [src]="place.thumbnailUrl"
+              [alt]="place.name"
+              class="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <div
+              *ngIf="!place.thumbnailUrl"
+              class="flex h-full w-full items-center justify-center text-slate-500"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21s-7-5.6-7-11a7 7 0 1114 0c0 5.4-7 11-7 11z" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Tên + category -->
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold text-slate-100">{{ place.name }}</p>
+            <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
+              <span class="truncate capitalize">{{ place.category }}</span>
+              <span *ngIf="place.stats?.activeCount" class="flex items-center gap-1 text-emerald-400">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]"></span>
+                {{ place.stats?.activeCount }} đang hoạt động
+              </span>
+            </div>
+          </div>
+
+          <!-- Badge khoảng cách -->
+          <span
+            *ngIf="formatDistance(place.distanceM) as dist"
+            class="shrink-0 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-xs font-semibold text-cyan-300"
+          >
+            {{ dist }}
+          </span>
+        </button>
+      </li>
+    </ul>
+  </ng-template>
+</div>

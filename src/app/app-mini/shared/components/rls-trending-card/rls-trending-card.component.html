@@ -1,0 +1,48 @@
+<button
+  type="button"
+  (click)="onOpen()"
+  class="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 p-3 text-left text-slate-100 shadow-[0_0_16px_rgba(168,85,247,0.12)] backdrop-blur-md transition-colors hover:border-fuchsia-500/30 active:scale-[0.99]"
+  [attr.aria-label]="'Mở ' + place.name"
+>
+  <!-- Thumbnail -->
+  <span
+    class="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-cyan-500/30 text-lg font-semibold text-fuchsia-100 ring-1 ring-white/15"
+  >
+    <img
+      *ngIf="place.thumbnailUrl as src; else initial"
+      [src]="src"
+      [alt]="place.name"
+      class="h-full w-full object-cover"
+      loading="lazy"
+    />
+    <ng-template #initial>{{ nameInitial }}</ng-template>
+  </span>
+
+  <!-- Nội dung -->
+  <span class="min-w-0 flex-1">
+    <span class="flex items-center gap-2">
+      <span class="truncate text-sm font-semibold">{{ place.name }}</span>
+    </span>
+
+    <!-- Badge lý do trending (R6.4) -->
+    <span
+      class="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1"
+      [ngClass]="reason.badge"
+    >
+      <span>{{ reason.icon }}</span>
+      <span>{{ reasonText }}</span>
+    </span>
+
+    <!-- Category + khoảng cách -->
+    <span class="mt-1 flex items-center gap-2 text-xs text-slate-400">
+      <span class="truncate capitalize">{{ place.category }}</span>
+      <ng-container *ngIf="hasDistance">
+        <span>·</span>
+        <span class="flex-shrink-0">{{ distanceText }}</span>
+      </ng-container>
+    </span>
+  </span>
+
+  <!-- Chevron -->
+  <span class="flex-shrink-0 text-slate-500" aria-hidden="true">›</span>
+</button>

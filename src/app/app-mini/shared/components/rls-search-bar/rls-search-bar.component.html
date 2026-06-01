@@ -1,0 +1,50 @@
+<!--
+  RlsSearchBarComponent — glassmorphism search bar (design.md §9.3, R2.4/R14.5).
+  Light glassmorphism + dark neon glow qua Tailwind v4.
+-->
+<div
+  class="flex items-center gap-2 rounded-[18px] border border-cyan-300/20 bg-[#080d1f]/75 px-3 py-2 text-slate-100 shadow-[0_0_22px_rgba(0,251,251,0.16)] backdrop-blur-xl transition-all duration-200"
+  [class.ring-2]="focused"
+  [class.ring-cyan-400/60]="focused"
+  [class.shadow-[0_0_28px_rgba(0,251,251,0.32)]]="focused"
+>
+  <!-- Icon kính lúp -->
+  <svg
+    class="h-5 w-5 shrink-0 text-cyan-300"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <circle cx="11" cy="11" r="7" />
+    <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+  </svg>
+
+  <!-- Ô nhập -->
+  <input
+    type="search"
+    inputmode="search"
+    autocomplete="off"
+    class="min-w-0 flex-1 border-0 bg-transparent text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+    [placeholder]="placeholder"
+    [attr.aria-label]="placeholder"
+    [ngModel]="value"
+    (ngModelChange)="onInput($event)"
+    (focus)="focused = true"
+    (blur)="focused = false"
+  />
+
+  <!-- Nút xoá (chỉ hiện khi có nội dung) -->
+  <button
+    *ngIf="value"
+    type="button"
+    class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-700/70 text-slate-200 transition-colors hover:bg-slate-600/80"
+    aria-label="Xoá tìm kiếm"
+    (click)="clear()"
+  >
+    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+    </svg>
+  </button>
+</div>
