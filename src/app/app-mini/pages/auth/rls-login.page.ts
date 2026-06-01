@@ -7,7 +7,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs/operators';
 
 import { RlsAuthService } from '../../core/services/rls-auth.service';
 import { RlsToastService } from '../../core/services/rls-toast.service';
@@ -53,6 +52,7 @@ export class RlsLoginPage implements OnInit {
       otp: ['', [Validators.required, Validators.pattern(/^[0-9]{4,6}$/)]],
     });
     this.profileForm = this.fb.group({
+      display_name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       age: [18, [Validators.required, Validators.min(13), Validators.max(100)]],
       gender: ['', Validators.required],
     });
@@ -108,17 +108,22 @@ export class RlsLoginPage implements OnInit {
 
     this.auth
       .verifyPhoneOtp({ phone: this.pendingPhone, otp: this.pendingOtp })
-      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (result) => {
+          this.loading = false;
           this.onboardingToken = result.onboardingToken;
           if (result.requiresProfile) {
             this.step = 'profile';
+            setTimeout(() => this.cdr.detectChanges(), 0);
             return;
           }
           this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
         },
-        error: (err) => this.handleError(err, 'OTP không đúng hoặc đã hết hạn.'),
+        error: (err) => {
+          this.loading = false;
+          setTimeout(() => this.cdr.detectChanges(), 0);
+          this.handleError(err, 'OTP không đúng hoặc đã hết hạn.');
+        },
       });
   }
 
@@ -130,23 +135,28 @@ export class RlsLoginPage implements OnInit {
 
     this.loading = true;
     this.clearErrors();
-    const { age, gender } = this.profileForm.value;
+    const { display_name, age, gender } = this.profileForm.value;
 
     this.auth
       .completePhoneProfile({
         phone: this.pendingPhone,
         otp: this.pendingOtp,
         onboarding_token: this.onboardingToken,
+        display_name: String(display_name ?? '').trim(),
         age: Number(age),
         gender,
       })
-      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: () => {
+          this.loading = false;
           this.toast.success('Hồ sơ đã sẵn sàng.');
           this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
         },
-        error: (err) => this.handleError(err, 'Không thể hoàn thiện hồ sơ.'),
+        error: (err) => {
+          this.loading = false;
+          setTimeout(() => this.cdr.detectChanges(), 0);
+          this.handleError(err, 'Không thể hoàn thiện hồ sơ.');
+        },
       });
   }
 
@@ -156,7 +166,7 @@ export class RlsLoginPage implements OnInit {
     }
     this.step = 'phone';
     this.otpForm.reset();
-    this.profileForm.patchValue({ age: 18, gender: '' });
+    this.profileForm.patchValue({ display_name: '', age: 18, gender: '' });
     this.clearErrors();
   }
 
@@ -177,6 +187,10 @@ export class RlsLoginPage implements OnInit {
 
   get otpCtrl() {
     return this.otpForm.get('otp');
+  }
+
+  get displayNameCtrl() {
+    return this.profileForm.get('display_name');
   }
 
   get ageCtrl() {

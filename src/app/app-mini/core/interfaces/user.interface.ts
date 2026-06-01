@@ -67,6 +67,7 @@ export interface RlsPhoneOtpVerifyRequest {
 
 export interface RlsPhoneProfileRequest {
   phone: string;
+  display_name: string;
   age: number;
   gender: RlsUserGender | string;
   otp?: string;

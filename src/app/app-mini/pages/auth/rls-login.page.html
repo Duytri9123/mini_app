@@ -58,12 +58,6 @@
       class="rls-auth-form"
       novalidate
     >
-      <section class="rls-step-panel">
-        <span class="rls-step-kicker">Bước 2</span>
-        <h2>Xác thực OTP</h2>
-        <p>Mã đã gửi tới {{ pendingPhone }}. Nhập 4-6 chữ số để tiếp tục.</p>
-      </section>
-
       <div class="rls-form-group">
         <label for="rls-otp" class="rls-form-label">Mã OTP</label>
         <input
@@ -95,7 +89,6 @@
       </button>
 
       <div class="rls-auth-inline">
-        <button type="button" class="rls-text-btn" (click)="backToPhone()">Đổi số</button>
         <button type="button" class="rls-text-btn" (click)="resendOtp()">Gửi lại mã</button>
       </div>
     </form>
@@ -107,11 +100,21 @@
       class="rls-auth-form"
       novalidate
     >
-      <section class="rls-step-panel">
-        <span class="rls-step-kicker">Bước 3</span>
-        <h2>Hoàn thiện hồ sơ</h2>
-        <p>Chỉ cần tuổi và giới tính để cá nhân hóa feed, bản đồ và gợi ý bạn bè.</p>
-      </section>
+      <div class="rls-form-group">
+        <label for="rls-display-name" class="rls-form-label">Tên hiển thị</label>
+        <input
+          id="rls-display-name"
+          type="text"
+          formControlName="display_name"
+          class="rls-form-input"
+          [class.rls-form-input--error]="displayNameCtrl?.invalid && displayNameCtrl?.touched"
+          placeholder="Tên của bạn"
+          autocomplete="name"
+        />
+        <span class="rls-form-field-error" *ngIf="displayNameCtrl?.invalid && displayNameCtrl?.touched" role="alert">
+          Tên từ 2 đến 50 ký tự.
+        </span>
+      </div>
 
       <div class="rls-form-grid">
         <div class="rls-form-group">

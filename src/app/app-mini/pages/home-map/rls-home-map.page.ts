@@ -360,6 +360,8 @@ export class RlsHomeMapPage implements AfterViewInit, OnDestroy {
       .subscribe((places) => {
         this.nearby = places ?? [];
         this.loadingNearby = false;
+        // Render marker cho các nearby location chưa có trên map
+        this.renderNearbyMarkers(this.nearby);
       });
 
     // Trending — gọi endpoint mới /trending/nearby (kèm post + active users)
@@ -471,6 +473,41 @@ export class RlsHomeMapPage implements AfterViewInit, OnDestroy {
   private clearMarkers(): void {
     for (const m of this.domMarkers) m.remove();
     this.domMarkers = [];
+  }
+
+  /**
+   * Render marker cho các nearby location chưa có trên map.
+   * Tránh duplicate bằng cách kiểm tra tọa độ đã có marker chưa.
+   */
+  private renderNearbyMarkers(places: RlsNearbyLocation[]): void {
+    if (!this.map) return;
+
+    // Tập hợp tọa độ đã có marker (từ snapshot)
+    const existing = new Set(
+      this.domMarkers.map((m) => {
+        const ll = m.getLngLat();
+        return `${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`;
+      }),
+    );
+
+    for (const place of places) {
+      const key = `${place.lat.toFixed(5)},${place.lng.toFixed(5)}`;
+      if (existing.has(key)) continue; // đã có marker rồi, bỏ qua
+
+      const count = place.stats?.activeCount ?? 0;
+      const el = this.canvasMarker.drawPlaceMarker(
+        place.category ?? 'default',
+        place.name,
+        count,
+        place.thumbnailUrl ?? null,
+      );
+
+      const m = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([place.lng, place.lat])
+        .addTo(this.map);
+      this.domMarkers.push(m);
+      existing.add(key);
+    }
   }
 
   // ─────────────────────────────── UI handlers ────────────────────────────────
