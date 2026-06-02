@@ -125,10 +125,10 @@ export class RlsMapCanvasService {
     thumbnailUrl?: string | null,
   ): HTMLCanvasElement {
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    const iconSize = 40;
-    const ringW = 2.5;
-    const labelPad = 5;
-    const labelFontSize = 10;
+    const iconSize = 32;
+    const ringW = 1.5;
+    const labelPad = 4;
+    const labelFontSize = 9;
     const labelLineH = labelFontSize + 4;
     const hasLabel = !!label;
     const hasCount = count > 1;
@@ -154,11 +154,11 @@ export class RlsMapCanvasService {
 
     const [c1, c2] = PLACE_COLORS[type] ?? PLACE_COLORS['default'];
 
-    // ── Shadow ─────────────────────────────────────────────────────────────
+    // ── Shadow + Ring gradient (isolated) ─────────────────────────────────
+    ctx.save();
     ctx.shadowColor = c1 + '88';
     ctx.shadowBlur  = 10;
 
-    // ── Ring gradient ──────────────────────────────────────────────────────
     const grad = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
     grad.addColorStop(0, c1);
     grad.addColorStop(1, c2);
@@ -168,7 +168,7 @@ export class RlsMapCanvasService {
     ctx.strokeStyle = grad;
     ctx.lineWidth = ringW * 2;
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    ctx.restore(); // ← shadow bị xoá hoàn toàn sau đây
 
     // ── Nền tròn ──────────────────────────────────────────────────────────
     ctx.save();
@@ -203,23 +203,22 @@ export class RlsMapCanvasService {
     // ── Badge count (top-right) ────────────────────────────────────────────
     if (hasCount) {
       const countStr = count > 99 ? '99+' : String(count);
-      const bw = Math.max(16, countStr.length * 6 + 6);
-      const bh = 15;
+      const bw = Math.max(14, countStr.length * 5.5 + 5);
+      const bh = 13;
       const bx = cx + r - 2;
       const by = cy - r - bh / 2 + 4;
 
-      ctx.fillStyle = '#ff59be';
+      ctx.fillStyle = c1;
       this.roundRect(ctx, bx, by, bw, bh, bh / 2);
       ctx.fill();
 
-      // Viền tối
       ctx.strokeStyle = '#0d1228';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
       this.roundRect(ctx, bx, by, bw, bh, bh / 2);
       ctx.stroke();
 
       ctx.fillStyle = '#fff';
-      ctx.font = `bold 8px -apple-system, sans-serif`;
+      ctx.font = `bold 7.5px -apple-system, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(countStr, bx + bw / 2, by + bh / 2);

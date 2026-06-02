@@ -1,0 +1,76 @@
+<div class="mb-1 mt-1.5 rounded-[14px] border border-cyan-300/20 bg-slate-950/70 p-2.5 shadow-[0_0_18px_rgba(0,251,251,0.1)]">
+  <div class="relative flex items-start gap-2 pr-6">
+    <div class="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-cyan-300/15 bg-slate-800">
+      <img
+        [src]="thumbUrl"
+        [alt]="place.name"
+        class="h-full w-full object-cover"
+        loading="lazy"
+        (error)="onImageError($event)"
+      />
+    </div>
+
+    <div class="min-w-0 flex-1">
+      <p class="truncate text-[13px] font-semibold leading-tight text-slate-100">{{ place.name }}</p>
+      <p class="mt-0.5 truncate text-[11px] leading-tight text-slate-400">{{ categoryLabel(place.category) }}</p>
+      <p *ngIf="reasonLabel" class="mt-1 text-[11px] font-medium leading-snug text-cyan-200">
+        {{ reasonLabel }}
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-xs text-slate-400"
+      aria-label="Đóng chi tiết"
+      (click)="onClose()"
+    >
+      &times;
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="mt-2 flex flex-col gap-1.5" aria-hidden="true">
+    <div class="h-2.5 w-full animate-pulse rounded bg-slate-700/50"></div>
+    <div class="h-2.5 w-2/3 animate-pulse rounded bg-slate-700/40"></div>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <div class="mt-2 grid grid-cols-3 gap-1.5">
+      <div class="rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1.5 text-center">
+        <p class="text-[12px] font-bold leading-none text-slate-100">{{ activeCount }}</p>
+        <p class="mt-0.5 text-[9px] leading-tight text-slate-500">đang ở đây</p>
+      </div>
+      <div class="rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1.5 text-center">
+        <p class="text-[12px] font-bold leading-none text-slate-100">{{ postsCount }}</p>
+        <p class="mt-0.5 text-[9px] leading-tight text-slate-500">bài viết</p>
+      </div>
+      <div class="rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1.5 text-center">
+        <p class="text-[12px] font-bold leading-none text-slate-100">{{ checkinsCount }}</p>
+        <p class="mt-0.5 text-[9px] leading-tight text-slate-500">check-in</p>
+      </div>
+    </div>
+
+    <div *ngIf="activeUsers.length" class="mt-2 flex items-center gap-1.5">
+      <div
+        *ngFor="let user of activeUsers"
+        class="-mr-1 flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full border border-cyan-300/35 bg-cyan-500/10 text-[9px] font-bold text-cyan-200"
+        [attr.title]="userName(user)"
+      >
+        <img *ngIf="userAvatar(user) as avatar; else initialTpl" [src]="avatar" [alt]="userName(user)" class="h-full w-full object-cover" />
+        <ng-template #initialTpl>
+          <span>{{ userInitial(user) }}</span>
+        </ng-template>
+      </div>
+      <span class="ml-1 text-[10px] text-slate-500">đang hoạt động</span>
+    </div>
+
+    <div *ngIf="post?.content" class="mt-2 rounded-lg border border-white/10 bg-white/[0.04] p-2">
+      <p class="text-[11px] leading-snug text-slate-300">
+        {{ post.content | slice:0:90 }}{{ (post.content?.length ?? 0) > 90 ? '...' : '' }}
+      </p>
+      <div class="mt-1.5 flex gap-2 text-[10px] text-slate-500">
+        <span>{{ post.reactionsCount ?? post.reactions_count ?? 0 }} reaction</span>
+        <span>{{ post.commentsCount ?? post.comments_count ?? 0 }} bình luận</span>
+      </div>
+    </div>
+  </ng-container>
+</div>

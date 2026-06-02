@@ -147,7 +147,7 @@ export const RLS_API = {
   MAP_BOOTSTRAP: '/map/bootstrap',
   MAP_HEATMAP: '/map/heatmap',
   MAP_MARKERS: '/map/markers',
-  MAP_NEARBY: '/map/nearby',
+  MAP_NEARBY: '/map/nearby',        // GET /api/map/nearby (public)
   MAP_HOT_AREAS: '/map/hot-areas',
   // Locations
   LOCATIONS: '/locations',

@@ -15,44 +15,6 @@
     </button>
   </header>
 
-  <section class="rls-friends-hero" aria-label="Thông số kết nối">
-    <div class="rls-friends-hero__copy">
-      <h3>Vòng kết nối quanh bạn</h3>
-      <p>Danh bạ, bạn chung và điểm nóng gần đây tạo thành lớp feed riêng cho từng người.</p>
-    </div>
-    <div class="rls-friends-stats">
-      <div>
-        <span>{{ matchedCount || suggestions.length }}</span>
-        <small>trùng danh bạ</small>
-      </div>
-      <div>
-        <span>{{ requestedCount }}</span>
-        <small>đã mời</small>
-      </div>
-      <div>
-        <span>{{ friendContentCount }}</span>
-        <small>bài từ bạn bè</small>
-      </div>
-    </div>
-  </section>
-
-  <section class="rls-contact-sync" aria-label="Đồng bộ danh bạ">
-    <div>
-      <span>Danh bạ</span>
-      <strong>{{ contactApiAvailable ? 'Có thể chọn liên hệ' : 'Dùng danh bạ mẫu' }}</strong>
-    </div>
-    <button
-      type="button"
-      class="rls-sync-btn"
-      (click)="syncContacts()"
-      [disabled]="importing"
-      [attr.aria-busy]="importing"
-    >
-      <i class="fa-solid fa-address-book" aria-hidden="true"></i>
-      <span>{{ importing ? 'Đang đồng bộ' : 'Đồng bộ' }}</span>
-    </button>
-  </section>
-
   <section class="rls-friends-groups" aria-label="Nhóm gợi ý">
     <button type="button" *ngFor="let group of quickGroups">
       <span>{{ group.label }}</span>

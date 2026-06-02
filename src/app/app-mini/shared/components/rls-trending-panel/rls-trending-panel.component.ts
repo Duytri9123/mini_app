@@ -8,6 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 
 import { RlsTrendingPlace, RlsTrendingReason } from '../../../core/interfaces';
+import { RlsPlaceInlineDetailComponent } from '../rls-place-inline-detail/rls-place-inline-detail.component';
 
 /** Nhãn + style theo từng lý do trending (design.md §6.5, R6.4). */
 interface RlsTrendingReasonMeta {
@@ -75,7 +76,7 @@ const DEFAULT_REASON_META: RlsTrendingReasonMeta = {
 @Component({
   selector: 'rls-trending-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RlsPlaceInlineDetailComponent],
   templateUrl: './rls-trending-panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -85,9 +86,13 @@ export class RlsTrendingPanelComponent {
 
   /** Đang nạp dữ liệu → hiện skeleton thay vì empty state. */
   @Input() loading = false;
+  @Input() selectedPlaceId: number | null = null;
+  @Input() detailLoading = false;
+  @Input() detail: any = null;
 
   /** Phát khi người dùng chọn một spot (mở chi tiết / recenter map). */
   @Output() open = new EventEmitter<RlsTrendingPlace>();
+  @Output() closeDetail = new EventEmitter<void>();
 
   /** trackBy theo id để Angular không re-render toàn bộ danh sách. */
   trackById(_index: number, item: RlsTrendingPlace): number {
@@ -97,6 +102,10 @@ export class RlsTrendingPanelComponent {
   /** Phát sự kiện chọn spot. */
   onOpen(item: RlsTrendingPlace): void {
     this.open.emit(item);
+  }
+
+  onCloseDetail(): void {
+    this.closeDetail.emit();
   }
 
   /** Nhãn lý do hiển thị: ưu tiên `reasonLabel` backend → fallback nhãn nội bộ. */

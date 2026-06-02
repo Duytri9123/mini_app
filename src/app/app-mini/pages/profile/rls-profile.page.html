@@ -1,100 +1,148 @@
 <div class="rls-profile-page">
   <header class="rls-profile-header">
     <a routerLink="/app-mini/home-map" class="rls-back-btn" aria-label="Quay lại bản đồ">
-      <span aria-hidden="true">←</span>
+      <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
     </a>
-    <div>
-      <span class="rls-profile-eyebrow">Local identity</span>
-      <h2 class="rls-profile-header-title">Hồ sơ</h2>
+    <div class="rls-profile-title">
+      <span>Hồ sơ</span>
+      <small>Tài khoản cá nhân</small>
     </div>
   </header>
 
-  <section class="rls-profile-card" aria-label="Thông tin cá nhân">
-    <div class="rls-profile-avatar-wrap">
-      <img
-        *ngIf="user?.avatarUrl"
-        [src]="getImageUrl(user?.avatarUrl)"
-        [alt]="user?.displayName"
-        class="rls-profile-avatar"
-      />
-      <div
-        *ngIf="!user?.avatarUrl"
-        class="rls-profile-avatar rls-profile-avatar--placeholder"
-        aria-hidden="true"
-      >
-        {{ user?.displayName?.charAt(0)?.toUpperCase() ?? '?' }}
-      </div>
-    </div>
-
-    <div class="rls-profile-info">
-      <h1 class="rls-profile-name">{{ user?.displayName ?? 'Người dùng' }}</h1>
-      <p *ngIf="user?.username" class="rls-profile-username">@{{ user?.username }}</p>
-      <p *ngIf="contactLabel" class="rls-profile-email">{{ contactLabel }}</p>
-      <span class="rls-profile-role-badge">{{ roleLabel }}</span>
-    </div>
-  </section>
-
-  <section class="rls-profile-signal" aria-label="Thông số cá nhân">
-    <div class="rls-profile-signal__head">
-      <h3>Local signal score</h3>
-      <span>{{ signalScore }}</span>
-    </div>
-    <div class="rls-profile-stats">
-      <div class="rls-profile-stat">
-        <span>{{ checkinCount }}</span>
-        <small>check-in</small>
-      </div>
-      <div class="rls-profile-stat">
-        <span>{{ visitedLocations }}</span>
-        <small>địa điểm</small>
-      </div>
-      <div class="rls-profile-stat">
-        <span>{{ streakDays }}</span>
-        <small>ngày streak</small>
-      </div>
-    </div>
-  </section>
-
-  <section class="rls-profile-section" aria-label="Lịch sử check-in">
-    <h3 class="rls-section-title">Lịch sử check-in</h3>
-
-    <div *ngIf="loadingCheckins" aria-busy="true" aria-label="Đang tải lịch sử...">
-      <div *ngFor="let i of [1,2,3]" class="rls-skeleton-item"></div>
-    </div>
-
-    <div *ngIf="!loadingCheckins && checkins.length === 0" class="rls-checkin-empty">
-      <p>Chưa có check-in từ backend.</p>
-      <p class="rls-checkin-empty-hint">
-        Bộ chỉ số phía trên đang dùng baseline để mô phỏng hồ sơ hoạt động.
-      </p>
-    </div>
-
-    <ul *ngIf="checkins.length > 0" class="rls-checkin-list" role="list">
-      <li
-        *ngFor="let checkin of checkins; trackBy: trackByCheckin"
-        class="rls-checkin-item"
-        role="listitem"
-      >
-        <span class="rls-checkin-icon" aria-hidden="true">•</span>
-        <div class="rls-checkin-content">
-          <p class="rls-checkin-location">Địa điểm #{{ checkin.locationId }}</p>
-          <time class="rls-checkin-time" [attr.datetime]="checkin.createdAt">
-            {{ checkin.createdAt | date:'dd/MM/yyyy HH:mm' }}
-          </time>
+  <main class="rls-profile-main">
+    <section class="rls-profile-hero" aria-label="Thông tin cá nhân">
+      <div class="rls-profile-cover">
+        <div class="rls-profile-avatar-wrap">
+          <img
+            *ngIf="user?.avatarUrl"
+            [src]="getImageUrl(user?.avatarUrl)"
+            [alt]="user?.displayName"
+            class="rls-profile-avatar"
+          />
+          <div
+            *ngIf="!user?.avatarUrl"
+            class="rls-profile-avatar rls-profile-avatar--placeholder"
+            aria-hidden="true"
+          >
+            {{ profileInitial }}
+          </div>
         </div>
-      </li>
-    </ul>
-  </section>
+      </div>
 
-  <section class="rls-profile-actions" aria-label="Hành động tài khoản">
-    <button
-      class="rls-btn rls-btn--danger rls-btn--full"
-      (click)="onLogout()"
-      [disabled]="loggingOut"
-      [attr.aria-busy]="loggingOut"
-    >
-      <span *ngIf="!loggingOut">Đăng xuất</span>
-      <span *ngIf="loggingOut" class="rls-spinner" aria-label="Đang đăng xuất..."></span>
-    </button>
-  </section>
+      <div class="rls-profile-info">
+        <h1 class="rls-profile-name">{{ user?.displayName ?? 'Người dùng' }}</h1>
+        <p class="rls-profile-handle">{{ primaryHandle }}</p>
+
+        <div class="rls-profile-badges">
+          <span class="rls-profile-badge">
+            <i class="fa-regular fa-user" aria-hidden="true"></i>
+            {{ roleLabel }}
+          </span>
+          <span *ngIf="user?.lastActiveAt" class="rls-profile-badge rls-profile-badge--success">
+            <i class="fa-solid fa-circle" aria-hidden="true"></i>
+            Đang hoạt động
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="rls-profile-signal" aria-label="Thông số cá nhân">
+      <div class="rls-profile-signal__head">
+        <div>
+          <span>Local score</span>
+          <h2>{{ signalLevelLabel }}</h2>
+        </div>
+        <strong>{{ signalScore }}</strong>
+      </div>
+
+      <div class="rls-profile-meter" aria-hidden="true">
+        <span [style.width.%]="signalProgress"></span>
+      </div>
+
+      <div class="rls-profile-stats">
+        <div class="rls-profile-stat">
+          <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+          <span>{{ checkinCount }}</span>
+          <small>Check-in</small>
+        </div>
+        <div class="rls-profile-stat">
+          <i class="fa-regular fa-map" aria-hidden="true"></i>
+          <span>{{ visitedLocations }}</span>
+          <small>Địa điểm</small>
+        </div>
+        <div class="rls-profile-stat">
+          <i class="fa-solid fa-fire" aria-hidden="true"></i>
+          <span>{{ streakDays }}</span>
+          <small>Ngày streak</small>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="contactLabel || user?.createdAt" class="rls-profile-details" aria-label="Thông tin tài khoản">
+      <div *ngIf="contactLabel" class="rls-profile-detail-row">
+        <i class="fa-solid fa-phone" aria-hidden="true"></i>
+        <div>
+          <span>Liên hệ</span>
+          <strong>{{ contactLabel }}</strong>
+        </div>
+      </div>
+      <div *ngIf="user?.createdAt" class="rls-profile-detail-row">
+        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+        <div>
+          <span>Tham gia</span>
+          <strong>{{ user?.createdAt | date:'MM/yyyy' }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="rls-profile-history" aria-label="Lịch sử check-in">
+      <div class="rls-profile-section-head">
+        <h2>Lịch sử check-in</h2>
+        <span>{{ checkins.length }} mục</span>
+      </div>
+
+      <div *ngIf="loadingCheckins" class="rls-profile-loading" aria-busy="true" aria-label="Đang tải lịch sử">
+        <div *ngFor="let i of [1,2,3]" class="rls-skeleton-item"></div>
+      </div>
+
+      <div *ngIf="!loadingCheckins && checkins.length === 0" class="rls-checkin-empty">
+        <span class="rls-checkin-empty-icon" aria-hidden="true">
+          <i class="fa-regular fa-map"></i>
+        </span>
+        <h3>Chưa có check-in</h3>
+        <p>Lịch sử hoạt động sẽ hiển thị tại đây sau lần check-in đầu tiên.</p>
+      </div>
+
+      <ul *ngIf="checkins.length > 0" class="rls-checkin-list" role="list">
+        <li
+          *ngFor="let checkin of checkins; trackBy: trackByCheckin"
+          class="rls-checkin-item"
+          role="listitem"
+        >
+          <span class="rls-checkin-icon" aria-hidden="true">
+            <i class="fa-solid fa-location-dot"></i>
+          </span>
+          <div class="rls-checkin-content">
+            <p class="rls-checkin-location">Địa điểm #{{ checkin.locationId }}</p>
+            <time class="rls-checkin-time" [attr.datetime]="checkin.createdAt">
+              {{ checkin.createdAt | date:'dd/MM/yyyy HH:mm' }}
+            </time>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="rls-profile-actions" aria-label="Hành động tài khoản">
+      <button
+        class="rls-btn rls-btn--danger rls-btn--full"
+        (click)="onLogout()"
+        [disabled]="loggingOut"
+        [attr.aria-busy]="loggingOut"
+      >
+        <i *ngIf="!loggingOut" class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+        <span *ngIf="!loggingOut">Đăng xuất</span>
+        <span *ngIf="loggingOut" class="rls-spinner" aria-label="Đang đăng xuất"></span>
+      </button>
+    </section>
+  </main>
 </div>

@@ -8,55 +8,77 @@ import {
 import { CommonModule } from '@angular/common';
 
 import { RlsLocation, RlsNearbyLocation } from '../../../core/interfaces';
+import { RlsPlaceInlineDetailComponent } from '../rls-place-inline-detail/rls-place-inline-detail.component';
 
-/**
- * REALTIME LOCAL SOCIAL (app-mini) — Panel "gần bạn" trong bottom sheet.
- * ─────────────────────────────────────────────────────────────────────────────
- * Presentational standalone component (design.md §9.3 `RlsNearbyPanelComponent`)
- * hiển thị danh sách địa điểm gần người dùng (kết quả `GET /map/nearby`) bên
- * trong `RlsBottomSheetComponent` trên `HomeMapPage` (R2.4). Component **thuần
- * UI**: nhận danh sách đã tính sẵn qua `@Input places` (design.md §9.3) và phát
- * sự kiện chọn để page xử lý (mở chi tiết / recenter map) — không gọi service,
- * không hardcode URL (R14.3).
- *
- * Khoảng cách (`distanceM`) do backend tính (mirror GeospatialQueryService) và
- * đã sắp xếp tăng dần; panel chỉ format hiển thị, không tự sắp xếp lại.
- *
- * Style: dark neon glow + light glassmorphism (Tailwind v4, R14.5).
- *
- * _Requirements: 2.4, 14.5 — Design §6.1, §6.5, §9.3_
- */
 @Component({
   selector: 'rls-nearby-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RlsPlaceInlineDetailComponent],
   templateUrl: './rls-nearby-panel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RlsNearbyPanelComponent {
-  /** Danh sách địa điểm gần (đã sắp xếp tăng dần theo khoảng cách ở backend). */
   @Input() places: RlsNearbyLocation[] = [];
-
-  /** Đang nạp dữ liệu → hiện skeleton thay vì empty state. */
   @Input() loading = false;
+  @Input() radiusM = 5000;
+  @Input() selectedPlaceId: number | null = null;
+  @Input() detailLoading = false;
+  @Input() detail: any = null;
 
-  /** Phát khi người dùng chọn một địa điểm (mở chi tiết). */
   @Output() select = new EventEmitter<RlsLocation>();
+  @Output() closeDetail = new EventEmitter<void>();
 
-  /** trackBy theo id để Angular không re-render toàn bộ danh sách. */
+  readonly fallbackImageUrl = 'assets/images/No_Image_Available.jpg';
+
+  get radiusLabel(): string {
+    return this.formatDistance(this.radiusM);
+  }
+
   trackById(_index: number, place: RlsLocation): number {
     return place.id;
   }
 
-  /** Phát sự kiện chọn địa điểm. */
   onSelect(place: RlsLocation): void {
     this.select.emit(place);
   }
 
-  /**
-   * Format khoảng cách dễ đọc: `< 1km` hiển thị mét, còn lại hiển thị km (1 lẻ).
-   * Trả `''` khi không có khoảng cách để template ẩn badge.
-   */
+  onCloseDetail(): void {
+    this.closeDetail.emit();
+  }
+
+  placeImageUrl(place: RlsNearbyLocation): string {
+    const raw = place as any;
+    return (
+      raw.thumbnailUrl ||
+      raw.thumbnail_url ||
+      raw.imageUrl ||
+      raw.image_url ||
+      raw.photoUrl ||
+      raw.photo_url ||
+      raw.coverUrl ||
+      raw.cover_url ||
+      this.fallbackImageUrl
+    );
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement | null;
+    if (!img || img.src.endsWith(this.fallbackImageUrl)) return;
+    img.src = this.fallbackImageUrl;
+  }
+
+  categoryLabel(category: string): string {
+    const labels: Record<string, string> = {
+      food: 'Đồ ăn',
+      cafe: 'Cafe',
+      event: 'Sự kiện',
+      nightlife: 'Nightlife',
+      campus: 'Campus',
+      other: 'Địa điểm',
+    };
+    return labels[category] ?? category;
+  }
+
   formatDistance(meters?: number): string {
     if (meters == null || !Number.isFinite(meters) || meters < 0) {
       return '';
@@ -64,6 +86,7 @@ export class RlsNearbyPanelComponent {
     if (meters < 1000) {
       return `${Math.round(meters)} m`;
     }
-    return `${(meters / 1000).toFixed(1)} km`;
+    const km = meters / 1000;
+    return `${Number.isInteger(km) ? km : km.toFixed(1)} km`;
   }
 }

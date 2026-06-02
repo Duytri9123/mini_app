@@ -9,7 +9,6 @@ export * from './location.interface';
 export * from './trending.interface';
 export * from './post.interface';
 export * from './friend.interface';
-export * from './trending.interface';
 export * from './checkin.interface';
 export * from './story.interface';
 export * from './marker.interface';

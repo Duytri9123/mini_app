@@ -43,9 +43,9 @@ export interface RlsTrendingPost {
 
 /** Người dùng đang active tại địa điểm. */
 export interface RlsActiveUser {
-  id: number;
-  name: string;
-  username: string;
+  id?: number;
+  name?: string;
+  username?: string;
   avatarUrl?: string | null;
 }
 

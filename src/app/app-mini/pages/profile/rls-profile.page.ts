@@ -117,11 +117,25 @@ export class RlsProfilePage implements OnInit, OnDestroy {
 
   get roleLabel(): string {
     const labels: Record<string, string> = {
-      admin: '👑 Admin',
-      moderator: '🛡️ Moderator',
-      user: '👤 Thành viên',
+      admin: 'Quản trị',
+      moderator: 'Điều phối',
+      user: 'Thành viên',
     };
     return labels[this.user?.role ?? 'user'] ?? this.user?.role ?? '';
+  }
+
+  get profileInitial(): string {
+    return (this.user?.displayName || this.user?.username || '?')
+      .charAt(0)
+      .toUpperCase();
+  }
+
+  get primaryHandle(): string {
+    if (this.user?.username) {
+      return `@${this.user.username}`;
+    }
+
+    return this.contactLabel || 'Chưa cập nhật thông tin';
   }
 
   get contactLabel(): string {
@@ -144,6 +158,22 @@ export class RlsProfilePage implements OnInit, OnDestroy {
 
   get signalScore(): number {
     return Math.min(99, 62 + this.checkinCount * 2 + this.visitedLocations);
+  }
+
+  get signalProgress(): number {
+    return Math.max(8, Math.min(100, this.signalScore));
+  }
+
+  get signalLevelLabel(): string {
+    if (this.signalScore >= 90) {
+      return 'Hoạt động nổi bật';
+    }
+
+    if (this.signalScore >= 75) {
+      return 'Tín hiệu tốt';
+    }
+
+    return 'Đang xây hồ sơ';
   }
 
   get streakDays(): number {

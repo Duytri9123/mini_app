@@ -92,7 +92,7 @@ const routes: Routes = [
             (m) => m.RlsProfilePage,
           ),
         canActivate: [rlsAuthGuard],
-        data: { title: 'Ho so' },
+        data: { title: 'Ho so', shellTheme: 'light' },
       },
       {
         path: '**',

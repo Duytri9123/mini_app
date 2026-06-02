@@ -67,6 +67,39 @@
   }
 
   // ── Cụm nút bên phải (filter + locate + 3D + post) ─────────────────────
+  &__radius-badge {
+    position: absolute;
+    top: calc(max(16px, env(safe-area-inset-top)) + 104px);
+    left: 14px;
+    z-index: 19;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    max-width: calc(100vw - 120px);
+    min-height: 2.15rem;
+    padding: 0 0.78rem;
+    border: 1px solid rgba(0, 251, 251, 0.26);
+    border-radius: 999px;
+    background: rgba(10, 14, 33, 0.78);
+    color: #e2e8f0;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(14px);
+    font-size: 0.76rem;
+    font-weight: 800;
+    pointer-events: none;
+
+    i {
+      color: var(--rls-secondary, #00fbfb);
+      font-size: 0.86rem;
+    }
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
   &__fab-group {
     position: absolute;
     right: 14px;
@@ -105,6 +138,11 @@
       width: 20px;
       height: 20px;
     }
+
+    i {
+      font-size: 18px;
+      line-height: 1;
+    }
   }
 
   &__fab {
@@ -131,6 +169,29 @@
         box-shadow:
           0 0 14px rgba(52, 211, 153, 0.25),
           0 4px 16px rgba(0, 0, 0, 0.45);
+      }
+    }
+
+    &--cluster {
+      color: #94a3b8;
+
+      &.is-active {
+        color: #38bdf8;
+        border-color: rgba(56, 189, 248, 0.45);
+        box-shadow:
+          0 0 14px rgba(56, 189, 248, 0.25),
+          0 4px 16px rgba(0, 0, 0, 0.45);
+      }
+    }
+
+    &--split {
+      color: #fbbf24;
+      border-color: rgba(251, 191, 36, 0.32);
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.42;
+        transform: none;
       }
     }
   }
@@ -336,6 +397,282 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  // ── Marker tooltip ────────────────────────────────────────────────────────
+  &__marker-tooltip {
+    position: absolute;
+    z-index: 35;
+    transform: translate(-50%, calc(-100% - 14px));
+    width: 220px;
+    border-radius: 16px;
+    background: rgba(11, 15, 35, 0.97);
+    border: 1px solid rgba(0, 251, 251, 0.2);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.6),
+      0 0 20px rgba(0, 251, 251, 0.08);
+    backdrop-filter: blur(20px);
+    padding: 12px;
+    animation: rls-tooltip-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    pointer-events: auto;
+    transition: width 0.25s ease;
+
+    &.is-expanded {
+      width: 280px;
+    }
+
+    // Mũi tên xuống
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 7px;
+      background: rgba(11, 15, 35, 0.97);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      border-bottom: 1px solid rgba(0, 251, 251, 0.2);
+    }
+  }
+
+  &__tooltip-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    font-size: 10px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+
+    &:active { background: rgba(255, 255, 255, 0.16); }
+  }
+
+  &__tooltip-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-right: 20px;
+  }
+
+  &__tooltip-thumb {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(0, 251, 251, 0.1);
+    border: 1px solid rgba(0, 251, 251, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &[data-cat='food']      { background: rgba(251,146,60,.15); border-color: rgba(251,146,60,.3); }
+    &[data-cat='cafe']      { background: rgba(244,114,182,.15); border-color: rgba(244,114,182,.3); }
+    &[data-cat='event']     { background: rgba(167,139,250,.15); border-color: rgba(167,139,250,.3); }
+    &[data-cat='nightlife'] { background: rgba(99,102,241,.15); border-color: rgba(99,102,241,.3); }
+
+    img { width: 100%; height: 100%; object-fit: cover; }
+    span { color: #94a3b8; font-size: 9px; font-weight: 800; letter-spacing: 0.06em; }
+  }
+
+  &__tooltip-info {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__tooltip-name {
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+
+  &__tooltip-cat {
+    color: #64748b;
+    font-size: 11px;
+    text-transform: capitalize;
+  }
+
+  &__tooltip-reason {
+    color: #94a3b8;
+    font-size: 11px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  // ── Expanded: loading skeleton ─────────────────────────────────────────
+  &__tooltip-loading {
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__tooltip-skeleton {
+    height: 10px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%);
+    background-size: 200% 100%;
+    animation: rls-shimmer 1.4s infinite;
+
+    &--short { width: 60%; }
+  }
+
+  // ── Expanded: stats row ────────────────────────────────────────────────
+  &__tooltip-stats {
+    display: flex;
+    gap: 0;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  &__tooltip-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 7px 4px;
+    background: rgba(255, 255, 255, 0.04);
+
+    & + & { border-left: 1px solid rgba(255, 255, 255, 0.06); }
+  }
+
+  &__tooltip-stat-val {
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  &__tooltip-stat-lbl {
+    color: #64748b;
+    font-size: 9px;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  // ── Expanded: active users ─────────────────────────────────────────────
+  &__tooltip-users {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  &__tooltip-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    overflow: hidden;
+    border: 1.5px solid rgba(0, 251, 251, 0.3);
+    background: rgba(0, 251, 251, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    img { width: 100%; height: 100%; object-fit: cover; }
+    span { color: #00fbfb; font-size: 9px; font-weight: 800; }
+  }
+
+  &__tooltip-users-label {
+    color: #64748b;
+    font-size: 10px;
+    margin-left: 2px;
+  }
+
+  // ── Expanded: trending post ────────────────────────────────────────────
+  &__tooltip-post {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+
+  &__tooltip-post-author {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+
+    img {
+      width: 18px;
+      height: 18px;
+      border-radius: 9999px;
+      object-fit: cover;
+    }
+
+    span {
+      color: #94a3b8;
+      font-size: 10px;
+      font-weight: 600;
+    }
+  }
+
+  &__tooltip-post-content {
+    color: #e2e8f0;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  &__tooltip-post-meta {
+    display: flex;
+    gap: 10px;
+    color: #64748b;
+    font-size: 10px;
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────────
+  &__tooltip-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  &__tooltip-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(0, 251, 251, 0.12);
+    border: 1px solid rgba(0, 251, 251, 0.25);
+    color: var(--rls-secondary, #00fbfb);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:active { background: rgba(0, 251, 251, 0.22); }
+
+    &--outline {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+    }
+
+    svg { width: 14px; height: 14px; flex-shrink: 0; }
+  }
+
   // ── Backdrop (nhẹ hơn vì panel nhỏ) ─────────────────────────────────────
   &__backdrop {
     position: absolute;
@@ -355,13 +692,14 @@
   &__drawer {
     position: absolute;
     left: 12px;
+    top: calc(max(16px, env(safe-area-inset-top)) + 110px);
     bottom: calc(var(--rls-shell-nav-height, 78px) + 110px);
     z-index: 30;
     display: flex;
     flex-direction: column;
-    width: min(72vw, 280px);
-    height: 58vh;
-    max-height: 58vh;
+    width: calc(100% - 90px);
+    height: auto;
+    max-height: none;
     border-radius: 18px;
     background: rgba(11, 15, 35, 0.95);
     border: 1px solid rgba(0, 251, 251, 0.18);
@@ -456,6 +794,26 @@
     -webkit-overflow-scrolling: touch;
     padding: 0 12px 12px;
   }
+
+  &__drawer-detail {
+    position: relative;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid rgba(0, 251, 251, 0.18);
+    border-radius: 14px;
+    background: rgba(11, 15, 35, 0.72);
+    box-shadow:
+      0 0 18px rgba(0, 251, 251, 0.08),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+
+    .rls-home__tooltip-header {
+      margin-bottom: 7px;
+    }
+
+    .rls-home__tooltip-post {
+      margin-bottom: 0;
+    }
+  }
 }
 
 // ── Bỏ filter tối trên bản đồ — để bản đồ hiển thị màu gốc ─────────────────
@@ -482,6 +840,99 @@
 }
 
 // ── Custom DOM marker (MapLibre) ─────────────────────────────────────────────
+:host ::ng-deep .rls-map-cluster {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.35), transparent 28%),
+    linear-gradient(135deg, rgba(0, 251, 251, 0.92), rgba(124, 95, 255, 0.96));
+  color: #ffffff;
+  box-shadow:
+    0 0 0 7px rgba(0, 251, 251, 0.13),
+    0 14px 30px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  appearance: none;
+  backdrop-filter: blur(10px);
+  transform-origin: center;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.18s ease;
+
+  &::before,
+  &::after {
+    position: absolute;
+    inset: -7px;
+    border: 1px solid rgba(0, 251, 251, 0.28);
+    border-radius: inherit;
+    content: "";
+  }
+
+  &::after {
+    inset: -13px;
+    opacity: 0.35;
+  }
+
+  &:hover {
+    transform: scale(1.06);
+    box-shadow:
+      0 0 0 9px rgba(0, 251, 251, 0.16),
+      0 18px 34px rgba(0, 0, 0, 0.42);
+  }
+
+  &.is-md {
+    width: 52px;
+    height: 52px;
+  }
+
+  &.is-lg {
+    width: 60px;
+    height: 60px;
+    background:
+      radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.35), transparent 28%),
+      linear-gradient(135deg, rgba(251, 146, 60, 0.95), rgba(236, 72, 153, 0.96));
+    box-shadow:
+      0 0 0 8px rgba(251, 146, 60, 0.16),
+      0 16px 34px rgba(0, 0, 0, 0.4);
+  }
+
+  &.is-xl {
+    width: 68px;
+    height: 68px;
+    background:
+      radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.35), transparent 28%),
+      linear-gradient(135deg, rgba(239, 68, 68, 0.96), rgba(249, 115, 22, 0.98));
+    box-shadow:
+      0 0 0 10px rgba(239, 68, 68, 0.16),
+      0 18px 38px rgba(0, 0, 0, 0.44);
+  }
+}
+
+:host ::ng-deep .rls-map-cluster__count {
+  position: relative;
+  z-index: 1;
+  font-size: 16px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+:host ::ng-deep .rls-map-cluster__label {
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 :host ::ng-deep .rls-map-marker {
   display: flex;
   flex-direction: column;
@@ -598,10 +1049,26 @@
 @keyframes rls-toast-slide-in {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.96);
+    transform: translateY(12px) scale(0.95);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+@keyframes rls-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 14px)) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 14px)) scale(1);
+  }
+}
+
+@keyframes rls-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

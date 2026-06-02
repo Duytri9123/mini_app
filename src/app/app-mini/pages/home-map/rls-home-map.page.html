@@ -1,13 +1,6 @@
-<!--
-  RlsHomeMapPage — bản đồ realtime toàn màn hình.
-  Không dùng bottom sheet — thay bằng drawer slide-up khi cần.
--->
 <div class="rls-home">
-
-  <!-- Bản đồ MapLibre (toàn màn hình) -->
   <div #mapContainer class="rls-home__map"></div>
 
-  <!-- Overlay trên cùng: search bar + quick nav -->
   <div class="rls-home__top">
     <rls-search-bar (query)="onSearch($event)"></rls-search-bar>
 
@@ -31,10 +24,7 @@
     </nav>
   </div>
 
-  <!-- Cụm nút phải: post + filter + locate + 3D — tất cả 46×46, đồng đều -->
   <div class="rls-home__fab-group">
-
-    <!-- Nút post / checkin (màu đồng) — đặt trên cùng cho nổi bật -->
     <a
       class="rls-home__post-btn"
       routerLink="/app-mini/post/create"
@@ -45,7 +35,6 @@
       </svg>
     </a>
 
-    <!-- Nút filter -->
     <button
       type="button"
       class="rls-home__fab"
@@ -61,7 +50,16 @@
       </svg>
     </button>
 
-    <!-- Nút định vị -->
+    <button
+      type="button"
+      class="rls-home__fab rls-home__fab--cluster"
+      [class.is-active]="clusteringEnabled"
+      (click)="toggleClustering()"
+      [attr.aria-label]="clusteringEnabled ? 'Tắt gom cụm marker' : 'Bật gom cụm marker'"
+    >
+      <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+    </button>
+
     <button
       type="button"
       class="rls-home__fab rls-home__fab--locate"
@@ -75,7 +73,6 @@
       </svg>
     </button>
 
-    <!-- Nút toggle vệ tinh -->
     <button
       type="button"
       class="rls-home__fab rls-home__fab--satellite"
@@ -84,7 +81,6 @@
       aria-label="Chuyển chế độ vệ tinh"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-        <!-- Quả địa cầu -->
         <circle cx="12" cy="12" r="9"/>
         <ellipse cx="12" cy="12" rx="4" ry="9"/>
         <line x1="3" y1="12" x2="21" y2="12" stroke-linecap="round"/>
@@ -92,11 +88,10 @@
         <line x1="5" y1="17" x2="19" y2="17" stroke-linecap="round"/>
       </svg>
     </button>
-
   </div>
 
-  <!-- Toast NEARBY TRENDING — auto-rotate qua các trending spots -->
   <div
+    *ngIf="!loadingTrending && trending.length > 0"
     class="rls-home__toast"
     [class.toast-exit]="toastAnim === 'exit'"
     [class.toast-enter]="toastAnim === 'enter'"
@@ -105,7 +100,6 @@
     tabindex="0"
     aria-label="Xem địa điểm trending gần đây"
   >
-    <!-- Thumbnail / fallback -->
     <div class="rls-home__toast-thumb" [attr.data-cat]="toastItem?.category">
       <ng-container *ngIf="toastThumbUrl; else toastFallback">
         <img [src]="toastThumbUrl" [alt]="toastItem?.name" loading="lazy" />
@@ -115,7 +109,6 @@
       </ng-template>
     </div>
 
-    <!-- Nội dung -->
     <div class="rls-home__toast-body">
       <div class="rls-home__toast-eyebrow">
         <strong>NEARBY TRENDING</strong>
@@ -125,7 +118,6 @@
       <p class="rls-home__toast-sub">{{ toastSub }}</p>
     </div>
 
-    <!-- Dot indicators (chỉ hiện khi có > 1 item) -->
     <div class="rls-home__toast-dots" *ngIf="trending.length > 1" aria-hidden="true">
       <span
         *ngFor="let item of trending; let i = index"
@@ -135,7 +127,6 @@
     </div>
   </div>
 
-  <!-- ── Backdrop khi drawer mở ── -->
   <div
     class="rls-home__backdrop"
     [class.is-open]="panelOpen"
@@ -143,7 +134,121 @@
     aria-hidden="true"
   ></div>
 
-  <!-- ── Drawer slide-up (thay thế bottom sheet) ── -->
+  <div
+    *ngIf="selectedPlace && tooltipPos"
+    class="rls-home__marker-tooltip"
+    [class.is-expanded]="tooltipExpanded"
+    [style.left.px]="tooltipPos.x"
+    [style.top.px]="tooltipPos.y"
+    role="dialog"
+    aria-label="Thông tin địa điểm"
+  >
+    <button type="button" class="rls-home__tooltip-close" (click)="closeTooltip()" aria-label="Đóng">&times;</button>
+
+    <div class="rls-home__tooltip-header">
+      <div class="rls-home__tooltip-thumb" [attr.data-cat]="selectedPlace.category">
+        <img *ngIf="selectedPlace.thumbnailUrl" [src]="selectedPlace.thumbnailUrl" [alt]="selectedPlace.name" />
+        <span *ngIf="!selectedPlace.thumbnailUrl">{{ selectedPlace.category | uppercase | slice:0:3 }}</span>
+      </div>
+      <div class="rls-home__tooltip-info">
+        <p class="rls-home__tooltip-name">{{ selectedPlace.name }}</p>
+        <p class="rls-home__tooltip-cat">{{ selectedPlace.category }}</p>
+      </div>
+    </div>
+
+    <p *ngIf="tooltipReasonLabel && !tooltipExpanded" class="rls-home__tooltip-reason">
+      🔥 {{ tooltipReasonLabel }}
+    </p>
+    <p *ngIf="!tooltipReasonLabel && tooltipActiveCount > 0 && !tooltipExpanded" class="rls-home__tooltip-reason">
+      👥 {{ tooltipActiveCount }} người đang ở đây
+    </p>
+
+    <ng-container *ngIf="tooltipExpanded">
+      <div *ngIf="tooltipDetailLoading" class="rls-home__tooltip-loading">
+        <div class="rls-home__tooltip-skeleton"></div>
+        <div class="rls-home__tooltip-skeleton rls-home__tooltip-skeleton--short"></div>
+      </div>
+
+      <ng-container *ngIf="!tooltipDetailLoading && tooltipDetail">
+        <div class="rls-home__tooltip-stats">
+          <div class="rls-home__tooltip-stat">
+            <span class="rls-home__tooltip-stat-val">{{ tooltipDetail.checkins_count ?? tooltipDetail.checkinsCount ?? 0 }}</span>
+            <span class="rls-home__tooltip-stat-lbl">Check-in</span>
+          </div>
+          <div class="rls-home__tooltip-stat">
+            <span class="rls-home__tooltip-stat-val">{{ tooltipDetail.posts_count ?? tooltipDetail.postsCount ?? 0 }}</span>
+            <span class="rls-home__tooltip-stat-lbl">Bài viết</span>
+          </div>
+          <div class="rls-home__tooltip-stat">
+            <span class="rls-home__tooltip-stat-val">{{ tooltipDetail.active_count ?? tooltipActiveCount }}</span>
+            <span class="rls-home__tooltip-stat-lbl">Đang ở đây</span>
+          </div>
+        </div>
+
+        <div
+          *ngIf="tooltipVisibleActiveUsers.length > 0"
+          class="rls-home__tooltip-users"
+        >
+          <div
+            *ngFor="let u of tooltipVisibleActiveUsers"
+            class="rls-home__tooltip-avatar"
+            [title]="tooltipUserName(u)"
+          >
+            <img *ngIf="tooltipUserAvatar(u) as avatar" [src]="avatar" [alt]="tooltipUserName(u)" />
+            <span *ngIf="!tooltipUserAvatar(u)">{{ tooltipUserInitial(u) }}</span>
+          </div>
+          <span class="rls-home__tooltip-users-label">đang ở đây</span>
+        </div>
+
+        <div
+          *ngIf="tooltipDetail.trending_post ?? tooltipDetail.trendingPost"
+          class="rls-home__tooltip-post"
+        >
+          <div class="rls-home__tooltip-post-author">
+            <img
+              *ngIf="(tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.author?.avatar_url ?? (tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.author?.avatarUrl"
+              [src]="(tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.author?.avatar_url ?? (tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.author?.avatarUrl"
+              alt=""
+            />
+            <span>{{ (tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.author?.name ?? 'Ẩn danh' }}</span>
+          </div>
+          <p class="rls-home__tooltip-post-content">
+            {{ (tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.content | slice:0:80 }}{{ ((tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.content?.length ?? 0) > 80 ? '...' : '' }}
+          </p>
+          <div class="rls-home__tooltip-post-meta">
+            <span>❤️ {{ (tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.reactions_count ?? (tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.reactionsCount ?? 0 }}</span>
+            <span>💬 {{ (tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.comments_count ?? (tooltipDetail.trending_post ?? tooltipDetail.trendingPost)?.commentsCount ?? 0 }}</span>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <div class="rls-home__tooltip-actions">
+      <button
+        *ngIf="!tooltipExpanded"
+        type="button"
+        class="rls-home__tooltip-btn"
+        (click)="expandTooltip()"
+      >
+        Xem chi tiết
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M8 3v10M3 8h10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <a
+        *ngIf="tooltipExpanded"
+        class="rls-home__tooltip-btn rls-home__tooltip-btn--outline"
+        [routerLink]="['/app-mini/location', selectedPlace.id]"
+        (click)="closeTooltip()"
+      >
+        Mở trang đầy đủ
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
   <div
     class="rls-home__drawer"
     [class.is-open]="panelOpen"
@@ -151,13 +256,11 @@
     aria-modal="true"
     aria-label="Địa điểm gần bạn và trending"
   >
-    <!-- Handle + nút đóng -->
     <div class="rls-home__drawer-handle">
       <span class="rls-home__drawer-pill">Địa điểm</span>
-      <button type="button" class="rls-home__drawer-close" (click)="closePanel()" aria-label="Đóng">✕</button>
+      <button type="button" class="rls-home__drawer-close" (click)="closePanel()" aria-label="Đóng">&times;</button>
     </div>
 
-    <!-- Tabs -->
     <div class="rls-home__tabs">
       <button
         type="button"
@@ -177,12 +280,85 @@
       </button>
     </div>
 
-    <!-- Nội dung tab -->
     <div class="rls-home__panel">
+      <div *ngIf="drawerDetailPlace as drawerPlace" class="rls-home__drawer-detail">
+        <button type="button" class="rls-home__tooltip-close" (click)="closeDrawerDetail()" aria-label="Đóng chi tiết">&times;</button>
+
+        <div class="rls-home__tooltip-header">
+          <div class="rls-home__tooltip-thumb" [attr.data-cat]="drawerPlace.category">
+            <ng-container *ngIf="drawerDetailThumbUrl as thumb; else drawerThumbFallback">
+              <img [src]="thumb" [alt]="drawerPlace.name" loading="lazy" />
+            </ng-container>
+            <ng-template #drawerThumbFallback>
+              <span>{{ categoryEmoji(drawerPlace.category) }}</span>
+            </ng-template>
+          </div>
+
+          <div class="rls-home__tooltip-info">
+            <div class="rls-home__tooltip-name">{{ drawerPlace.name }}</div>
+            <div class="rls-home__tooltip-cat">{{ drawerPlace.category }}</div>
+          </div>
+        </div>
+
+        <div *ngIf="drawerDetailReasonLabel" class="rls-home__tooltip-reason">
+          {{ drawerDetailReasonLabel }}
+        </div>
+
+        <div *ngIf="drawerDetailLoading" class="rls-home__tooltip-loading">
+          <div class="rls-home__tooltip-skeleton"></div>
+          <div class="rls-home__tooltip-skeleton rls-home__tooltip-skeleton--short"></div>
+        </div>
+
+        <ng-container *ngIf="!drawerDetailLoading">
+          <div class="rls-home__tooltip-stats">
+            <div class="rls-home__tooltip-stat">
+              <span class="rls-home__tooltip-stat-val">{{ drawerDetailActiveCount }}</span>
+              <span class="rls-home__tooltip-stat-lbl">đang ở đây</span>
+            </div>
+            <div class="rls-home__tooltip-stat">
+              <span class="rls-home__tooltip-stat-val">{{ drawerDetail?.stats?.postsCount ?? drawerDetail?.posts_count ?? drawerPlace.stats?.postsCount ?? 0 }}</span>
+              <span class="rls-home__tooltip-stat-lbl">bài viết</span>
+            </div>
+            <div class="rls-home__tooltip-stat">
+              <span class="rls-home__tooltip-stat-val">{{ drawerDetail?.stats?.storiesCount ?? drawerDetail?.stories_count ?? drawerPlace.stats?.storiesCount ?? 0 }}</span>
+              <span class="rls-home__tooltip-stat-lbl">story</span>
+            </div>
+          </div>
+
+          <div *ngIf="drawerVisibleActiveUsers.length" class="rls-home__tooltip-users">
+            <div
+              *ngFor="let user of drawerVisibleActiveUsers"
+              class="rls-home__tooltip-avatar"
+              [attr.title]="tooltipUserName(user)"
+            >
+              <img *ngIf="tooltipUserAvatar(user) as avatar; else drawerUserInitialTpl" [src]="avatar" [alt]="tooltipUserName(user)" />
+              <ng-template #drawerUserInitialTpl>
+                <span>{{ tooltipUserInitial(user) }}</span>
+              </ng-template>
+            </div>
+            <span class="rls-home__tooltip-users-label">đang hoạt động</span>
+          </div>
+
+          <div *ngIf="drawerDetailPost as post" class="rls-home__tooltip-post">
+            <div *ngIf="post.author" class="rls-home__tooltip-post-author">
+              <img *ngIf="post.author.avatarUrl || post.author.avatar_url" [src]="post.author.avatarUrl || post.author.avatar_url" [alt]="post.author.name" />
+              <span>{{ post.author.name || post.author.username }}</span>
+            </div>
+            <div class="rls-home__tooltip-post-content">{{ post.content }}</div>
+            <div class="rls-home__tooltip-post-meta">
+              <span>{{ post.reactionsCount ?? post.reactions_count ?? 0 }} reaction</span>
+              <span>{{ post.commentsCount ?? post.comments_count ?? 0 }} bình luận</span>
+            </div>
+          </div>
+        </ng-container>
+
+      </div>
+
       <rls-nearby-panel
         *ngIf="activeTab === 'nearby'"
         [places]="nearby"
         [loading]="loadingNearby"
+        [radiusM]="nearbyRadiusM"
         (select)="onSelectPlace($event)"
       ></rls-nearby-panel>
 
@@ -194,5 +370,4 @@
       ></rls-trending-panel>
     </div>
   </div>
-
 </div>

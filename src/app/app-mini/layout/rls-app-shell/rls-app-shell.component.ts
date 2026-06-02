@@ -69,6 +69,7 @@ export class RlsAppShellComponent implements OnInit, OnDestroy {
 
   hideNav = false;
   isMapPage = false;
+  isLightShell = false;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -107,6 +108,7 @@ export class RlsAppShellComponent implements OnInit, OnDestroy {
       this.router.url.startsWith('/app-mini/register');
     this.hideNav = data['hideNav'] === true || authRoute;
     this.isMapPage = data['isMapPage'] === true;
+    this.isLightShell = data['shellTheme'] === 'light';
     this.cdr.markForCheck();
   }
 }
