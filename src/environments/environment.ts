@@ -1,5 +1,5 @@
 // const BASE_URL_VALUE = 'https://cms.gapmove.com';
-const BASE_URL_VALUE = 'http://127.0.0.1:8002/';
+const BASE_URL_VALUE = 'http://127.0.0.1:8000/';
 const GOOGLE_CLIENT_ID_VALUE =
   '764570307183-17o4dsc046ga93sojamt9p640irkgsc8.apps.googleusercontent.com';
 

@@ -1,17 +1,18 @@
+// Profile page — dùng CSS variables từ rls-shell--light
+// Không override màu cứng, để đồng nhất với hệ thống design.
+
 :host {
   display: block;
-  min-height: 100vh;
-  background: #f5f7fb;
-  color: #0f172a;
+  background: var(--rls-bg, #f6f9fc);
+  color: var(--rls-on-surface, #0f172a);
 }
 
 .rls-profile-page {
   max-width: 480px;
-  min-height: 100vh;
   margin: 0 auto;
-  background: #f5f7fb;
 }
 
+// ── Header sticky ────────────────────────────────────────────────────────────
 .rls-profile-header {
   position: sticky;
   top: 0;
@@ -20,7 +21,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5eaf1;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
 }
@@ -32,10 +33,10 @@
   justify-content: center;
   width: 2.35rem;
   height: 2.35rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 8px;
   background: #ffffff;
-  color: #334155;
+  color: var(--rls-on-surface, #334155);
   text-decoration: none;
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
 }
@@ -49,7 +50,7 @@
   }
 
   span {
-    color: #0f172a;
+    color: var(--rls-on-surface, #0f172a);
     font-size: 1rem;
     font-weight: 800;
     line-height: 1.25;
@@ -57,29 +58,33 @@
 
   small {
     margin-top: 0.1rem;
-    color: #64748b;
+    color: var(--rls-muted, #64748b);
     font-size: 0.76rem;
     font-weight: 600;
   }
 }
 
+// ── Main content ─────────────────────────────────────────────────────────────
 .rls-profile-main {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.75rem 0.875rem 7rem;
+  // padding-bottom đủ để nội dung cuối không bị tab bar floating che
+  padding: 0.75rem 0.875rem calc(var(--rls-shell-nav-height, 96px) + 1.5rem);
 }
 
+// ── Shared card style ────────────────────────────────────────────────────────
 .rls-profile-hero,
 .rls-profile-signal,
 .rls-profile-details,
 .rls-profile-history {
-  border: 1px solid #e3eaf2;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  background: var(--rls-surface, #ffffff);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
 }
 
+// ── Hero card ────────────────────────────────────────────────────────────────
 .rls-profile-hero {
   overflow: hidden;
 }
@@ -104,9 +109,9 @@
 .rls-profile-avatar {
   width: 5.4rem;
   height: 5.4rem;
-  border: 4px solid #ffffff;
+  border: 4px solid var(--rls-surface, #ffffff);
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--rls-surface, #ffffff);
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.18);
   object-fit: cover;
 
@@ -133,7 +138,7 @@
 .rls-profile-name {
   max-width: 100%;
   margin: 0;
-  color: #0f172a;
+  color: var(--rls-on-surface, #0f172a);
   font-size: 1.35rem;
   font-weight: 900;
   line-height: 1.25;
@@ -143,7 +148,7 @@
 .rls-profile-handle {
   max-width: 100%;
   margin: 0.3rem 0 0;
-  color: #7c3aed;
+  color: var(--rls-primary, #7c3aed);
   font-size: 0.92rem;
   font-weight: 700;
   overflow-wrap: anywhere;
@@ -163,16 +168,16 @@
   gap: 0.38rem;
   min-height: 1.9rem;
   padding: 0 0.65rem;
-  border: 1px solid #ddd6fe;
+  border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: 999px;
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: rgba(124, 58, 237, 0.07);
+  color: var(--rls-primary, #6d28d9);
   font-size: 0.78rem;
   font-weight: 750;
 
   &--success {
-    border-color: #bbf7d0;
-    background: #f0fdf4;
+    border-color: rgba(21, 128, 61, 0.2);
+    background: rgba(21, 128, 61, 0.07);
     color: #15803d;
 
     i {
@@ -181,6 +186,7 @@
   }
 }
 
+// ── Signal card ───────────────────────────────────────────────────────────────
 .rls-profile-signal {
   padding: 1rem;
 }
@@ -193,7 +199,7 @@
 
   span {
     display: block;
-    color: #008c95;
+    color: var(--rls-secondary, #008c95);
     font-size: 0.72rem;
     font-weight: 850;
     letter-spacing: 0.04em;
@@ -202,7 +208,7 @@
 
   h2 {
     margin: 0.15rem 0 0;
-    color: #0f172a;
+    color: var(--rls-on-surface, #0f172a);
     font-size: 1.05rem;
     font-weight: 850;
   }
@@ -214,8 +220,8 @@
     min-width: 3.15rem;
     height: 2.35rem;
     border-radius: 8px;
-    background: #e6f7f8;
-    color: #00747b;
+    background: rgba(0, 140, 149, 0.1);
+    color: var(--rls-secondary, #00747b);
     font-size: 1.15rem;
     font-weight: 950;
   }
@@ -226,7 +232,7 @@
   margin-top: 0.9rem;
   overflow: hidden;
   border-radius: 999px;
-  background: #edf2f7;
+  background: rgba(15, 23, 42, 0.08);
 
   span {
     display: block;
@@ -240,9 +246,9 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 1rem;
-  border: 1px solid #e8eef5;
+  border: 1px solid rgba(15, 23, 42, 0.07);
   border-radius: 8px;
-  background: #f8fafc;
+  background: rgba(15, 23, 42, 0.02);
   overflow: hidden;
 }
 
@@ -255,16 +261,16 @@
   text-align: center;
 
   & + & {
-    border-left: 1px solid #e8eef5;
+    border-left: 1px solid rgba(15, 23, 42, 0.07);
   }
 
   i {
-    color: #008c95;
+    color: var(--rls-secondary, #008c95);
     font-size: 0.92rem;
   }
 
   span {
-    color: #0f172a;
+    color: var(--rls-on-surface, #0f172a);
     font-size: 1.02rem;
     font-weight: 900;
     line-height: 1;
@@ -273,7 +279,7 @@
   small {
     max-width: 100%;
     overflow: hidden;
-    color: #64748b;
+    color: var(--rls-muted, #64748b);
     font-size: 0.68rem;
     font-weight: 750;
     text-overflow: ellipsis;
@@ -281,6 +287,7 @@
   }
 }
 
+// ── Details card ─────────────────────────────────────────────────────────────
 .rls-profile-details {
   display: grid;
   overflow: hidden;
@@ -294,7 +301,7 @@
   padding: 0.85rem 1rem;
 
   & + & {
-    border-top: 1px solid #eef2f7;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
   }
 
   > i {
@@ -304,8 +311,8 @@
     width: 2.4rem;
     height: 2.4rem;
     border-radius: 8px;
-    background: #f1f5f9;
-    color: #475569;
+    background: rgba(15, 23, 42, 0.05);
+    color: var(--rls-muted, #475569);
   }
 
   span,
@@ -315,7 +322,7 @@
   }
 
   span {
-    color: #64748b;
+    color: var(--rls-muted, #64748b);
     font-size: 0.72rem;
     font-weight: 750;
   }
@@ -323,7 +330,7 @@
   strong {
     overflow: hidden;
     margin-top: 0.12rem;
-    color: #0f172a;
+    color: var(--rls-on-surface, #0f172a);
     font-size: 0.92rem;
     font-weight: 800;
     text-overflow: ellipsis;
@@ -331,6 +338,7 @@
   }
 }
 
+// ── History card ─────────────────────────────────────────────────────────────
 .rls-profile-history {
   padding: 1rem;
 }
@@ -344,19 +352,20 @@
 
   h2 {
     margin: 0;
-    color: #0f172a;
+    color: var(--rls-on-surface, #0f172a);
     font-size: 1rem;
     font-weight: 850;
   }
 
   span {
     flex: 0 0 auto;
-    color: #94a3b8;
+    color: var(--rls-muted, #94a3b8);
     font-size: 0.76rem;
     font-weight: 750;
   }
 }
 
+// ── Skeleton ──────────────────────────────────────────────────────────────────
 .rls-profile-loading {
   display: grid;
   gap: 0.55rem;
@@ -367,36 +376,32 @@
   border-radius: 8px;
   background: linear-gradient(
     90deg,
-    #eef2f7 25%,
-    #ffffff 50%,
-    #eef2f7 75%
+    rgba(15, 23, 42, 0.06) 25%,
+    rgba(15, 23, 42, 0.02) 50%,
+    rgba(15, 23, 42, 0.06) 75%
   );
   background-size: 200% 100%;
   animation: rls-shimmer 1.4s infinite;
 }
 
 @keyframes rls-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
+// ── Empty state ───────────────────────────────────────────────────────────────
 .rls-checkin-empty {
   display: grid;
   justify-items: center;
   padding: 1.4rem 1rem;
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed rgba(15, 23, 42, 0.15);
   border-radius: 8px;
-  background: #f8fafc;
+  background: rgba(15, 23, 42, 0.02);
   text-align: center;
 
   h3 {
     margin: 0.65rem 0 0;
-    color: #0f172a;
+    color: var(--rls-on-surface, #0f172a);
     font-size: 0.96rem;
     font-weight: 850;
   }
@@ -404,7 +409,7 @@
   p {
     max-width: 18rem;
     margin: 0.25rem 0 0;
-    color: #64748b;
+    color: var(--rls-muted, #64748b);
     font-size: 0.82rem;
     line-height: 1.45;
   }
@@ -417,11 +422,12 @@
   width: 2.7rem;
   height: 2.7rem;
   border-radius: 8px;
-  background: #e6f7f8;
-  color: #008c95;
+  background: rgba(0, 140, 149, 0.1);
+  color: var(--rls-secondary, #008c95);
   font-size: 1.15rem;
 }
 
+// ── Check-in list ─────────────────────────────────────────────────────────────
 .rls-checkin-list {
   display: grid;
   gap: 0.55rem;
@@ -436,9 +442,9 @@
   gap: 0.75rem;
   align-items: center;
   padding: 0.75rem;
-  border: 1px solid #e8eef5;
+  border: 1px solid rgba(15, 23, 42, 0.07);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--rls-surface, #ffffff);
 }
 
 .rls-checkin-icon {
@@ -448,7 +454,7 @@
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 8px;
-  background: #eff6ff;
+  background: rgba(37, 99, 235, 0.08);
   color: #2563eb;
 }
 
@@ -459,7 +465,7 @@
 .rls-checkin-location {
   overflow: hidden;
   margin: 0;
-  color: #0f172a;
+  color: var(--rls-on-surface, #0f172a);
   font-size: 0.9rem;
   font-weight: 800;
   text-overflow: ellipsis;
@@ -469,11 +475,12 @@
 .rls-checkin-time {
   display: block;
   margin-top: 0.18rem;
-  color: #64748b;
+  color: var(--rls-muted, #64748b);
   font-size: 0.76rem;
   font-weight: 600;
 }
 
+// ── Actions ───────────────────────────────────────────────────────────────────
 .rls-profile-actions {
   padding: 0 0 0.25rem;
 }
@@ -505,12 +512,12 @@
   }
 
   &--danger {
-    border: 1px solid #fecdd3;
-    background: #fff1f2;
+    border: 1px solid rgba(190, 18, 60, 0.18);
+    background: rgba(190, 18, 60, 0.07);
     color: #be123c;
 
     &:not(:disabled):hover {
-      background: #ffe4e6;
+      background: rgba(190, 18, 60, 0.12);
     }
   }
 
@@ -530,9 +537,7 @@
 }
 
 @keyframes rls-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 @media (max-width: 360px) {

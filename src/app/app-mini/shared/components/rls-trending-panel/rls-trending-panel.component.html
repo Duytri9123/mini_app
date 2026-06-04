@@ -7,18 +7,13 @@
   <!-- Header -->
   <header class="flex items-center justify-between px-1">
     <h2 class="text-[13px] font-semibold text-slate-200">Đang trending gần bạn</h2>
-    <span
-      *ngIf="!loading && items.length"
-      class="text-[11px] text-slate-400"
-    >{{ items.length }} địa điểm</span>
+    <span *ngIf="!loading && items.length" class="text-[11px] text-slate-400">{{ items.length }} địa điểm</span>
   </header>
 
   <!-- Loading skeleton -->
   <ul *ngIf="loading" class="flex flex-col gap-1.5" aria-hidden="true">
-    <li
-      *ngFor="let s of [0, 1, 2, 3]"
-      class="flex items-center gap-2 rounded-[14px] border border-white/10 bg-slate-900/40 p-2.5"
-    >
+    <li *ngFor="let s of [0, 1, 2, 3]"
+      class="flex items-center gap-2 rounded-[14px] border border-white/10 bg-slate-900/40 p-2.5">
       <span class="h-12 w-12 flex-shrink-0 animate-pulse rounded-xl bg-slate-700/40"></span>
       <span class="flex min-w-0 flex-1 flex-col gap-1.5">
         <span class="h-3 w-2/3 animate-pulse rounded bg-slate-700/40"></span>
@@ -28,10 +23,8 @@
   </ul>
 
   <!-- Empty state -->
-  <div
-    *ngIf="!loading && !items.length"
-    class="flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-slate-900/40 px-4 py-8 text-center"
-  >
+  <div *ngIf="!loading && !items.length"
+    class="flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-slate-900/40 px-4 py-8 text-center">
     <span class="text-2xl" aria-hidden="true">🛰️</span>
     <p class="text-xs font-medium text-slate-200">Chưa có địa điểm trending</p>
     <p class="text-xs text-slate-400">Hãy thử mở rộng khu vực hoặc quay lại sau.</p>
@@ -40,23 +33,14 @@
   <!-- Danh sách spot trending -->
   <ul *ngIf="!loading && items.length" class="flex flex-col gap-1.5">
     <li *ngFor="let item of items; trackBy: trackById">
-      <button
-        type="button"
-        (click)="onOpen(item)"
+      <button type="button" (click)="onOpen(item)"
         class="flex w-full items-center gap-2 rounded-[14px] border border-white/10 bg-slate-900/60 p-2.5 text-left text-slate-100 shadow-[0_0_16px_rgba(168,85,247,0.12)] backdrop-blur-md transition-colors hover:border-fuchsia-500/30 active:scale-[0.99]"
-        [attr.aria-label]="'Mở ' + item.name"
-      >
+        [attr.aria-label]="'Mở ' + item.name">
         <!-- Thumbnail / rank -->
         <span
-          class="relative flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-cyan-500/30 text-sm font-semibold text-fuchsia-100 ring-1 ring-white/15"
-        >
-          <img
-            *ngIf="item.thumbnailUrl as src; else rankTpl"
-            [src]="src"
-            [alt]="item.name"
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
+          class="relative flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-cyan-500/30 text-sm font-semibold text-fuchsia-100 ring-1 ring-white/15">
+          <img *ngIf="item.thumbnailUrl as src; else rankTpl" [src]="src" [alt]="item.name"
+            class="h-full w-full object-cover" loading="lazy" />
           <ng-template #rankTpl>
             <span>{{ item.rank ? '#' + item.rank : (item.name || '?').charAt(0).toUpperCase() }}</span>
           </ng-template>
@@ -64,15 +48,16 @@
 
         <!-- Nội dung -->
         <span class="min-w-0 flex-1">
-          <span class="truncate text-[13px] font-semibold leading-tight">{{ item.name }}</span>
+          <span class="flex min-w-0 items-center gap-1.5">
+            <span class="min-w-0 truncate text-[13px] font-semibold leading-tight">{{ item.name }}</span>
 
-          <!-- Badge lý do trending (R6.4) -->
+            <!-- Badge lý do trending (R6.4) -->
+          </span>
           <span
-            class="mt-0.5 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium"
-            [ngClass]="reasonBadgeClass(item)"
-          >
-            <span aria-hidden="true">{{ reasonIcon(item) }}</span>
-            <span>{{ reasonLabel(item) }}</span>
+            class="inline-flex max-w-[82px] shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none"
+            [ngClass]="reasonBadgeClass(item)">
+            <span class="shrink-0" aria-hidden="true">{{ reasonIcon(item) }}</span>
+            <span class="truncate whitespace-nowrap">{{ reasonLabel(item) }}</span>
           </span>
 
           <!-- Category -->
@@ -83,13 +68,8 @@
         <span class="flex-shrink-0 text-slate-500" aria-hidden="true">›</span>
       </button>
 
-      <rls-place-inline-detail
-        *ngIf="selectedPlaceId === item.id"
-        [place]="item"
-        [loading]="detailLoading"
-        [detail]="detail"
-        (close)="onCloseDetail()"
-      ></rls-place-inline-detail>
+      <rls-place-inline-detail *ngIf="selectedPlaceId === item.id" [place]="item" [loading]="detailLoading"
+        [detail]="detail" (close)="onCloseDetail()"></rls-place-inline-detail>
     </li>
   </ul>
 </section>
